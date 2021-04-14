@@ -1,6 +1,6 @@
 import sys, os
 
-
+simpleInput = True
 
 def removeUselessCharachters(name,useless):
     if useless in name:
@@ -33,8 +33,6 @@ def getAllInfo(infilename):
     all_central = dict()
     for line in l[start+1:stop]:
         measurement = line.split(' ')[0]
-        # if '7' in measurement: continue
-        # if 'dil8' in measurement: continue
         measurements.append(measurement)
         all_values = line.split(' ')[1].split(',')
         all_central[measurement] = all_values[0]
@@ -150,9 +148,13 @@ def writeCorrelations(outdir,systnames,measurements,matrix):
 
 
 infilename = sys.argv[1]
-reldir = infilename.replace(infilename.split('/')[-1],'')
-blue_outdir, allinputs = getBLUEoutdir(infilename)
-systnames, measurements, value, uncert, matrix = getAllInfo(reldir+blue_outdir+allinputs)
+if simpleInput:
+    systnames, measurements, value, uncert, matrix = getAllInfo(infilename)
+else:
+    reldir = infilename.replace(infilename.split('/')[-1],'')
+    blue_outdir, allinputs = getBLUEoutdir(infilename)
+    systnames, measurements, value, uncert, matrix = getAllInfo(reldir+blue_outdir+allinputs)
+
 
 outdir = 'inputsConvinoATLAS/'
 if not os.path.exists(outdir):
