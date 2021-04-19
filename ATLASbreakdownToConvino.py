@@ -18,7 +18,7 @@ def readInputFile(measurement):
         systD[systname] = impact
         MCstatD[systname] = MCstatImpact
     fullInfoD[measurement] = [central, stat, systD, MCstatD]
-
+    return
 
 def writeConfig(outdir,measurements):
     f = open(outdir+'/mt_config.txt','w')
