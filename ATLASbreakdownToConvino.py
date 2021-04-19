@@ -1,5 +1,4 @@
 import sys, os
-from writeConvinoOutput import *
 
 measurements = ['dil7','ljets7','allhad7','dil8','ljets8','allhad8']
 fullInfoD = dict()
