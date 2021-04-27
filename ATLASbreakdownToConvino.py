@@ -1,7 +1,10 @@
 import sys, os
+import itertools
 
-measurements = ['dil7','ljets7','allhad7','dil8','ljets8','allhad8']
+allmeasurements = ['dil7','ljets7','allhad7','dil8','ljets8','allhad8']
 fullInfoD = dict()
+
+permutations = True
 
 def readInputFile(measurement):
     infilename = 'inputs/ATLAS{}TeV.txt'.format(measurement)
@@ -18,6 +21,7 @@ def readInputFile(measurement):
         systD[systname] = impact
         MCstatD[systname] = MCstatImpact
     fullInfoD[measurement] = [central, stat, systD, MCstatD]
+
     return
 
 def writeConfig(outdir,measurements):
@@ -36,17 +40,17 @@ def writeConfig(outdir,measurements):
     return
 
 
-def getFullSystNames(measurements,fullInfoD):
-    fullsystnames = fullInfoD[measurements[0]][2].keys()
-    for meas in measurements:
+def getFullSystNames():
+    fsn = fullInfoD[allmeasurements[0]][2].keys()
+    for meas in allmeasurements:
         systnames = fullInfoD[meas][2].keys()
         for systname in systnames:
-            if not systname in fullsystnames:
-                fullsystnames.append(systname)
-    fullsystnames.append('stat')
-    return fullsystnames
+            if not systname in fsn:
+                fsn.append(systname)
+    fsn.append('stat')
+    return fsn
 
-def completeSystList(systD,MCstatD,fullsystnames):
+def completeSystList(systD,MCstatD):
     systnames = systD.keys()
     for syst in fullsystnames:
         if not syst in systnames:
@@ -55,20 +59,19 @@ def completeSystList(systD,MCstatD,fullsystnames):
     return [systD, MCstatD]
 
 
-def writeMeasurementFile(outdir,measurements,fullInfoD):
+def writeMeasurementFile(outdir,measurements):
     f = open('{}/allinputs.txt'.format(outdir),'w')
     f.write('\n\n[hessian]\n\n[end hessian]\n\n[correlation matrix]\n\n[end correlation matrix]\n\n[not fitted]\n\n\t')
     
-    systnames = getFullSystNames(measurements,fullInfoD)
-    for syst in systnames:
+    for syst in fullsystnames:
         f.write('{} '.format(syst))
 
     for measurement in measurements:
         central, stat, systD, MCstatD = fullInfoD[measurement]
         systD['stat'] = stat
-        systD, MCstatD = completeSystList(systD,MCstatD,systnames)
+        systD, MCstatD = completeSystList(systD,MCstatD)
         f.write('\n\n\tmt_{} '.format(measurement))
-        for syst in systnames:
+        for syst in fullsystnames:
             f.write('{} '.format(systD[syst]))
     f.write('\n\n[end not fitted]\n\n[systematics]\n\n[end systematics]\n\n[estimates]\n\n')
     f.write('\tn_estimates = {}\n\n'.format(len(measurements)))
@@ -81,13 +84,44 @@ def writeMeasurementFile(outdir,measurements,fullInfoD):
     return
 
 
-for measurement in measurements:
-    readInputFile(measurement)
 
-outdir = 'inputsConvino_ATLASbreakdown'
+outdir = 'inputsConvino_ATLASbreakdown/'
+if permutations: 
+    outdir = 'inputsConvino_ATLASbreakdown_debug/'
+
 if not os.path.exists(outdir):
     os.makedirs(outdir)
 
+for measurement in allmeasurements:
+    readInputFile(measurement)
+fullsystnames = getFullSystNames()
 
-writeConfig(outdir,measurements)
-writeMeasurementFile(outdir,measurements,fullInfoD)
+if not permutations:
+    writeConfig(outdir,allmeasurements)
+    writeMeasurementFile(outdir,allmeasurements)
+
+else:
+    of = open('run_all_debug_breakdown.sh','w')
+    of.write('mkdir -p logs_debug_breakdown\n\n')
+
+    ol = open('log_list_breakdown.txt','w')
+
+    outdir += 'input'
+    for r in range(2,len(allmeasurements)):
+        comb_list = itertools.combinations(allmeasurements,r)
+        for comb in comb_list:
+            comb = list(comb)
+            od = outdir
+            for c in comb:
+                od += '_{}'.format(c)
+            if not os.path.exists(od):
+                os.makedirs(od)
+            writeConfig(od,comb)
+            writeMeasurementFile(od,comb)
+
+            of.write('nohup convino --prefix ATLAS_{0} {1}/mt_config.txt -d --neyman &> logs_debug_breakdown/log_{0}.log &\nsleep 20\n\n'.format(od.replace('inputsConvino_ATLASbreakdown_debug/input_',''),od))
+            ol.write('log_{}.log\n'.format(od.replace('inputsConvino_ATLASbreakdown_debug/input_','')))
+
+            
+
+
