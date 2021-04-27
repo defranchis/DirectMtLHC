@@ -1,6 +1,9 @@
 import sys, os
 from writeConvinoOutput import *
 
+disable_Convino = False
+disable_BLUE = False
+
 def getSystNames(lines):
     for line in lines:
         if 'Stat' in line:
@@ -109,6 +112,59 @@ def getFullCorrelationMatrix(lines,measurements,systnames):
         sys.exit()
     return matrix_dict
 
+
+def writeOutputSteve(lines,systnames,measurements,value,uncert,matrix):
+
+    f = open('CMS_Steve_negCorr.txt','w')
+    for i in range (0,len(lines)):
+        f.write('{}\n'.format(lines[i]))
+        if 'Stat' in lines[i]: break
+
+    f.write('\n')
+    start = False
+
+    for i in range(0,len(lines)):
+        if 'Stat' in lines[i]:
+            start = True
+        if start and 'Mtop' in lines[i]:
+            f.write('{}\n'.format(lines[i].replace('-','')))
+    
+    f.write('\n')
+
+    for i in range(0,len(lines)):
+        if 'Stat' in lines[i] and '1.0' in lines[i] and '0.0' in lines[i]:
+            istart = i
+            break
+    for i in range (istart,istart+len(measurements)):
+        f.write('{}\n'.format(lines[i]))
+
+    f.write('\n')
+
+    for syst in systnames:
+        if syst == 'Stat': 
+            continue
+        for meas1 in measurements:
+            for meas2 in measurements:
+                u1 = uncert[meas1][syst]
+                u2 = uncert[meas2][syst]
+                if u1 != 0 and u2 != 0:
+                    matrix[syst][meas1][meas2] *= u1*u2/abs(u1*u2)
+
+    for syst in systnames:
+        if syst == 'Stat': 
+            continue
+        for i,meas1 in enumerate(measurements):
+            for meas2 in measurements:
+                f.write('{} '.format(matrix[syst][meas1][meas2]))
+            if i == 0:
+                f.write('\'{}\''.format(syst))
+            f.write('\n')
+        f.write('\n')
+
+    return
+
+
+
 # infilename = 'allCMS_legacy_result.txt'
 if len(sys.argv) < 2:
     print '\nplease provide input file\n'
@@ -124,10 +180,14 @@ measurements = getMeasurements(lines)
 value, uncert = getAllResults(lines,measurements,systnames)
 matrix = getFullCorrelationMatrix(lines,measurements,systnames)
 
-outdir = 'inputsConvinoCMS/'
-if not os.path.exists(outdir):
-    os.makedirs(outdir)
+if not disable_Convino:
+    outdir = 'inputsConvinoCMS/'
+    if not os.path.exists(outdir):
+        os.makedirs(outdir)
 
-writeConfig(outdir,systnames,measurements)
-writeAllFiles(outdir,systnames,measurements,value,uncert)
-writeCorrelations(outdir,systnames,measurements,matrix)
+        writeConfig(outdir,systnames,measurements)
+        writeAllFiles(outdir,systnames,measurements,value,uncert)
+        writeCorrelations(outdir,systnames,measurements,matrix)
+
+if not disable_BLUE:
+    writeOutputSteve(lines,systnames,measurements,value,uncert,matrix)
