@@ -110,6 +110,13 @@ def getFullCorrelationMatrix(lines,measurements,systnames):
     return matrix_dict
 
 # infilename = 'allCMS_legacy_result.txt'
+if len(sys.argv) < 2:
+    print '\nplease provide input file\n'
+    exit()
+elif len(sys.argv) > 2:
+    print '\nplease provide a single input\n'
+    exit()
+
 infilename = sys.argv[1]
 lines = open(infilename,'r').read().splitlines()
 systnames = getSystNames(lines)
