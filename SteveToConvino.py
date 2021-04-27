@@ -113,7 +113,7 @@ def getFullCorrelationMatrix(lines,measurements,systnames):
     return matrix_dict
 
 
-def writeOutputSteve(lines,systnames,measurements,value,uncert,matrix):
+def writeOutputSteve(lines,systnames,measurements,matrix):
 
     f = open('CMS_Steve_negCorr.txt','w')
     for i in range (0,len(lines)):
@@ -143,16 +143,6 @@ def writeOutputSteve(lines,systnames,measurements,value,uncert,matrix):
     for syst in systnames:
         if syst == 'Stat': 
             continue
-        for meas1 in measurements:
-            for meas2 in measurements:
-                u1 = uncert[meas1][syst]
-                u2 = uncert[meas2][syst]
-                if u1 != 0 and u2 != 0:
-                    matrix[syst][meas1][meas2] *= u1*u2/abs(u1*u2)
-
-    for syst in systnames:
-        if syst == 'Stat': 
-            continue
         for i,meas1 in enumerate(measurements):
             for meas2 in measurements:
                 f.write('{} '.format(matrix[syst][meas1][meas2]))
@@ -163,8 +153,22 @@ def writeOutputSteve(lines,systnames,measurements,value,uncert,matrix):
 
     return
 
-
-
+def propagateNegativeCorrelations(matrix,systnames,measurements,uncert):
+    for syst in systnames:
+        if syst == 'Stat': 
+            continue
+        for meas1 in measurements:
+            for meas2 in measurements:
+                u1 = uncert[meas1][syst]
+                u2 = uncert[meas2][syst]
+                if u1 != 0 and u2 != 0:
+                    matrix[syst][meas1][meas2] *= u1*u2/abs(u1*u2)
+    for meas in measurements:
+        for syst in systnames:
+            if uncert[meas][syst] < 0:
+                uncert[meas][syst] *= -1.
+    return matrix, uncert
+    
 # infilename = 'allCMS_legacy_result.txt'
 if len(sys.argv) < 2:
     print '\nplease provide input file\n'
@@ -180,14 +184,19 @@ measurements = getMeasurements(lines)
 value, uncert = getAllResults(lines,measurements,systnames)
 matrix = getFullCorrelationMatrix(lines,measurements,systnames)
 
+#propagation of negative correlations
+matrix, uncert = propagateNegativeCorrelations(matrix,systnames,measurements,uncert)
+
+
 if not disable_Convino:
     outdir = 'inputsConvinoCMS/'
     if not os.path.exists(outdir):
         os.makedirs(outdir)
 
-        writeConfig(outdir,systnames,measurements)
-        writeAllFiles(outdir,systnames,measurements,value,uncert)
-        writeCorrelations(outdir,systnames,measurements,matrix)
+    writeConfig(outdir,systnames,measurements)
+    writeAllFiles(outdir,systnames,measurements,value,uncert)
+    writeCorrelations(outdir,systnames,measurements,matrix)
+
 
 if not disable_BLUE:
-    writeOutputSteve(lines,systnames,measurements,value,uncert,matrix)
+    writeOutputSteve(lines,systnames,measurements,matrix)
