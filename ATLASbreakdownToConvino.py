@@ -7,7 +7,7 @@ fullInfoD = dict()
 permutations = True
 
 def readInputFile(measurement):
-    infilename = 'inputs/ATLAS{}TeV.txt'.format(measurement)
+    infilename = 'original_inputs/ATLAS{}TeV.txt'.format(measurement)
     infile = open(infilename,'r')
     lines = infile.read().splitlines()
     central = lines[0].split()[-1]
@@ -106,12 +106,12 @@ else:
 
     ol = open('log_list_breakdown.txt','w')
 
-    outdir += 'input'
+    od_orig = outdir+'input'
     for r in range(2,len(allmeasurements)):
         comb_list = itertools.combinations(allmeasurements,r)
         for comb in comb_list:
             comb = list(comb)
-            od = outdir
+            od = od_orig
             for c in comb:
                 od += '_{}'.format(c)
             if not os.path.exists(od):
@@ -119,8 +119,8 @@ else:
             writeConfig(od,comb)
             writeMeasurementFile(od,comb)
 
-            of.write('nohup convino --prefix ATLAS_{0} {1}/mt_config.txt -d --neyman &> logs_debug_breakdown/log_{0}.log &\nsleep 20\n\n'.format(od.replace('inputsConvino_ATLASbreakdown_debug/input_',''),od))
-            ol.write('log_{}.log\n'.format(od.replace('inputsConvino_ATLASbreakdown_debug/input_','')))
+            of.write('nohup convino --prefix ATLAS_{0} {1}/mt_config.txt -d --neyman &> logs_debug_breakdown/log_{0}.log &\nsleep 20\n\n'.format(od.replace('{}/input_'.format(outdir.replace('/','')),''),od))
+            ol.write('log_{}.log\n'.format(od.replace('{}/input_'.format(outdir.replace('/','')),'')))
 
             
 
