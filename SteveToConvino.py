@@ -187,15 +187,17 @@ matrix = getFullCorrelationMatrix(lines,measurements,systnames)
 #propagation of negative correlations
 matrix, uncert = propagateNegativeCorrelations(matrix,systnames,measurements,uncert)
 
+merged, uncert = mergeCorrelations(systnames,measurements,uncert,matrix)
+
 
 if not disable_Convino:
     outdir = 'inputsConvinoCMS/'
     if not os.path.exists(outdir):
         os.makedirs(outdir)
 
-    writeConfig(outdir,systnames,measurements)
-    writeAllFiles(outdir,systnames,measurements,value,uncert)
-    writeCorrelations(outdir,systnames,measurements,matrix)
+    writeConfig(outdir,systnames,measurements,merged)
+    writeAllFiles(outdir,systnames,measurements,value,uncert,merged)
+    writeCorrelations(outdir,systnames,measurements,matrix,merged)
 
 
 if not disable_BLUE:

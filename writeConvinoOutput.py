@@ -1,4 +1,4 @@
-def writeConfig(outdir,systnames,measurements):
+def writeConfig(outdir,systnames,measurements,merged=[]):
     f = open(outdir+'/mt_config.txt','w')
     f.write('[global]\n\n[end global]\n\n[inputs]\n\n')
     f.write('\tnFiles = {} \n\n'.format(len(measurements)))
@@ -13,6 +13,7 @@ def writeConfig(outdir,systnames,measurements):
     f.write('[correlations]\n\n\t#!FILE  =  extra_correlations.txt\n\n[end correlations]\n\n[uncertainty impacts]\n\n')
     for syst in systnames:
         if syst == 'Stat': continue
+        if syst in merged: continue
         f.write('\t{} = '.format(syst))
         for meas in measurements:
             f.write('{}_{} '.format(syst,meas))
@@ -24,7 +25,7 @@ def writeConfig(outdir,systnames,measurements):
     f.close()
     return
 
-def writeMeasurementFile(outdir,systnames,measurement,value,uncert):
+def writeMeasurementFile(outdir,systnames,measurement,value,uncert,merged=[]):
     f = open('{}/{}.txt'.format(outdir,measurement),'w')
     f.write('\n\n[hessian]\n\n[end hessian]\n\n[correlation matrix]\n\n[end correlation matrix]\n\n[not fitted]\n\n\t')
     systnames.remove('Stat')
@@ -33,7 +34,10 @@ def writeMeasurementFile(outdir,systnames,measurement,value,uncert):
         if syst == 'Stat':
             f.write('stat ')
         else:
-            f.write('{}_{} '.format(syst,measurement))
+            if syst in merged:
+                f.write('{} '.format(syst))
+            else:
+                f.write('{}_{} '.format(syst,measurement))
     f.write('\n\tmt_{} '.format(measurement))
     for syst in systnames:
         f.write('{} '.format(uncert[measurement][syst]))
@@ -45,15 +49,16 @@ def writeMeasurementFile(outdir,systnames,measurement,value,uncert):
     f.close()
     return
 
-def writeAllFiles(outdir,systnames,measurements,value,uncert):
+def writeAllFiles(outdir,systnames,measurements,value,uncert,merged=[]):
     for measurement in measurements:
-        writeMeasurementFile(outdir,systnames,measurement,value,uncert)
+        writeMeasurementFile(outdir,systnames,measurement,value,uncert,merged)
     return
 
-def writeCorrelations(outdir,systnames,measurements,matrix):
+def writeCorrelations(outdir,systnames,measurements,matrix,merged=[]):
     f = open(outdir+'/extra_correlations.txt','w')
     for syst in systnames:
         if syst == 'Stat': continue
+        if syst in merged: continue
         for i, meas_i in enumerate(measurements):
             for j, meas_j in enumerate(measurements):
                 if not j>i: continue
@@ -61,3 +66,31 @@ def writeCorrelations(outdir,systnames,measurements,matrix):
         f.write('\n')
     f.close()
     return
+
+def mergeCorrelations(systnames,measurements,uncert,matrix):
+    ready_s = []
+    eligible_s = []
+    for syst in systnames:
+        if syst == 'Stat': continue
+        ready = True
+        eligible = True
+        for meas1 in measurements:
+            for meas2 in measurements:
+                if matrix[syst][meas1][meas2] != 1:
+                    ready = False
+                if abs(matrix[syst][meas1][meas2]) != 1:
+                    eligible = False
+        if ready:
+            ready_s.append(syst)
+        elif eligible:
+            eligible_s.append(syst)
+
+    ref = measurements[0]
+    for syst in eligible_s:
+        signs = matrix[syst][ref]
+        for meas in measurements:
+            uncert[meas][syst] *= signs[meas]
+
+    ready_s.extend(eligible_s)
+
+    return ready_s, uncert

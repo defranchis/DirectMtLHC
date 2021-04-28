@@ -94,7 +94,6 @@ else:
     blue_outdir, allinputs = getBLUEoutdir(infilename)
     systnames, measurements, value, uncert, matrix = getAllInfo(reldir+blue_outdir+allinputs)
 
-
 outdir = 'inputsConvinoATLAS/'
 if permutations:
     outdir = 'inputsConvinoATLAS_debug/'
@@ -102,9 +101,10 @@ if not os.path.exists(outdir):
     os.makedirs(outdir)
 
 if not permutations:
-    writeConfig(outdir,systnames,measurements)
-    writeAllFiles(outdir,systnames,measurements,value,uncert)
-    writeCorrelations(outdir,systnames,measurements,matrix)
+    merged, uncert = mergeCorrelations(systnames,measurements,uncert,matrix)
+    writeConfig(outdir,systnames,measurements,merged)
+    writeAllFiles(outdir,systnames,measurements,value,uncert,merged)
+    writeCorrelations(outdir,systnames,measurements,matrix,merged)
 
 else:
     of = open('run_all_debug.sh','w')
@@ -112,20 +112,21 @@ else:
 
     ol = open('log_list.txt','w')
 
-    outdir += 'input'
+    od_orig = outdir+'input'
     for r in range(2,len(measurements)):
         comb_list = itertools.combinations(measurements,r)
         for comb in comb_list:
             comb = list(comb)
-            od = outdir
+            od = od_orig
             for c in comb:
                 od += '_{}'.format(c)
             if not os.path.exists(od):
                 os.makedirs(od)
-            writeConfig(od,systnames,comb)
-            writeAllFiles(od,systnames,comb,value,uncert)
-            writeCorrelations(od,systnames,comb,matrix)
-            of.write('nohup convino --prefix ATLAS_{0} {1}/mt_config.txt -d --neyman &> logs_debug/log_{0}.log &\n'.format(od.replace('inputs_debug_ATLAS/input_',''),od))
-            ol.write('log_{}.log\n'.format(od.replace('inputs_debug_ATLAS/input_','')))
+            merged, uncert =  mergeCorrelations(systnames,comb,uncert,matrix)
+            writeConfig(od,systnames,comb,merged)
+            writeAllFiles(od,systnames,comb,value,uncert,merged)
+            writeCorrelations(od,systnames,comb,matrix,merged)
+            of.write('nohup convino --prefix ATLAS_{0} {1}/mt_config.txt --neyman &> logs_debug/log_{0}.log & \n'.format(od.replace('{}/input_'.format(outdir.replace('/','')),''),od))
+            ol.write('log_{}.log\n'.format(od.replace('{}/input_'.format(outdir.replace('/','')),'')))
 
 
