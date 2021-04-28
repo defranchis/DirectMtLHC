@@ -150,7 +150,7 @@ def writeOutputSteve(lines,systnames,measurements,matrix):
                 f.write('\'{}\''.format(syst))
             f.write('\n')
         f.write('\n')
-
+    f.write('!\n')
     return
 
 def propagateNegativeCorrelations(matrix,systnames,measurements,uncert):
