@@ -67,18 +67,22 @@ def getCorrelationMatrixSyst(lines,measurements,systname):
             found = True
             break
     if not found:
-        print 'matrix for syst:', systname, 'not found'
-        return
+        print 'ERROR! matrix for syst:', systname, 'not found'
+        sys.exit()
     if len(matrix)!= len(measurements):
-        print 'ERROR!, wrong matrix dimension', systname
+        print 'logic ERROR', systname
         sys.exit()
     if matrix[0].split()[-1].replace('\'','') != systname:
-        print 'ERROR!, wrong format', systname
+        print 'ERROR! Wrong format in correlation matrix', systname
         sys.exit()
     for i, m_line in enumerate(matrix):
+        if not '1.0' in m_line:
+            print 'ERROR! Line missing in correlation matrix for syst:', systname
+            sys.exit()
         matrix[i] = m_line.split()
         if i==0 : matrix[i] = matrix[i][0:-1]
     
+
     if not isSymmetricMatrix(matrix):
         print 'ERROR! matrix not symmetric for syst:', systname
         sys.exit()
