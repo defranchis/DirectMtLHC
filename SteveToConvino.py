@@ -60,15 +60,20 @@ def isSymmetricMatrix(matrix):
     return True
 
 def getCorrelationMatrixSyst(lines,measurements,systname):
+    found = False
     for i, line in enumerate(lines):
-        if systname in line and '1.0' in line:
+        if '\'{}\''.format(systname) in line and '1.0' in line:
             matrix = lines[i:i+len(measurements)]
+            found = True
             break
+    if not found:
+        print 'matrix for syst:', systname, 'not found'
+        return
     if len(matrix)!= len(measurements):
-        print 'ERROR!', systname
+        print 'ERROR!, wrong matrix dimension', systname
         sys.exit()
     if matrix[0].split()[-1].replace('\'','') != systname:
-        print 'ERROR!', systname
+        print 'ERROR!, wrong format', systname
         sys.exit()
     for i, m_line in enumerate(matrix):
         matrix[i] = m_line.split()
