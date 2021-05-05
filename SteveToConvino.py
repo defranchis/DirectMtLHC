@@ -1,5 +1,6 @@
 import sys, os
 from writeConvinoOutput import *
+import copy
 
 disable_Convino = False
 disable_BLUE = False
@@ -161,22 +162,6 @@ def writeOutputSteve(lines,systnames,measurements,matrix):
         f.write('\n')
     f.write('!\n')
     return
-
-def propagateNegativeCorrelations(matrix,systnames,measurements,uncert):
-    for syst in systnames:
-        if syst == 'Stat': 
-            continue
-        for meas1 in measurements:
-            for meas2 in measurements:
-                u1 = uncert[meas1][syst]
-                u2 = uncert[meas2][syst]
-                if u1 != 0 and u2 != 0:
-                    matrix[syst][meas1][meas2] *= u1*u2/abs(u1*u2)
-    for meas in measurements:
-        for syst in systnames:
-            if uncert[meas][syst] < 0:
-                uncert[meas][syst] *= -1.
-    return matrix, uncert
     
 # infilename = 'allCMS_legacy_result.txt'
 if len(sys.argv) < 2:
@@ -193,21 +178,29 @@ measurements = getMeasurements(lines)
 value, uncert = getAllResults(lines,measurements,systnames)
 matrix = getFullCorrelationMatrix(lines,measurements,systnames)
 
+checkFullMatrix(matrix,systnames,measurements,uncert)
+
 #propagation of negative correlations
 matrix, uncert = propagateNegativeCorrelations(matrix,systnames,measurements,uncert)
+m_orig = checkFullMatrix(matrix,systnames,measurements,uncert)
 
-merged, uncert = mergeCorrelations(systnames,measurements,uncert,matrix)
 
+if not disable_BLUE:
+    writeOutputSteve(lines,systnames,measurements,matrix)
 
 if not disable_Convino:
     outdir = 'inputsConvinoCMS/'
     if not os.path.exists(outdir):
         os.makedirs(outdir)
 
+    merged, uncert, matrix = mergeCorrelations(systnames,measurements,uncert,matrix)
+    m_merge = checkFullMatrix(matrix,systnames,measurements,uncert)
+    if not (m_orig==m_merge).all():
+        print 'ERROR: something wrong in merging'
+        sys.exit()
+
     writeConfig(outdir,systnames,measurements,merged)
     writeAllFiles(outdir,systnames,measurements,value,uncert,merged)
     writeCorrelations(outdir,systnames,measurements,matrix,merged)
 
 
-if not disable_BLUE:
-    writeOutputSteve(lines,systnames,measurements,matrix)

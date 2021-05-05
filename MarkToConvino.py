@@ -1,6 +1,7 @@
 import sys, os
 import itertools
 from writeConvinoOutput import *
+import copy
 
 simpleInput = True
 permutations = False
@@ -100,8 +101,15 @@ if permutations:
 if not os.path.exists(outdir):
     os.makedirs(outdir)
 
+m_orig = checkFullMatrix(matrix,systnames,measurements,uncert)
+
 if not permutations:
-    merged, uncert = mergeCorrelations(systnames,measurements,uncert,matrix)
+    merged, uncert, matrix = mergeCorrelations(systnames,measurements,uncert,matrix)
+    m_merge = checkFullMatrix(matrix,systnames,measurements,uncert)
+    if not (m_orig==m_merge).all():
+        print 'ERROR: something wrong in merging'
+        sys.exit()
+
     writeConfig(outdir,systnames,measurements,merged)
     writeAllFiles(outdir,systnames,measurements,value,uncert,merged)
     writeCorrelations(outdir,systnames,measurements,matrix,merged)
@@ -122,7 +130,8 @@ else:
                 od += '_{}'.format(c)
             if not os.path.exists(od):
                 os.makedirs(od)
-            merged, uncert =  mergeCorrelations(systnames,comb,uncert,matrix)
+            merged, uncert, matrix =  mergeCorrelations(systnames,comb,uncert,matrix)
+            checkFullMatrix(matrix,systnames,comb,uncert)
             writeConfig(od,systnames,comb,merged)
             writeAllFiles(od,systnames,comb,value,uncert,merged)
             writeCorrelations(od,systnames,comb,matrix,merged)

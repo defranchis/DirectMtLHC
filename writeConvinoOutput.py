@@ -1,4 +1,5 @@
 import numpy as np
+import copy
 
 def writeConfig(outdir,systnames,measurements,merged=[]):
     f = open(outdir+'/mt_config.txt','w')
@@ -69,9 +70,35 @@ def writeCorrelations(outdir,systnames,measurements,matrix,merged=[]):
     f.close()
     return
 
+def propagateNegativeCorrelations(matrix,systnames,measurements,uncert):
+    for syst in systnames:
+        if syst == 'Stat': 
+            continue
+        for meas1 in measurements:
+            for meas2 in measurements:
+                u1 = uncert[meas1][syst]
+                u2 = uncert[meas2][syst]
+                if u1 != 0 and u2 != 0:
+                    matrix[syst][meas1][meas2] *= u1*u2/abs(u1*u2)
+                elif u1 != 0:
+                    matrix[syst][meas1][meas2] *= u1/abs(u1)
+                elif u2 != 0:
+                    matrix[syst][meas1][meas2] *= u2/abs(u2)
+
+    for meas in measurements:
+        for syst in systnames:
+            if uncert[meas][syst] < 0:
+                uncert[meas][syst] *= -1.
+    return matrix, uncert
+
 def mergeCorrelations(systnames,measurements,uncert,matrix):
+
+    orig_m = copy.deepcopy(matrix)
+    orig_u = copy.deepcopy(uncert)
+
     ready_s = []
     eligible_s = []
+
     for syst in systnames:
         if syst == 'Stat': continue
         ready = True
@@ -92,10 +119,25 @@ def mergeCorrelations(systnames,measurements,uncert,matrix):
         signs = matrix[syst][ref]
         for meas in measurements:
             uncert[meas][syst] *= signs[meas]
-
+        for m1 in measurements:
+            for m2 in measurements:
+                matrix[syst][m1][m2] = 1.0
+    
     ready_s.extend(eligible_s)
 
-    return ready_s, uncert
+    test_m, test_u = propagateNegativeCorrelations(matrix,systnames,measurements,uncert)
+
+    if test_u != orig_u:
+        print 'WARNING: something inconsistent in input uncertainties. Please check'
+    
+    if test_m != orig_m:
+        for syst in systnames:
+            if syst == 'Stat': continue
+            if not syst in eligible_s: continue
+            if test_m[syst] != orig_m[syst]:
+                print 'ERROR: correlations for systematic {} inconsistent'.format(syst)
+
+    return ready_s, uncert, matrix
 
 
 def isInvertible(m):
@@ -141,13 +183,13 @@ def checkFullMatrix(matrix,systnames,measurements,uncert):
         m_tot += m_syst
 
     if isInvertible(m_tot):
-        print 'good! full matrix is invertible'
+        print '\ngood! full matrix is invertible'
     else:
-        print 'ERROR! full matrix is not invertible'
+        print '\nERROR! full matrix is not invertible\n'
         return
     if isPositiveDefinite(m_tot):
-        print 'good! full matrix is positive definite'
+        print 'good! full matrix is positive definite\n'
     else:
-        print 'ERROR: full matrix is not positive definite'
+        print 'ERROR: full matrix is not positive definite\n'
 
-    return
+    return m_tot
