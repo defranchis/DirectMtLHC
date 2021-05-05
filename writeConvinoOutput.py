@@ -76,6 +76,8 @@ def propagateNegativeCorrelations(matrix,systnames,measurements,uncert):
             continue
         for meas1 in measurements:
             for meas2 in measurements:
+                if matrix[syst][meas1][meas2] == 0:
+                    continue
                 u1 = uncert[meas1][syst]
                 u2 = uncert[meas2][syst]
                 if u1 != 0 and u2 != 0:
@@ -122,10 +124,10 @@ def mergeCorrelations(systnames,measurements,uncert,matrix):
         for m1 in measurements:
             for m2 in measurements:
                 matrix[syst][m1][m2] = 1.0
-    
+
     ready_s.extend(eligible_s)
 
-    test_m, test_u = propagateNegativeCorrelations(matrix,systnames,measurements,uncert)
+    test_m, test_u = propagateNegativeCorrelations(copy.deepcopy(matrix),systnames,measurements,copy.deepcopy(uncert))
 
     if test_u != orig_u:
         print 'WARNING: something inconsistent in input uncertainties. Please check'
