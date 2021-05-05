@@ -1,3 +1,5 @@
+import numpy as np
+
 def writeConfig(outdir,systnames,measurements,merged=[]):
     f = open(outdir+'/mt_config.txt','w')
     f.write('[global]\n\n[end global]\n\n[inputs]\n\n')
@@ -94,3 +96,58 @@ def mergeCorrelations(systnames,measurements,uncert,matrix):
     ready_s.extend(eligible_s)
 
     return ready_s, uncert
+
+
+def isInvertible(m):
+    try:
+        i = np.linalg.inv(m)
+    except np.linalg.LinAlgError as err:
+        if not 'Singular matrix' in err:
+            print 'WARNING', err
+        return False
+    return True
+
+def isPositiveDefinite(m):
+    if not isInvertible(m):
+        return False
+    w,v = np.linalg.eig(m)
+    if (w > 0).all():
+      return True
+    return False
+
+
+def getSystMatrix(syst,matrix,measurements,uncert):
+    m = np.zeros((len(measurements),len(measurements)))
+    for i,meas1 in enumerate(measurements):
+        for j,meas2 in enumerate(measurements):
+            m[i,j] = matrix[meas1][meas2]*uncert[meas1][syst]*uncert[meas2][syst]
+    return m
+
+def getStatMatrix(matrix,measurements,uncert):
+    m =  np.zeros((len(measurements),len(measurements)))
+    for i,meas in enumerate(measurements):
+        m[i,i] = uncert[meas]['Stat']*uncert[meas]['Stat']
+    return m
+
+def checkFullMatrix(matrix,systnames,measurements,uncert):
+
+    m_stat = getStatMatrix(matrix,measurements,uncert)
+    m_tot = m_stat
+
+    for syst in systnames:
+        if syst == 'Stat':
+            continue
+        m_syst = getSystMatrix(syst,matrix[syst],measurements,uncert)
+        m_tot += m_syst
+
+    if isInvertible(m_tot):
+        print 'good! full matrix is invertible'
+    else:
+        print 'ERROR! full matrix is not invertible'
+        return
+    if isPositiveDefinite(m_tot):
+        print 'good! full matrix is positive definite'
+    else:
+        print 'ERROR: full matrix is not positive definite'
+
+    return
