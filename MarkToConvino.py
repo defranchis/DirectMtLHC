@@ -5,6 +5,7 @@ import copy
 
 simpleInput = True
 permutations = False
+merge_syst = True
 
 def removeUselessCharachters(name,useless):
     if useless in name:
@@ -101,14 +102,18 @@ if permutations:
 if not os.path.exists(outdir):
     os.makedirs(outdir)
 
-m_orig = checkFullMatrix(matrix,systnames,measurements,uncert)
+m_orig = checkFullMatrix(copy.deepcopy(matrix),systnames,measurements,copy.deepcopy(uncert))
 
 if not permutations:
-    merged, uncert, matrix = mergeCorrelations(systnames,measurements,uncert,matrix)
-    m_merge = checkFullMatrix(matrix,systnames,measurements,uncert)
-    if not (m_orig==m_merge).all():
-        print 'ERROR: something wrong in merging'
-        sys.exit()
+    
+    if merge_syst:
+        merged, uncert, matrix = mergeCorrelations(systnames,measurements,copy.deepcopy(uncert),copy.deepcopy(matrix))
+        m_merge = checkFullMatrix(copy.deepcopy(matrix),systnames,measurements,copy.deepcopy(uncert))
+        if not (m_orig==m_merge).all():
+            print 'ERROR: something wrong in merging'
+            sys.exit()
+    else:
+        merged = []
 
     writeConfig(outdir,systnames,measurements,merged)
     writeAllFiles(outdir,systnames,measurements,value,uncert,merged)
@@ -130,8 +135,17 @@ else:
                 od += '_{}'.format(c)
             if not os.path.exists(od):
                 os.makedirs(od)
-            merged, uncert, matrix =  mergeCorrelations(systnames,comb,uncert,matrix)
-            checkFullMatrix(matrix,systnames,comb,uncert)
+
+            m_orig = checkFullMatrix(copy.deepcopy(matrix),systnames,comb,copy.deepcopy(uncert))
+            if merge_syst:
+                merged, uncert, matrix =  mergeCorrelations(systnames,comb,copy.deepcopy(uncert),copy.deepcopy(matrix))
+                m_merge = checkFullMatrix(copy.deepcopy(matrix),systnames,comb,copy.deepcopy(uncert))
+                if not (m_orig==m_merge).all():
+                    print 'ERROR: something wrong in merging'
+                    sys.exit()
+            else:
+                merged = []
+                
             writeConfig(od,systnames,comb,merged)
             writeAllFiles(od,systnames,comb,value,uncert,merged)
             writeCorrelations(od,systnames,comb,matrix,merged)

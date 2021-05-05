@@ -4,6 +4,7 @@ import copy
 
 disable_Convino = False
 disable_BLUE = False
+merge_syst = True
 
 def getSystNames(lines):
     for line in lines:
@@ -178,26 +179,30 @@ measurements = getMeasurements(lines)
 value, uncert = getAllResults(lines,measurements,systnames)
 matrix = getFullCorrelationMatrix(lines,measurements,systnames)
 
-checkFullMatrix(matrix,systnames,measurements,uncert)
-
-#propagation of negative correlations
-matrix, uncert = propagateNegativeCorrelations(matrix,systnames,measurements,uncert)
 m_orig = checkFullMatrix(matrix,systnames,measurements,uncert)
 
-
 if not disable_BLUE:
-    writeOutputSteve(lines,systnames,measurements,matrix)
+    p_matrix, p_uncert = propagateNegativeCorrelations(copy.deepcopy(matrix),systnames,measurements,copy.deepcopy(uncert))
+    m_prop = checkFullMatrix(p_matrix,systnames,measurements,p_uncert)
+    if not (m_orig==m_prop).all():
+        print 'ERROR: something wrong in propagaiton of negative uncertainties'
+        sys.exit()
+    writeOutputSteve(lines,systnames,measurements,p_matrix)
 
 if not disable_Convino:
     outdir = 'inputsConvinoCMS/'
     if not os.path.exists(outdir):
         os.makedirs(outdir)
 
-    merged, uncert, matrix = mergeCorrelations(systnames,measurements,uncert,matrix)
-    m_merge = checkFullMatrix(matrix,systnames,measurements,uncert)
-    if not (m_orig==m_merge).all():
-        print 'ERROR: something wrong in merging'
-        sys.exit()
+    if merge_syst:
+        merged, uncert, matrix = mergeCorrelations(systnames,measurements,copy.deepcopy(uncert),copy.deepcopy(matrix))
+        m_merge = checkFullMatrix(copy.deepcopy(matrix),systnames,measurements,copy.deepcopy(uncert))
+        if not (m_orig==m_merge).all():
+            print 'ERROR: something wrong in merging'
+            sys.exit()
+
+    else:
+        merged = []
 
     writeConfig(outdir,systnames,measurements,merged)
     writeAllFiles(outdir,systnames,measurements,value,uncert,merged)
