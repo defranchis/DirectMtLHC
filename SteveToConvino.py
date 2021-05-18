@@ -2,9 +2,17 @@ import sys, os
 from writeConvinoOutput import *
 import copy
 
-disable_Convino = False
-disable_BLUE = False
-merge_syst = True
+import argparse
+
+parser = argparse.ArgumentParser(description='specify options')
+
+parser.add_argument('-f',action='store',type=str, required=True, help='<Required> input file')
+parser.add_argument('--noConvino',action='store_true', help='disable Convino output')
+parser.add_argument('--noBLUE',action='store_true', help='disable BLUE output')
+parser.add_argument('--noMergeSyst',action='store_true', help='do not merge fully correlated sources')
+parser.add_argument('--exclude',action='store', help='provide list of measurements to be excluded. Example: --exclude \'meas 1, meas 2\'')
+
+args = parser.parse_args()
 
 def getSystNames(lines):
     for line in lines:
@@ -16,9 +24,14 @@ def getSystNames(lines):
     return ['ERROR!']
 
 def removeUselessCharachters(name):
+    name = name.replace(' ','_')
     if name.endswith('_'):
         name = name[:-1]
     if name.endswith('_'):
+        name = removeUselessCharachters(name)
+    if name.startswith('_'):
+        name = name[1:]
+    if name.startswith('_'):
         name = removeUselessCharachters(name)
     return name
 
@@ -124,10 +137,12 @@ def getFullCorrelationMatrix(lines,measurements,systnames):
     return matrix_dict
 
 
-def writeOutputSteve(lines,systnames,measurements,matrix):
+def writeOutputSteve(lines,systnames,measurements,matrix,exclude,nMeas_orig):
 
     f = open('CMS_Steve_negCorr.txt','w')
     for i in range (0,len(lines)):
+        if '# of observables' in lines[i]:
+            lines[i] = lines[i].replace(' {} '.format(nMeas_orig),' {} '.format(len(measurements)))
         f.write('{}\n'.format(lines[i]))
         if 'Stat' in lines[i]: break
 
@@ -138,18 +153,27 @@ def writeOutputSteve(lines,systnames,measurements,matrix):
         if 'Stat' in lines[i]:
             start = True
         if start and 'Mtop' in lines[i]:
-            f.write('{}\n'.format(lines[i].replace('-','')))
-    
+            excluded = False
+            for e in exclude:
+                if e.replace('_',' ') in lines[i] or e in lines[i]:
+                    excluded = True
+                    break
+            if not excluded:
+                f.write('{}\n'.format(lines[i].replace('-','')))
+
+    f.write('\n\n')
+
+    for i,meas1 in enumerate(measurements):
+        for j,meas2 in enumerate(measurements):
+            corr = 0.0
+            if i==j:
+                corr = 1.0
+            f.write('{} '.format(corr))
+        if i == 0:
+            f.write('\'Stat\'')
+        f.write('\n')
     f.write('\n')
 
-    for i in range(0,len(lines)):
-        if 'Stat' in lines[i] and '1.0' in lines[i] and '0.0' in lines[i]:
-            istart = i
-            break
-    for i in range (istart,istart+len(measurements)):
-        f.write('{}\n'.format(lines[i]))
-
-    f.write('\n')
 
     for syst in systnames:
         if syst == 'Stat': 
@@ -164,37 +188,47 @@ def writeOutputSteve(lines,systnames,measurements,matrix):
     f.write('!\n')
     return
     
-# infilename = 'allCMS_legacy_result.txt'
-if len(sys.argv) < 2:
-    print '\nplease provide input file\n'
-    exit()
-elif len(sys.argv) > 2:
-    print '\nplease provide a single input\n'
-    exit()
+def excludeMeasurements(measurements, exclude):
+    exclude = [removeUselessCharachters(e) for e in exclude]
+    for e in exclude:
+        if not e in measurements:
+            print 'ERROR: measurement "{}" not found (to be excluded)\n'.format(e)
+            sys.exit()
+        measurements.remove(e)
 
-infilename = sys.argv[1]
+    return measurements
+
+
+infilename = args.f
 lines = open(infilename,'r').read().splitlines()
 systnames = getSystNames(lines)
 measurements = getMeasurements(lines) 
 value, uncert = getAllResults(lines,measurements,systnames)
 matrix = getFullCorrelationMatrix(lines,measurements,systnames)
 
+nMeas_orig = len(measurements)
+
+if not args.exclude is None:
+    exclude = args.exclude.split(',')
+    exclude = [removeUselessCharachters(e) for e in exclude]
+    measurements = excludeMeasurements(measurements,exclude)
+
 m_orig = checkFullMatrix(matrix,systnames,measurements,uncert)
 
-if not disable_BLUE:
+if not args.noBLUE:
     p_matrix, p_uncert = propagateNegativeCorrelations(copy.deepcopy(matrix),systnames,measurements,copy.deepcopy(uncert))
     m_prop = checkFullMatrix(p_matrix,systnames,measurements,p_uncert)
     if not (m_orig==m_prop).all():
         print 'ERROR: something wrong in propagaiton of negative uncertainties'
         sys.exit()
-    writeOutputSteve(lines,systnames,measurements,p_matrix)
+    writeOutputSteve(lines,systnames,measurements,p_matrix,exclude,nMeas_orig)
 
-if not disable_Convino:
+if not args.noConvino:
     outdir = 'inputsConvinoCMS/'
     if not os.path.exists(outdir):
         os.makedirs(outdir)
 
-    if merge_syst:
+    if not args.noMergeSyst:
         merged, uncert, matrix = mergeCorrelations(systnames,measurements,copy.deepcopy(uncert),copy.deepcopy(matrix))
         m_merge = checkFullMatrix(copy.deepcopy(matrix),systnames,measurements,copy.deepcopy(uncert))
         if not (m_orig==m_merge).all():
