@@ -212,6 +212,8 @@ if not args.exclude is None:
     exclude = args.exclude.split(',')
     exclude = [removeUselessCharachters(e) for e in exclude]
     measurements = excludeMeasurements(measurements,exclude)
+else:
+    exclude = []
 
 m_orig = checkFullMatrix(matrix,systnames,measurements,uncert)
 
