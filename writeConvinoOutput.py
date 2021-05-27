@@ -198,3 +198,27 @@ def checkFullMatrix(matrix,systnames,measurements,uncert):
         print 'ERROR: full matrix is not positive definite\n'
 
     return m_tot
+
+
+def facilitateMerge(matrix,measurements,systnames,uncert):
+    orig = copy.deepcopy(matrix)
+    ref = measurements[0]
+    for syst in systnames:
+        for meas1 in measurements:
+            if uncert[meas1][syst] == 0:
+                for meas2 in measurements:
+                    sign = 1
+                    if matrix[syst][ref][meas2] == -1:
+                        sign = -1
+                    matrix[syst][meas1][meas2] = round(sign,1)
+                    matrix[syst][meas2][meas1] = round(sign,1)
+
+    for syst in systnames:
+        if 'Stat' in syst:
+            continue
+        for meas1 in measurements:
+            for meas2 in measurements:
+                if abs(matrix[syst][meas1][meas2]) != 1:
+                    matrix[syst] = orig[syst]
+
+    return matrix
