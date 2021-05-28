@@ -5,7 +5,7 @@ import copy
 
 simpleInput = True
 permutations = False
-merge_syst = True
+merge_syst = False
 
 def removeUselessCharachters(name,useless):
     if useless in name:
@@ -138,7 +138,6 @@ else:
 
             m_orig = checkFullMatrix(copy.deepcopy(matrix),systnames,comb,copy.deepcopy(uncert))
             if merge_syst:
-                # matrix = facilitateMerge(copy.deepcopy(matrix),comb,systnames,uncert)
                 merged, uncert, matrix =  mergeCorrelations(systnames,comb,copy.deepcopy(uncert),copy.deepcopy(matrix))
                 m_merge = checkFullMatrix(copy.deepcopy(matrix),systnames,comb,copy.deepcopy(uncert))
                 if not (m_orig==m_merge).all():
