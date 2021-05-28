@@ -231,8 +231,6 @@ if not args.noConvino:
         os.makedirs(outdir)
 
     if not args.noMergeSyst:
-        # debugging
-        # matrix = facilitateMerge(copy.deepcopy(matrix),measurements,systnames,uncert)
         merged, uncert, matrix = mergeCorrelations(systnames,measurements,copy.deepcopy(uncert),copy.deepcopy(matrix))
         m_merge = checkFullMatrix(copy.deepcopy(matrix),systnames,measurements,copy.deepcopy(uncert))
         if not (m_orig==m_merge).all():
@@ -242,8 +240,8 @@ if not args.noConvino:
     else:
         merged = []
 
-    writeConfig(outdir,systnames,measurements,merged)
+    writeConfig(outdir,systnames,measurements,uncert,merged)
     writeAllFiles(outdir,systnames,measurements,value,uncert,merged)
-    writeCorrelations(outdir,systnames,measurements,matrix,merged)
+    writeCorrelations(outdir,systnames,measurements,matrix,uncert,merged)
 
 

@@ -1,7 +1,7 @@
 import numpy as np
 import copy
 
-def writeConfig(outdir,systnames,measurements,merged=[]):
+def writeConfig(outdir,systnames,measurements,uncert,merged=[]):
     f = open(outdir+'/mt_config.txt','w')
     f.write('[global]\n\n[end global]\n\n[inputs]\n\n')
     f.write('\tnFiles = {} \n\n'.format(len(measurements)))
@@ -18,12 +18,16 @@ def writeConfig(outdir,systnames,measurements,merged=[]):
         if syst == 'Stat': continue
         if syst in merged: continue
         f.write('\t{} = '.format(syst))
+        first = False
         for meas in measurements:
-            f.write('{}_{} '.format(syst,meas))
-            if meas != measurements[-1]:
-                f.write('+ ')
+            if uncert[meas][syst] == 0:
+                continue
+            if first:
+                f.write('{}_{} '.format(syst,meas))
             else:
-                f.write('\n')
+                f.write('+ {}_{} '.format(syst,meas))
+
+        f.write('\n')
     f.write('\n\n[end uncertainty impacts]\n')
     f.close()
     return
@@ -34,6 +38,8 @@ def writeMeasurementFile(outdir,systnames,measurement,value,uncert,merged=[]):
     systnames.remove('Stat')
     systnames.append('Stat')
     for syst in systnames:
+        if uncert[measurement][syst] == 0:
+            continue
         if syst == 'Stat':
             f.write('stat ')
         else:
@@ -43,6 +49,8 @@ def writeMeasurementFile(outdir,systnames,measurement,value,uncert,merged=[]):
                 f.write('{}_{} '.format(syst,measurement))
     f.write('\n\tmt_{} '.format(measurement))
     for syst in systnames:
+        if uncert[measurement][syst] == 0:
+            continue
         f.write('{} '.format(uncert[measurement][syst]))
     f.write('\n\n[end not fitted]\n\n[systematics]\n\n[end systematics]\n\n[estimates]\n\n')
     f.write('\tn_estimates = 1\n\n')
@@ -57,14 +65,18 @@ def writeAllFiles(outdir,systnames,measurements,value,uncert,merged=[]):
         writeMeasurementFile(outdir,systnames,measurement,value,uncert,merged)
     return
 
-def writeCorrelations(outdir,systnames,measurements,matrix,merged=[]):
+def writeCorrelations(outdir,systnames,measurements,matrix,uncert,merged=[]):
     f = open(outdir+'/extra_correlations.txt','w')
     for syst in systnames:
         if syst == 'Stat': continue
         if syst in merged: continue
         for i, meas_i in enumerate(measurements):
+            if uncert[meas_i][syst] == 0:
+                continue
             for j, meas_j in enumerate(measurements):
                 if not j>i: continue
+                if uncert[meas_j][syst] == 0:
+                    continue
                 f.write('{}_{} = ({}) {}_{}\n'.format(syst,meas_i,matrix[syst][meas_i][meas_j],syst,meas_j))
         f.write('\n')
     f.close()
@@ -105,11 +117,15 @@ def mergeCorrelations(systnames,measurements,uncert,matrix):
         ready = True
         eligible = True
         for meas1 in measurements:
+            if uncert[meas1][syst] == 0:
+                continue
             for meas2 in measurements:
                 if matrix[syst][meas1][meas2] != 1:
-                    ready = False
+                    if uncert[meas1][syst] != 0 and uncert[meas2][syst] != 0:
+                        ready = False
                 if abs(matrix[syst][meas1][meas2]) != 1:
-                    eligible = False
+                    if uncert[meas1][syst] != 0 and uncert[meas2][syst] != 0:
+                        eligible = False
         if ready:
             ready_s.append(syst)
         elif eligible:
@@ -119,8 +135,12 @@ def mergeCorrelations(systnames,measurements,uncert,matrix):
     for syst in eligible_s:
         signs = matrix[syst][ref]
         for meas in measurements:
+            if uncert[meas][syst] == 0:
+                continue            
             uncert[meas][syst] *= signs[meas]
         for m1 in measurements:
+            if uncert[m1][syst] == 0:
+                continue        
             for m2 in measurements:
                 matrix[syst][m1][m2] = 1.0
 
@@ -200,25 +220,3 @@ def checkFullMatrix(matrix,systnames,measurements,uncert):
     return m_tot
 
 
-def facilitateMerge(matrix,measurements,systnames,uncert):
-    orig = copy.deepcopy(matrix)
-    ref = measurements[0]
-    for syst in systnames:
-        for meas1 in measurements:
-            if uncert[meas1][syst] == 0:
-                for meas2 in measurements:
-                    sign = 1
-                    if matrix[syst][ref][meas2] == -1:
-                        sign = -1
-                    matrix[syst][meas1][meas2] = round(sign,1)
-                    matrix[syst][meas2][meas1] = round(sign,1)
-
-    for syst in systnames:
-        if 'Stat' in syst:
-            continue
-        for meas1 in measurements:
-            for meas2 in measurements:
-                if abs(matrix[syst][meas1][meas2]) != 1:
-                    matrix[syst] = orig[syst]
-
-    return matrix

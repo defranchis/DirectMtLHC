@@ -115,9 +115,9 @@ if not permutations:
     else:
         merged = []
 
-    writeConfig(outdir,systnames,measurements,merged)
+    writeConfig(outdir,systnames,measurements,uncert,merged)
     writeAllFiles(outdir,systnames,measurements,value,uncert,merged)
-    writeCorrelations(outdir,systnames,measurements,matrix,merged)
+    writeCorrelations(outdir,systnames,measurements,matrix,uncert,merged)
 
 else:
     of = open('run_all_debug.sh','w')
@@ -138,6 +138,7 @@ else:
 
             m_orig = checkFullMatrix(copy.deepcopy(matrix),systnames,comb,copy.deepcopy(uncert))
             if merge_syst:
+                # matrix = facilitateMerge(copy.deepcopy(matrix),comb,systnames,uncert)
                 merged, uncert, matrix =  mergeCorrelations(systnames,comb,copy.deepcopy(uncert),copy.deepcopy(matrix))
                 m_merge = checkFullMatrix(copy.deepcopy(matrix),systnames,comb,copy.deepcopy(uncert))
                 if not (m_orig==m_merge).all():
@@ -146,9 +147,9 @@ else:
             else:
                 merged = []
                 
-            writeConfig(od,systnames,comb,merged)
+            writeConfig(od,systnames,comb,uncert,merged)
             writeAllFiles(od,systnames,comb,value,uncert,merged)
-            writeCorrelations(od,systnames,comb,matrix,merged)
+            writeCorrelations(od,systnames,comb,matrix,uncert,merged)
             of.write('nohup convino --prefix ATLAS_{0} {1}/mt_config.txt --neyman &> logs_debug/log_{0}.log & \n'.format(od.replace('{}/input_'.format(outdir.replace('/','')),''),od))
             ol.write('log_{}.log\n'.format(od.replace('{}/input_'.format(outdir.replace('/','')),'')))
 
