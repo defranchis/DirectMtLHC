@@ -243,5 +243,9 @@ if not args.noConvino:
     writeConfig(outdir,systnames,measurements,uncert,merged)
     writeAllFiles(outdir,systnames,measurements,value,uncert,merged)
     writeCorrelations(outdir,systnames,measurements,matrix,uncert,merged)
-    checkExternalCorrelations(outdir)
+    failed = checkExternalCorrelations(outdir)
+    if failed is not None:
+        for syst in failed:
+            printSingleCovariance(matrix,syst,measurements)
+
 

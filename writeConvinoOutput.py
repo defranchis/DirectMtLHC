@@ -262,7 +262,7 @@ def checkExternalCorrelations(outdir):
 
     if not isInvertible(m) or not isPositiveDefinite(m):
         print 'matrix is not healthy, performing further checks...\n'
-        detailedMatrixCheck(m,paras)
+        return detailedMatrixCheck(m,paras)
 
     return
 
@@ -278,19 +278,70 @@ def checkMatrixSingleSource(m,source,paras):
     if det <= 0:
         print '{}\t{}\t{}\t{}'.format(source, isInvertible(m), isPositiveDefinite(m), det)
 
+    return isPositiveDefinite(m)
+
+
+def checkSourceWithoutMeasurement(m,source,meas,paras):
+    for i,par in enumerate(paras):
+        if not source in par:
+            for j, dummy in enumerate(paras):
+                if j!=i:
+                    m[i,j] = 0
+                    m[j,i] = 0
+        else:
+            if meas in par:
+                for j, dummy in enumerate(paras):
+                    if j!=i:
+                        m[i,j] = 0
+                        m[j,i] = 0
+
+    det = np.linalg.det(m)
+    if det > 0:
+        print '{}\t{}\t{}\t{}\t{}'.format(source, meas, isInvertible(m), isPositiveDefinite(m), det)
+
+    return isPositiveDefinite(m)
+
     return
 
 def detailedMatrixCheck(m,paras):
     sources = []
+    measurements = []
     for par in paras:
         source = par.split('_')[0]
+        meas = par.replace(source+'_','')
         if not source in sources:
             sources.append(source)
+        if not meas in measurements:
+            measurements.append(meas)
 
     print '\nsource\tinvertible\tpos. def\tdet\n'
+    
+    failed = []
     for source in sources:
-        checkMatrixSingleSource(copy.deepcopy(m),source,paras)
+        success = checkMatrixSingleSource(copy.deepcopy(m),source,paras)
+        if not success:
+            failed.append(source)
     print
-    return
 
+    print '\nsource\texcluded\tinvertible\tpos. def\tdet\n'
+    
+    for source in failed:
+        for meas in measurements:
+            checkSourceWithoutMeasurement(copy.deepcopy(m),source,meas,paras)
+    print
+    return failed
 
+def getSingleCovariance(matrix,syst,measurements):
+    systmatrix = matrix[syst]
+    m = np.zeros((len(measurements),len(measurements)))
+    for i, m1 in enumerate(measurements):
+        for j,m2 in enumerate(measurements):
+            m[i,j] = systmatrix[m1][m2]
+    return m
+
+def printSingleCovariance(matrix,syst,measurements):
+    print '->',syst
+    print measurements
+    print
+    print getSingleCovariance(matrix,syst,measurements)
+    print
