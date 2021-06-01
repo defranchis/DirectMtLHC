@@ -1,5 +1,6 @@
 import numpy as np
 import copy
+        
 
 def writeConfig(outdir,systnames,measurements,uncert,merged=[]):
     f = open(outdir+'/mt_config.txt','w')
@@ -76,6 +77,8 @@ def writeCorrelations(outdir,systnames,measurements,matrix,uncert,merged=[]):
             for j, meas_j in enumerate(measurements):
                 if not j>i: continue
                 if uncert[meas_j][syst] == 0:
+                    continue
+                if matrix[syst][meas_i][meas_j] == 0:
                     continue
                 f.write('{}_{} = ({}) {}_{}\n'.format(syst,meas_i,matrix[syst][meas_i][meas_j],syst,meas_j))
         f.write('\n')
@@ -166,13 +169,9 @@ def mergeCorrelations(systnames,measurements,uncert,matrix):
 
 
 def isInvertible(m):
-    try:
-        i = np.linalg.inv(m)
-    except np.linalg.LinAlgError as err:
-        if not 'Singular matrix' in err:
-            print 'WARNING', err
-        return False
-    return True
+    det = np.linalg.det(m)
+    return det > 0
+
 
 def isPositiveDefinite(m):
     if not isInvertible(m):
@@ -218,5 +217,80 @@ def checkFullMatrix(matrix,systnames,measurements,uncert):
         print 'ERROR: full matrix is not positive definite\n'
 
     return m_tot
+
+
+def checkExternalCorrelations(outdir):
+    f = open(outdir+'/extra_correlations.txt','r')
+    lines = f.read().splitlines()
+
+    paras = []
+    
+    for l in lines:
+        if not '(' in l: continue
+        corr = float(l.split('(')[-1].split(')')[0])
+        if corr == 0: continue
+        s1 = l.split(' ')[0]
+        s2 = l.split(' ')[-1]
+        if not s1 in paras:
+            paras.append(s1)
+        if not s2 in paras:
+            paras.append(s2)
+            
+    m = np.zeros((len(paras),len(paras)))    
+
+    for i, p in enumerate(paras):
+        m[i,i] = 1
+
+    for l in lines:
+        if not '(' in l: continue
+        corr = float(l.split('(')[-1].split(')')[0])
+        if corr == 0: continue
+        i = paras.index(l.split(' ')[0])
+        j = paras.index(l.split(' ')[-1])
+        if abs(corr) == 1:
+            corr *= .999
+        m[i,j] = corr
+        m[j,i] = corr
+        
+
+    
+    print '\n-> final checks on parameter correlation matrix\n'
+    print 'determinant =', np.linalg.det(m)
+    print 'is matrix invertible:', isInvertible(m)
+    print 'is matrix positive definite:', isPositiveDefinite(m)
+    print 
+
+    if not isInvertible(m) or not isPositiveDefinite(m):
+        print 'matrix is not healthy, performing further checks...\n'
+        detailedMatrixCheck(m,paras)
+
+    return
+
+
+def checkMatrixSingleSource(m,source,paras):
+    for i,par in enumerate(paras):
+        if not source in par:
+            for j, dummy in enumerate(paras):
+                if j!=i:
+                    m[i,j] = 0
+                    m[j,i] = 0
+    det = np.linalg.det(m)
+    if det <= 0:
+        print '{}\t{}\t{}\t{}'.format(source, isInvertible(m), isPositiveDefinite(m), det)
+
+    return
+
+def detailedMatrixCheck(m,paras):
+    sources = []
+    for par in paras:
+        source = par.split('_')[0]
+        if not source in sources:
+            sources.append(source)
+
+    print '\nsource\tinvertible\tpos. def\tdet\n'
+    for source in sources:
+        checkMatrixSingleSource(copy.deepcopy(m),source,paras)
+    print
+    return
 
 

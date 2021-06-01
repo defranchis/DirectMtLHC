@@ -118,6 +118,7 @@ if not permutations:
     writeConfig(outdir,systnames,measurements,uncert,merged)
     writeAllFiles(outdir,systnames,measurements,value,uncert,merged)
     writeCorrelations(outdir,systnames,measurements,matrix,uncert,merged)
+    checkExternalCorrelations(outdir)
 
 else:
     of = open('run_all_debug.sh','w')

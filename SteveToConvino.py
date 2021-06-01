@@ -243,5 +243,5 @@ if not args.noConvino:
     writeConfig(outdir,systnames,measurements,uncert,merged)
     writeAllFiles(outdir,systnames,measurements,value,uncert,merged)
     writeCorrelations(outdir,systnames,measurements,matrix,uncert,merged)
-
+    checkExternalCorrelations(outdir)
 
