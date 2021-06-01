@@ -245,6 +245,7 @@ if not args.noConvino:
     writeCorrelations(outdir,systnames,measurements,matrix,uncert,merged)
     failed = checkExternalCorrelations(outdir)
     if failed is not None:
+        print '\nprinting problematic matrices...\n'
         for syst in failed:
             printSingleCovariance(matrix,syst,measurements)
 

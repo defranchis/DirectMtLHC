@@ -313,7 +313,8 @@ def detailedMatrixCheck(m,paras):
             sources.append(source)
         if not meas in measurements:
             measurements.append(meas)
-
+        
+    print '\n-> problematic sources:'
     print '\nsource\tinvertible\tpos. def\tdet\n'
     
     failed = []
@@ -323,6 +324,7 @@ def detailedMatrixCheck(m,paras):
             failed.append(source)
     print
 
+    print '\n-> trying excluding some inputs:'
     print '\nsource\texcluded\tinvertible\tpos. def\tdet\n'
     
     for source in failed:
