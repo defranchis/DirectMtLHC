@@ -170,7 +170,7 @@ def mergeCorrelations(systnames,measurements,uncert,matrix):
 
 def isInvertible(m):
     det = np.linalg.det(m)
-    return det > 0
+    return det != 0
 
 
 def isPositiveDefinite(m):

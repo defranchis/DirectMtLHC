@@ -111,6 +111,8 @@ if not permutations:
         m_merge = checkFullMatrix(copy.deepcopy(matrix),systnames,measurements,copy.deepcopy(uncert))
         if not (m_orig==m_merge).all():
             print 'ERROR: something wrong in merging'
+            print 'please disable merging and check consistency of input correlations'
+            print
             sys.exit()
     else:
         merged = []
@@ -122,7 +124,7 @@ if not permutations:
     if failed is not None:
         print '\nprinting problematic matrices...\n'
         for syst in failed:
-            printSingleCovariance(matrix,syst,measurements)
+            printSingleCorrelation(matrix,syst,measurements)
     
     # tomerge = {
     #     'JES7':['JES8pilepT','JES8pilerho','JESpilemu','JESpilenvtx'],
