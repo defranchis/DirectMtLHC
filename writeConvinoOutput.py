@@ -333,17 +333,54 @@ def detailedMatrixCheck(m,paras):
     print
     return failed
 
-def getSingleCovariance(matrix,syst,measurements):
+def getSingleCorrelation(matrix,syst,measurements):
     systmatrix = matrix[syst]
     m = np.zeros((len(measurements),len(measurements)))
     for i, m1 in enumerate(measurements):
         for j,m2 in enumerate(measurements):
             m[i,j] = systmatrix[m1][m2]
+            if i!=j and abs(m[i,j]) == 1:
+                m[i,j] *= .999
     return m
 
-def printSingleCovariance(matrix,syst,measurements):
+def getSingleCovariance(matrix,syst,measurements,uncert):
+    systmatrix = matrix[syst]
+    m = np.zeros((len(measurements),len(measurements)))
+    for i, m1 in enumerate(measurements):
+        for j,m2 in enumerate(measurements):
+            m[i,j] = systmatrix[m1][m2]*uncert[m1][syst]*uncert[m2][syst]
+            if i!=j and abs(systmatrix[m1][m2]) == 1:
+                m[i,j] *= .999
+    return m
+
+def printSingleCorrelation(matrix,syst,measurements):
     print '->',syst
     print measurements
     print
-    print getSingleCovariance(matrix,syst,measurements)
+    m = getSingleCorrelation(matrix,syst,measurements)
+    print 'det = ',np.linalg.det(m)
+    print m
     print
+
+
+def printCombinedCorrelation(matrix,sources,measurements,uncert):
+    m = np.zeros((len(measurements),len(measurements)))
+    for source in sources:
+        m += getSingleCovariance(matrix,source,measurements,uncert)
+    for i in range(0,len(measurements)):
+        for j in range(0,len(measurements)):
+            if i==j: continue
+            m[i,j] = m[i,j]/((m[i,i]*m[j,j])**.5)
+    for i in range(0,len(measurements)):
+        m[i,i] = 1
+    print 'det = ', np.linalg.det(m)
+    print isPositiveDefinite(m)
+    print m
+    return
+
+def printCombinedCorrelations(matrix,tomerge,measurements,uncert):
+    for key in tomerge.keys():
+        print key
+        printCombinedCorrelation(matrix,tomerge[key],measurements,uncert)
+        print
+    return

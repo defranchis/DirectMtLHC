@@ -123,6 +123,14 @@ if not permutations:
         print '\nprinting problematic matrices...\n'
         for syst in failed:
             printSingleCovariance(matrix,syst,measurements)
+    
+    # tomerge = {
+    #     'JES7':['JES8pilepT','JES8pilerho','JESpilemu','JESpilenvtx'],
+    #     'AtlJetUnc':['JEff','JVF'],
+    #     'MET':['METRes','METScale','METCellOut','METPile'],
+    # }
+    # printCombinedCorrelations(matrix,tomerge,measurements,uncert)        
+
 
 else:
     of = open('run_all_debug.sh','w')

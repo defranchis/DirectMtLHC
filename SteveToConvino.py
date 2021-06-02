@@ -247,6 +247,6 @@ if not args.noConvino:
     if failed is not None:
         print '\nprinting problematic matrices...\n'
         for syst in failed:
-            printSingleCovariance(matrix,syst,measurements)
+            printSingleCorrelation(matrix,syst,measurements)
 
 
