@@ -174,7 +174,7 @@ def isInvertible(m):
 
 
 def isPositiveDefinite(m):
-    if not isInvertible(m):
+    if not np.linalg.det(m) > 0:
         return False
     w,v = np.linalg.eig(m)
     if (w > 0).all():
