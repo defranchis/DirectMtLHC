@@ -177,9 +177,7 @@ def isPositiveDefinite(m):
     if not np.linalg.det(m) > 0:
         return False
     w,v = np.linalg.eig(m)
-    if (w > 0).all():
-      return True
-    return False
+    return (w > 0).all()
 
 
 def getSystMatrix(syst,matrix,measurements,uncert):
