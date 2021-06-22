@@ -331,13 +331,13 @@ def detailedMatrixCheck(m,paras):
     print
     return failed
 
-def getSingleCorrelation(matrix,syst,measurements):
+def getSingleCorrelation(matrix,syst,measurements,trick=True):
     systmatrix = matrix[syst]
     m = np.zeros((len(measurements),len(measurements)))
     for i, m1 in enumerate(measurements):
         for j,m2 in enumerate(measurements):
             m[i,j] = systmatrix[m1][m2]
-            if i!=j and abs(m[i,j]) == 1:
+            if i!=j and abs(m[i,j]) == 1 and trick:
                 m[i,j] *= .999
     return m
 
@@ -351,11 +351,11 @@ def getSingleCovariance(matrix,syst,measurements,uncert):
                 m[i,j] *= .999
     return m
 
-def printSingleCorrelation(matrix,syst,measurements):
+def printSingleCorrelation(matrix,syst,measurements,trick=True):
     print '->',syst
     print measurements
     print
-    m = getSingleCorrelation(matrix,syst,measurements)
+    m = getSingleCorrelation(matrix,syst,measurements,trick)
     print 'det = ',np.linalg.det(m)
     print m
     print

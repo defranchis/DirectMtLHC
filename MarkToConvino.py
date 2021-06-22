@@ -5,7 +5,7 @@ import copy
 
 simpleInput = True
 permutations = False
-merge_syst = True
+merge_syst  = True
 
 def removeUselessCharachters(name,useless):
     if useless in name:
@@ -133,6 +133,9 @@ if not permutations:
     # }
     # printCombinedCorrelations(matrix,tomerge,measurements,uncert)        
 
+    # for syst in systnames:
+    #     if syst.lower() == 'stat': continue
+    #     printSingleCorrelation(matrix,syst,measurements,trick=False)
 
 else:
     of = open('run_all_debug.sh','w')
