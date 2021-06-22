@@ -9,8 +9,10 @@ parser = argparse.ArgumentParser(description='specify options')
 parser.add_argument('-f',action='store',type=str, required=True, help='<Required> input file')
 parser.add_argument('--noConvino',action='store_true', help='disable Convino output')
 parser.add_argument('--noBLUE',action='store_true', help='disable BLUE output')
-parser.add_argument('--noMergeSyst',action='store_true', help='do not merge fully correlated sources')
+# parser.add_argument('--noMergeSyst',action='store_true', help='do not merge fully correlated sources')
 parser.add_argument('--exclude',action='store', help='provide list of measurements to be excluded. Example: --exclude \'meas 1, meas 2\'')
+
+noMergeSyst = True # please do not set to False for now
 
 args = parser.parse_args()
 
@@ -230,7 +232,8 @@ if not args.noConvino:
     if not os.path.exists(outdir):
         os.makedirs(outdir)
 
-    if not args.noMergeSyst:
+    # if not args.noMergeSyst:
+    if not noMergeSyst:
         merged, uncert, matrix = mergeCorrelations(systnames,measurements,copy.deepcopy(uncert),copy.deepcopy(matrix))
         m_merge = checkFullMatrix(copy.deepcopy(matrix),systnames,measurements,copy.deepcopy(uncert))
         if not (m_orig==m_merge).all():

@@ -5,7 +5,7 @@ import copy
 
 simpleInput = True
 permutations = False
-merge_syst  = True
+merge_syst = False # please do not use True for now
 
 def removeUselessCharachters(name,useless):
     if useless in name:
