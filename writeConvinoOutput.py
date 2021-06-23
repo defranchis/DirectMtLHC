@@ -169,12 +169,13 @@ def mergeCorrelations(systnames,measurements,uncert,matrix):
 
 
 def isInvertible(m):
-    det = np.linalg.det(m)
-    return det != 0
-
+    if np.isfinite(np.linalg.cond(m)):
+        return True
+    else:
+        return False
 
 def isPositiveDefinite(m):
-    if not np.linalg.det(m) > 0:
+    if not isInvertible(m):
         return False
     w,v = np.linalg.eig(m)
     return (w > 0).all()
@@ -250,7 +251,6 @@ def checkExternalCorrelations(outdir):
         m[i,j] = corr
         m[j,i] = corr
         
-
     
     print '\n-> final checks on parameter correlation matrix\n'
     print 'determinant =', np.linalg.det(m)
