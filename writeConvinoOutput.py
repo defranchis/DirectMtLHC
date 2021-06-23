@@ -19,18 +19,99 @@ def writeConfig(outdir,systnames,measurements,uncert,merged=[]):
         if syst == 'Stat': continue
         if syst in merged: continue
         f.write('\t{} = '.format(syst))
-        first = False
+        first = True
         for meas in measurements:
             if uncert[meas][syst] == 0:
                 continue
             if first:
                 f.write('{}_{} '.format(syst,meas))
+                first = False
             else:
                 f.write('+ {}_{} '.format(syst,meas))
 
         f.write('\n')
     f.write('\n\n[end uncertainty impacts]\n')
     f.close()
+    return
+
+def writeConfigMerged(outdir,systnames,measurements,uncert,merged=[]):
+    f = open(outdir+'/mt_config.txt','w')
+    f.write('[global]\n\n[end global]\n\n[inputs]\n\n')
+    f.write('\tnFiles = 1 \n')
+    f.write('\tfile0 = all_inputs.txt\n')
+    f.write('\n[end inputs]\n\n[observables]\n\n\tmt_comb = ')
+    for meas in measurements:
+        f.write('mt_{} '.format(meas))
+        if meas!= measurements[-1]: 
+            f.write('+ ')
+        else: f.write('\n\n[end observables]\n\n')
+    f.write('[correlations]\n\n\t#!FILE  =  extra_correlations.txt\n\n[end correlations]\n\n[uncertainty impacts]\n\n')
+    for syst in systnames:
+        if syst == 'Stat': continue
+        if syst in merged: continue
+        f.write('\t{} = '.format(syst))
+        first = True
+        for meas in measurements:
+            if uncert[meas][syst] == 0:
+                continue
+            if first:
+                f.write('{}_{} '.format(syst,meas))
+                first = False
+            else:
+                f.write('+ {}_{} '.format(syst,meas))
+        f.write('\n')
+    f.write('\n')
+    for syst in merged:
+        nonzero = False
+        for meas in measurements:
+            if uncert[meas][syst] != 0:
+                nonzero = True
+                break
+        if nonzero:
+            f.write('\t{} = {}\n'.format(syst,syst))
+    f.write('\n')
+    f.write('\n\n[end uncertainty impacts]\n')
+    f.close()
+    return
+
+def writeFileMerged(outdir,systnames,measurements,value,uncert,merged):
+    f = open('{}/all_inputs.txt'.format(outdir),'w')
+    f.write('\n\n[hessian]\n\n[end hessian]\n\n[correlation matrix]\n\n[end correlation matrix]\n\n[not fitted]\n\n\t')
+    all_syst = []
+    for syst in systnames:
+        if 'stat' in syst.lower():
+            continue
+        for meas in measurements:
+            if uncert[meas][syst] == 0:
+                continue
+            syststr = syst
+            if not syst in merged:
+                syststr += '_{}'.format(meas)
+            if not syststr in all_syst:
+                all_syst.append(syststr)
+                f.write('{} '.format(syststr))
+    f.write('stat ')
+    for meas in measurements:
+        f.write('\n\tmt_{} '.format(meas))
+        for s in all_syst:
+            if s in merged:
+                f.write('{} '.format(uncert[meas][s]))
+            else:
+                this_syst = s.split('_')[0]
+                this_meas = s.replace(this_syst+'_','')
+                if this_meas == meas:
+                    f.write('{} '.format(uncert[meas][this_syst]))
+                else:
+                    f.write('0 ')
+        f.write('{}'.format(uncert[meas]['Stat']))
+    f.write('\n\n[end not fitted]\n\n[systematics]\n\n[end systematics]\n\n[estimates]\n\n')
+    f.write('\tn_estimates = {}\n\n'.format(len(measurements)))
+    for i, meas in enumerate(measurements):
+        f.write('\tname_{} = mt_{}\n'.format(i,meas))
+        f.write('\tvalue_{} = {}\n\n'.format(i,value[meas]))
+    f.write('[end estimates]\n')
+    f.close()
+
     return
 
 def writeMeasurementFile(outdir,systnames,measurement,value,uncert,merged=[]):

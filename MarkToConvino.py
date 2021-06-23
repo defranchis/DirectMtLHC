@@ -5,7 +5,7 @@ import copy
 
 simpleInput = True
 permutations = False
-merge_syst = False # please do not use True for now
+merge_syst = True
 
 def removeUselessCharachters(name,useless):
     if useless in name:
@@ -117,8 +117,8 @@ if not permutations:
     else:
         merged = []
 
-    writeConfig(outdir,systnames,measurements,uncert,merged)
-    writeAllFiles(outdir,systnames,measurements,value,uncert,merged)
+    writeConfigMerged(outdir,systnames,measurements,uncert,merged)
+    writeFileMerged(outdir,systnames,measurements,value,uncert,merged)
     writeCorrelations(outdir,systnames,measurements,matrix,uncert,merged)
     failed = checkExternalCorrelations(outdir)
     if failed is not None:
