@@ -1,5 +1,6 @@
 import sys, os
 import numpy as np
+import copy
 
 from writeConvinoOutput import isInvertible, isPositiveDefinite
 
@@ -67,13 +68,16 @@ def getMergedSystList(systlist):
 
 def makeMergedMap(mergedlist,systlist):
     merge = {}
+    actually_merged = []
     for m in mergedlist:
         l = []
         for s in systlist:
             if s.split('_')[0] == m:
                 l.append(s)
         merge[m] = l
-    return merge        
+        if len(l)>1:
+            actually_merged.append(m)
+    return merge, actually_merged
 
 def getMergedCovariance(cov_m,mergemap,systlist,mergedlist):
     merged_m = np.zeros((len(mergedlist),len(mergedlist)))
@@ -90,23 +94,68 @@ def getMergedCovariance(cov_m,mergemap,systlist,mergedlist):
             merged_m[i,j] = entry
     return merged_m
 
+def getCorrelationFromCovariance(cov):
+    corr = np.zeros((cov.shape[0],cov.shape[0]))
+    for i in range(0,cov.shape[0]):
+        for j in range(0,cov.shape[0]):
+            if i==j:
+                corr[i,j] = 1
+            else:
+                corr[i,j]=cov[i,j]/((cov[i,i]*cov[j,j])**.5)
+    return corr
+
+def printLargeMergedCorrelations(corr,syst,actual):
+    th = 0.1
+    l_large = []
+    print '\nnon-negligible correlations after merging (> {}) \n'.format(th)
+    for i in range(0,corr.shape[0]-1):
+        for j in range(i+1,corr.shape[0]-1):
+            if corr[i,j] > th:
+                if syst[i] in actual or syst[j] in actual:
+                    print syst[i],syst[j],round(corr[i,j],2)
+                    l_large.append([syst[i],syst[j]])
+    if len(l_large) == 0:
+        print 'None'
+    return l_large
+
+def printOriginalCorrelations(large_corr,corr_m,mergemap,systlist):
+    print '\nprinting original correlations\n'
+    for s1,s2 in large_corr:
+        l1 = mergemap[s1]
+        l2 = mergemap[s2]
+        for ll1 in l1:
+            for ll2 in l2:
+                print ll1, ll2, corr_m[systlist.index(ll1),systlist.index(ll2)]
+        print '\n'
+
+    return
+
 def mergeInputsForLHC(experiment):
+
     systlist, cov_m, mt_comb  = readPostFitInfo(experiment)
+    corr_m = getCorrelationFromCovariance(cov_m)
     mergedlist = getMergedSystList(systlist)
-    mergemap = makeMergedMap(mergedlist,systlist)
+    mergemap, actually_merged = makeMergedMap(mergedlist,systlist)
     cov_merged = getMergedCovariance(cov_m,mergemap,systlist,mergedlist)
 
     if round(cov_m.sum(),5) != round(cov_merged.sum(),5):
         print 'ERROR: something wrong in merging'
         sys.exit()
 
+    corr_merged = getCorrelationFromCovariance(cov_merged)
+    large_corr = printLargeMergedCorrelations(corr_merged,mergedlist,actually_merged)
+    if len(large_corr) > 0:
+        printOriginalCorrelations(large_corr,corr_m,mergemap,systlist)
+
     hessian = invertMatrix(cov_merged)
     writeConvinoInputFromCovariance(experiment,hessian, mergedlist, mt_comb)
+
     return
 
 
 def main():
     for experiment in ['ATLAS','CMS']:
+        print '\n\n-> processing {} inputs \n'.format(experiment)
         mergeInputsForLHC(experiment)
     return
 
