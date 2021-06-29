@@ -130,6 +130,17 @@ def printOriginalCorrelations(large_corr,corr_m,mergemap,systlist):
 
     return
 
+def normalizeInputsForConvino(cov):
+    norm = copy.deepcopy(cov)
+    unc = []
+    for i in range(0,cov.shape[0]-1):
+        unc.append(cov[i,i]**.5)
+    unc.append(1) #do not normalize mt
+    for i in range(0,cov.shape[0]):
+        for j in range(0,cov.shape[0]):
+            norm[i,j] /= unc[i]*unc[j]
+    return norm
+
 def mergeInputsForLHC(experiment):
 
     systlist, cov_m, mt_comb  = readPostFitInfo(experiment)
@@ -147,7 +158,8 @@ def mergeInputsForLHC(experiment):
     if len(large_corr) > 0:
         printOriginalCorrelations(large_corr,corr_m,mergemap,systlist)
 
-    hessian = invertMatrix(cov_merged)
+    cov_norm = normalizeInputsForConvino(cov_merged)    
+    hessian = invertMatrix(cov_norm)
     writeConvinoInputFromCovariance(experiment,hessian, mergedlist, mt_comb)
 
     return
