@@ -52,7 +52,7 @@ def getMeasurementResult(lines,measurement,systnames):
             central = float(uncert[0])
             uncert = uncert[1:]
             if len(uncert) != len(systnames):
-                print 'ERROR!'
+                print 'ERROR! {} uncertainties provided with {} systnames'.format(len(uncert),len(systnames))
                 sys.exit()
             for i, systname in enumerate(systnames):
                 uncertainties[systname] = float(uncert[i])
