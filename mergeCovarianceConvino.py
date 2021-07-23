@@ -26,12 +26,30 @@ def readPostFitInfo(experiment):
         for j in range(0,len(entries)-1):
             cov[i,j] = float(entries[j+1])        
 
+    l = l_orig[l_orig.index('[full correlation matrix]') +1 : l_orig.index('[end full correlation matrix]')]
+    corr = np.zeros((len(l),len(l)))
+    for i,line in enumerate(l):
+        entries = line.split()
+        for j in range(0,len(entries)-1):
+            corr[i,j] = float(entries[j+1])        
+
     for line in l_orig:
         if 'mt_comb: ' in line:
             break
     foo, mt, up, down = line.split()
 
-    return syst_list, cov, float(mt)
+    constraints = []
+    i = l_orig.index('Name       pull   constraint')
+    for l in l_orig[i+1:len(syst_list)+i]:
+        constraints.append(float(l.split()[-1]))
+
+    impacts = []
+    i = l_orig.index('Simple impact table: name, impact [%]')
+    for l in l_orig[i+2:len(syst_list)+i+1]:
+        impacts.append(float(l.split()[1])*float(mt)/100)
+
+
+    return syst_list, cov, float(mt), constraints, impacts, corr
 
 def writeConvinoInputFromCovariance(experiment, hess, systs, mt):
     f = open('{}/allinputs_{}.txt'.format(outdir,experiment),'w')
@@ -81,8 +99,9 @@ def makeMergedMap(mergedlist,systlist):
             actually_merged.append(m)
     return merge, actually_merged
 
-def getMergedCovariance(cov_m,mergemap,systlist,mergedlist):
+def getMergedCovariance(cov_m,mergemap,systlist,mergedlist,doprint=False):
     merged_m = np.zeros((len(mergedlist),len(mergedlist)))
+    corr = getCorrelationFromCovariance(cov_m)
     for i,ms1 in enumerate(mergedlist):
         for j,ms2 in enumerate(mergedlist):
             l1 = mergemap[ms1]
@@ -90,9 +109,18 @@ def getMergedCovariance(cov_m,mergemap,systlist,mergedlist):
             i1 = [systlist.index(l) for l in l1]
             i2 = [systlist.index(l) for l in l2]
             entry = 0
-            for ii1 in i1:
-                for ii2 in i2:
+            if doprint:
+                print ms1, ms2
+            mini_m = np.zeros((len(i1)+1,len(i2)+1))
+            for ii,ii1 in enumerate(i1):
+                for jj, ii2 in enumerate(i2):
+                    mini_m[ii,jj] = corr[ii1,ii2] 
                     entry += cov_m[ii1,ii2]
+            for ii,ii1 in enumerate(i1):
+                mini_m[ii,-1] = corr[ii1,-1]
+            for jj,ii2 in enumerate(i2):
+                mini_m[-1,jj] = corr[ii2,-1]
+            if doprint: print mini_m.round(2)
             merged_m[i,j] = entry
     return merged_m
 
@@ -155,28 +183,117 @@ def renameMergedListCMS(mergedlist):
         l.append(r)
     return l
 
+def propagateSignsForConvino(cov):
+    signed = np.zeros((cov.shape[0],cov.shape[0]))
+    s = cov[-1]/abs(cov[-1])
+    print s
+    for i in range(0,cov.shape[0]):
+        for j in range(0,cov.shape[0]):
+            signed[i,j] = cov[i,j]*s[i]*s[j]
+    return signed
+
+def createConsistentCovariance(cov,impacts):
+    c = np.zeros((cov.shape[0],cov.shape[0]))
+    corr = getCorrelationFromCovariance(cov)
+    sigma_m = cov[-1,-1]**.5
+    factors = []
+    for i in range(0,cov.shape[0]-1):
+        # factors.append(abs(corr[i,-1])*sigma_m/(cov[i,i]**.5))
+        factors.append(impacts[i]/corr[i,-1]/(cov[i,i])**.5)
+    factors.append(1) #mass is already OK
+    for i in range(0,cov.shape[0]):
+        for j in range(0,cov.shape[0]):
+            c[i,j] = cov[i,j]*factors[i]*factors[j]
+    return c
+
+def BYOC(cov,impacts): #build your own covariance
+    err_m = cov[-1,-1]**.5
+    impacts.append(err_m)
+    corr = getCorrelationFromCovariance(cov)
+    mycov = np.zeros((len(impacts),len(impacts)))
+    for i, i1 in enumerate(impacts):
+        for j, i2 in enumerate(impacts):
+            mycov[i,j] = corr[i,j]*i1*i2
+    return mycov
+
+
 def mergeInputsForLHC(experiment):
 
-    systlist, cov_m, mt_comb  = readPostFitInfo(experiment)
+    systlist, cov_m, mt_comb,constraints, impacts, corr_convino = readPostFitInfo(experiment)
+    cov_m = propagateSignsForConvino(cov_m)
+    # cov_m = normalizeInputsForConvino(cov_m)
     corr_m = getCorrelationFromCovariance(cov_m)
+    
+
+    # mycov = BYOC(cov_m,copy.deepcopy(impacts))
+    # mycov = propagateSignsForConvino(mycov)
+
+    # l = cov_m[-1]
+    # for i in range(0,l.shape[0]):
+    #     print 'entry {} : {}'.format(i,l[i])
+    #     print
+    #     for j in range(0,l.shape[0]):
+    #         print j, cov_m[j,-1]
+    #     print
+    # cov_m = createConsistentCovariance(cov_m,impacts)
+    # cov_m = propagateSignsForConvino(cov_m)
+
+
+    
+    # mycov = propagateSignsForConvino(mycov)
+
+
     mergedlist = getMergedSystList(systlist)
     mergemap, actually_merged = makeMergedMap(mergedlist,systlist)
-    cov_merged = getMergedCovariance(cov_m,mergemap,systlist,mergedlist)
+    cov_merged = getMergedCovariance(cov_m,mergemap,systlist,mergedlist,doprint=True)
+    
+    # sigma_m = cov_m[-1,-1]**.5
+    # for i in range(0,corr_m.shape[0]-1):
+        # print impacts[i] / (corr_m[i,-1]*sigma_m)
+        # print impacts[i] / cov_m[i,-1]/constraints[i]
+        # print (cov_m[i,-1]/corr_m[i,-1]/sigma_m) / constraints[i]
+        # print (corr_m[i,-1]*sigma_m) / impacts[i], constraints[i]
+        # print impacts[i]/sigma_m, cov_m[i,-1], corr_m[i,-1], constraints[i]
+
 
     if round(cov_m.sum(),5) != round(cov_merged.sum(),5):
         print 'ERROR: something wrong in merging'
         sys.exit()
 
     corr_merged = getCorrelationFromCovariance(cov_merged)
-    large_corr = printLargeMergedCorrelations(corr_merged,mergedlist,actually_merged)
-    if len(large_corr) > 0:
-        printOriginalCorrelations(large_corr,corr_m,mergemap,systlist)
 
-    cov_norm = normalizeInputsForConvino(cov_merged)    
-    hessian = invertMatrix(cov_norm)
+    # large_corr = printLargeMergedCorrelations(corr_merged,mergedlist,actually_merged)
+    # if len(large_corr) > 0:
+    #     printOriginalCorrelations(large_corr,corr_m,mergemap,systlist)
+
+    # cov_norm = normalizeInputsForConvino(cov_merged)    
+    # hessian = invertMatrix(cov_norm)
+
+    # hessian = invertMatrix(cov_merged)
     if experiment == 'CMS':
         mergedlist = renameMergedListCMS(mergedlist)
-    writeConvinoInputFromCovariance(experiment,hessian, mergedlist, mt_comb)
+    # writeConvinoInputFromCovariance(experiment,hessian, mergedlist, mt_comb)
+
+
+    # systred = copy.deepcopy(systlist)
+    # systred.remove('mt_comb')
+    # mergeall = {'syst': systred, 'mt':['mt_comb']}
+    # cov_massonly = getMergedCovariance(mycov,mergeall,systlist,['syst','mt'])
+    # # cov_massonly = normalizeInputsForConvino(cov_massonly)
+    # corr_massonly = getCorrelationFromCovariance(cov_massonly)
+    # print cov_massonly
+    # print
+    # print cov_massonly[0,0]**.5,cov_massonly[-1,-1]**.5
+    # print
+    # print corr_massonly
+    # print
+    
+    # for i in range(0,cov_m.shape[0]):
+    #     print cov_m[i,-1]
+    # print getCorrelationFromCovariance(cov_massonly)
+    # print cov_massonly.sum(), cov_m.sum()
+    # hessian = invertMatrix(cov_massonly)
+    # writeConvinoInputFromCovariance(experiment,hessian, ['syst','mt'], mt_comb)
 
     return mergedlist
 
@@ -249,6 +366,7 @@ def main():
     experiments = ['ATLAS','CMS']
     mergedlist_d = dict()
     for exp in experiments:
+        if exp == 'ATLAS': continue
         print '\n\n-> processing {} inputs \n'.format(exp)
         ml = mergeInputsForLHC(exp)
         mergedlist_d[exp] = ml
