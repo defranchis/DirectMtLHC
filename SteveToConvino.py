@@ -154,7 +154,10 @@ def newWriteOutputSteve(lines,systnames,measurements,matrix,exclude,nMeas_orig,v
     if toys:
         f = open('{}/CMS_Steve_negCorr_toy.txt'.format(toys_dir),'w')
     else:
-        f = open('CMS_Steve_negCorr_new.txt','w')
+        outdir = 'signed_files' #fromhere
+        if not os.path.exists(outdir):
+            os.makedirs(outdir)
+        f = open('{}/{}_signed.txt'.format(outdir,(args.f).split('/')[-1].replace('.txt','')),'w')
     for i in range (0,len(lines)):
         if '# of observables' in lines[i]:
             lines[i] = lines[i].replace(' {} '.format(nMeas_orig),' {} '.format(len(measurements)))
@@ -481,7 +484,7 @@ if not args.noBLUE:
     if not (m_orig==m_prop).all():
         print 'ERROR: something wrong in propagaiton of negative uncertainties'
         sys.exit()
-    writeOutputSteve(lines,systnames,measurements,p_matrix,exclude,nMeas_orig)
+    # writeOutputSteve(lines,systnames,measurements,p_matrix,exclude,nMeas_orig)
     newWriteOutputSteve(lines,systnames,measurements,p_matrix,exclude,nMeas_orig,value,uncert)
 
 if not args.noConvino:
