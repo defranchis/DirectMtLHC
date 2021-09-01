@@ -16,6 +16,7 @@ parser.add_argument('--noBLUE',action='store_true', help='disable BLUE output')
 parser.add_argument('--noMergeSyst',action='store_true', help='do not merge fully correlated sources')
 parser.add_argument('--exclude',action='store', help='provide list of measurements to be excluded. Example: --exclude \'meas 1, meas 2\'')
 parser.add_argument('--nToys',action='store',type=int, help='number of toys for MC stat')
+parser.add_argument('--toysIndividualSyst',action='store_true', help='also run toys for each individual (relevant) systematic')
 
 args = parser.parse_args()
 
@@ -281,14 +282,18 @@ def throwToys(lines,systnames,measurements,matrix,exclude,nMeas_orig,value,uncer
     for i, v in enumerate(variables):
         toys.append([])
 
+    if len(systForToys)>1 or not args.toysIndividualSyst:
+        toy_d = {}
+        print 'throwing new toys...\n'
+        for meas in MCstat_d.keys():
+            toy_dd = {}
+            for syst in systForToys:
+                t = np.random.normal(uncert[meas][syst],MCstat_d[meas][syst],args.nToys)
+                toy_dd[syst] = list(t)
+            toy_d[meas] = toy_dd
+    else:
+        toy_d = toy_dg
 
-    toy_d = {}
-    for meas in MCstat_d.keys():
-        toy_dd = {}
-        for i,syst in enumerate(systForToys):
-            t = np.random.normal(uncert[meas][syst],MCstat_d[meas][i],args.nToys)
-            toy_dd[syst] = list(t)
-        toy_d[meas] = toy_dd
 
     toy_syst_d = {}
     nom_syst_d = {}
@@ -357,7 +362,8 @@ def throwToys(lines,systnames,measurements,matrix,exclude,nMeas_orig,value,uncer
                 m, w = result[z].split()
                 toy_weight_d[m].append(float(w))
 
-
+    if args.toysIndividualSyst:
+        print systForToys
     print 'var, mean, rms, nominal\n'
     for z, v in enumerate(variables):
         if z==0:
@@ -365,6 +371,9 @@ def throwToys(lines,systnames,measurements,matrix,exclude,nMeas_orig,value,uncer
         else:
             print v,'\t', round(np.array(toys[z]).mean(),3), '\t  ', round(np.array(toys[z]).std(),3), '\t', round(nominals[z],3)
     print
+
+    if args.toysIndividualSyst:
+        return toy_d
 
     f = open('{}/slides.tex'.format(toys_dir),'w')
     
@@ -528,11 +537,20 @@ if args.nToys > 0:
         if not thisMeas in measurements:
             print 'ERROR: measurement {} in file MCstat.txt not found in input file'.format(thisMeas)
             sys.exit()
-        MCstat_l = []
-        for ll in l:
+        MCstat_dd = {}
+        for j,ll in enumerate(l):
             if ll == thisMeas: continue
-            MCstat_l.append(float(ll))
-        MCstat_d[thisMeas] = MCstat_l
+            MCstat_dd[systForToys[j-1]] = float(ll)
+        MCstat_d[thisMeas] = MCstat_dd
 
-    throwToys(lines,systnames,measurements,matrix,exclude,nMeas_orig,value,uncert,MCstat_d,systForToys)
+    for meas in MCstat_d.keys():
+        print '\n', meas, '\n'
+        print 'syst\tnom\tMCstat'
+        for syst in systForToys:
+            print syst,'\t', uncert[meas][syst],'\t', MCstat_d[meas][syst]
+    print'\n'
 
+    toy_dg = throwToys(lines,systnames,measurements,matrix,exclude,nMeas_orig,value,uncert,MCstat_d,systForToys)
+    if args.toysIndividualSyst:
+        for st in systForToys:
+            throwToys(lines,systnames,measurements,matrix,exclude,nMeas_orig,value,uncert,MCstat_d,[st])
