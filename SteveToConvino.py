@@ -3,7 +3,7 @@ from writeConvinoOutput import *
 import copy
 import numpy as np
 import ROOT
-from ROOT import TH1F, TCanvas
+from ROOT import TH1F, TCanvas, TGraph
 import argparse
 
 ROOT.gROOT.SetBatch(True)
@@ -17,10 +17,12 @@ parser.add_argument('--noMergeSyst',action='store_true', help='do not merge full
 parser.add_argument('--exclude',action='store', help='provide list of measurements to be excluded. Example: --exclude \'meas 1, meas 2\'')
 parser.add_argument('--nToys',action='store',type=int, help='number of toys for MC stat')
 parser.add_argument('--toysIndividualSyst',action='store_true', help='also run toys for each individual (relevant) systematic')
+parser.add_argument('--scanCorrAll',action='store_true', help='scan all correlations with simple assumptions')
 
 args = parser.parse_args()
 
 toys_dir = 'toys_workdir'
+scan_dir = 'scan_workdir'
 np.random.seed(1)
 
 
@@ -151,9 +153,14 @@ def getFullCorrelationMatrix(lines,measurements,systnames):
         sys.exit()
     return matrix_dict
 
-def newWriteOutputSteve(lines,systnames,measurements,matrix,exclude,nMeas_orig,value,uncert,toys=False):
+def newWriteOutputSteve(lines,systnames,measurements,matrix,exclude,nMeas_orig,value,uncert,toys=False,scan=False):
+    if toys and scan:
+        print 'ERROR: either toys or scan'
+        sys.exit()
     if toys:
         f = open('{}/CMS_Steve_negCorr_toy.txt'.format(toys_dir),'w')
+    elif scan:
+        f = open('{}/CMS_Steve_negCorr_scan.txt'.format(scan_dir),'w')
     else:
         outdir = 'signed_files' #fromhere
         if not os.path.exists(outdir):
@@ -162,7 +169,7 @@ def newWriteOutputSteve(lines,systnames,measurements,matrix,exclude,nMeas_orig,v
     for i in range (0,len(lines)):
         if '# of observables' in lines[i]:
             lines[i] = lines[i].replace(' {} '.format(nMeas_orig),' {} '.format(len(measurements)))
-        if toys and '\./combine' in lines[i]:
+        if (toys or scan) and '\./combine' in lines[i]:
             lines[i] = lines[i].replace('\./combine','\../../code_Steve/combine')
         
         f.write('{}\n'.format(lines[i]))
@@ -469,6 +476,154 @@ def throwToys(lines,systnames,measurements,matrix,exclude,nMeas_orig,value,uncer
         
     return
 
+def getResultReducedCorrelation(lines,systnames,measurements,matrix,exclude,nMeas_orig,value,uncert,red_corr):
+    m_red = copy.deepcopy(matrix)
+    for syst in systnames:
+        if syst == 'Stat': continue
+        for m1 in measurements:
+            for m2 in measurements:
+                if m1 == m2: continue
+                if m_red[syst][m1][m2] == 1:
+                    m_red[syst][m1][m2] = round(red_corr,3)
+    p_matrix, p_uncert = propagateNegativeCorrelations(copy.deepcopy(m_red),systnames,measurements,copy.deepcopy(uncert))
+    newWriteOutputSteve(lines,systnames,measurements,p_matrix,exclude,nMeas_orig,value,uncert,False,True)
+    os.system('source {}/CMS_Steve_negCorr_scan.txt > {}/log.log'.format(scan_dir,scan_dir))
+    result = (open('{}/log.log'.format(scan_dir),'r')).read().splitlines()
+    res_l = []
+    for j,r in enumerate(result):
+        if r.replace(' ','').startswith('Mtop') and '+-' in r:
+            res_l.append(r)
+    res = res_l[-1]
+    res = res.replace('+-','')
+    res = res.replace('[','')
+    res = res.replace(']','')
+    res = res.replace('|','')
+    blah, mt, tot, stat, syst, blahblah = res.split()
+
+    return float(mt), float(tot), float(stat), float(syst)
+
+
+def getResultIncreasedCorrelation(lines,systnames,measurements,matrix,exclude,nMeas_orig,value,uncert,incr_corr):
+    m_incr = copy.deepcopy(matrix)
+    for syst in systnames:
+        if syst == 'Stat': continue
+        for m1 in measurements:
+            for m2 in measurements:
+                if m_incr[syst][m1][m2] == 0:
+                    m_incr[syst][m1][m2] = round(incr_corr,3)
+    p_matrix, p_uncert = propagateNegativeCorrelations(copy.deepcopy(m_incr),systnames,measurements,copy.deepcopy(uncert))
+    newWriteOutputSteve(lines,systnames,measurements,p_matrix,exclude,nMeas_orig,value,uncert,False,True)
+    os.system('source {}/CMS_Steve_negCorr_scan.txt > {}/log.log'.format(scan_dir,scan_dir))
+    result = (open('{}/log.log'.format(scan_dir),'r')).read().splitlines()
+    res_l = []
+    for j,r in enumerate(result):
+        if r.replace(' ','').startswith('Mtop') and '+-' in r:
+            res_l.append(r)
+    res = res_l[-1]
+    res = res.replace('+-','')
+    res = res.replace('[','')
+    res = res.replace(']','')
+    res = res.replace('|','')
+    blah, mt, tot, stat, syst, blahblah = res.split()
+
+    return float(mt), float(tot), float(stat), float(syst)
+
+def makeCorrelationScan(lines,systnames,measurements,matrix,exclude,nMeas_orig,value,uncert):
+
+    if not os.path.exists(scan_dir):
+        os.makedirs(scan_dir)
+
+    step = 0.01
+    red_corrs = list(np.arange(0.7,1+step/2,step))
+    h_mt = TGraph()
+    h_tot = TGraph()
+    h_stat = TGraph()
+    h_syst = TGraph()
+    for i,red_corr in enumerate(red_corrs):
+        mt, tot, stat, syst = getResultReducedCorrelation(lines,systnames,measurements,matrix,exclude,nMeas_orig,value,uncert,red_corr)
+        print red_corr, mt, tot, stat, syst
+        h_mt.SetPoint(i,red_corr,mt)
+        h_tot.SetPoint(i,red_corr,tot)
+        h_stat.SetPoint(i,red_corr,stat)
+        h_syst.SetPoint(i,red_corr,syst)
+        
+    h_mt.SetTitle('correlation scan (reduced); correlation; mt [GeV]')
+    h_tot.SetTitle('correlation scan (reduced); correlation; tot uncert [GeV]')
+    h_stat.SetTitle('correlation scan (reduced); correlation; stat uncert [GeV]')
+    h_syst.SetTitle('correlation scan (reduced); correlation; syst uncert [GeV]')
+
+    h_mt.SetMarkerStyle(8)
+    h_tot.SetMarkerStyle(8)
+    h_stat.SetMarkerStyle(8)
+    h_syst.SetMarkerStyle(8)
+
+    c = TCanvas()
+    h_mt.Draw('apl')
+    c.SaveAs('{}/mt_red.png'.format(scan_dir))
+    c.Clear()
+
+    h_tot.Draw('apl')
+    c.SaveAs('{}/tot_red.png'.format(scan_dir))
+    c.Clear()
+
+    h_stat.Draw('apl')
+    c.SaveAs('{}/stat_red.png'.format(scan_dir))
+    c.Clear()
+
+    h_syst.Draw('apl')
+    c.SaveAs('{}/syst_red.png'.format(scan_dir))
+    c.Clear()
+
+
+###########
+
+
+    step = 0.01
+    incr_corrs = list(np.arange(-.3,0.3+step/2,step))
+    h_mt = TGraph()
+    h_tot = TGraph()
+    h_stat = TGraph()
+    h_syst = TGraph()
+    for i,incr_corr in enumerate(incr_corrs):
+        mt, tot, stat, syst = getResultIncreasedCorrelation(lines,systnames,measurements,matrix,exclude,nMeas_orig,value,uncert,incr_corr)
+        print incr_corr, mt, tot, stat, syst
+        h_mt.SetPoint(i,incr_corr,mt)
+        h_tot.SetPoint(i,incr_corr,tot)
+        h_stat.SetPoint(i,incr_corr,stat)
+        h_syst.SetPoint(i,incr_corr,syst)
+        
+    h_mt.SetTitle('correlation scan (increased); correlation; mt [GeV]')
+    h_tot.SetTitle('correlation scan (increased); correlation; tot uncert [GeV]')
+    h_stat.SetTitle('correlation scan (increased); correlation; stat uncert [GeV]')
+    h_syst.SetTitle('correlation scan (increased); correlation; syst uncert [GeV]')
+
+    h_mt.SetMarkerStyle(8)
+    h_tot.SetMarkerStyle(8)
+    h_stat.SetMarkerStyle(8)
+    h_syst.SetMarkerStyle(8)
+
+    c = TCanvas()
+    h_mt.Draw('apl')
+    c.SaveAs('{}/mt_incr.png'.format(scan_dir))
+    c.Clear()
+
+    h_tot.Draw('apl')
+    c.SaveAs('{}/tot_incr.png'.format(scan_dir))
+    c.Clear()
+
+    h_stat.Draw('apl')
+    c.SaveAs('{}/stat_incr.png'.format(scan_dir))
+    c.Clear()
+
+    h_syst.Draw('apl')
+    c.SaveAs('{}/syst_incr.png'.format(scan_dir))
+    c.Clear()
+
+
+
+
+    return
+
 infilename = args.f
 lines = open(infilename,'r').read().splitlines()
 systnames = getSystNames(lines)
@@ -549,8 +704,12 @@ if args.nToys > 0:
         for syst in systForToys:
             print syst,'\t', uncert[meas][syst],'\t', MCstat_d[meas][syst]
     print'\n'
-
+    
     toy_dg = throwToys(lines,systnames,measurements,matrix,exclude,nMeas_orig,value,uncert,MCstat_d,systForToys)
     if args.toysIndividualSyst:
         for st in systForToys:
             throwToys(lines,systnames,measurements,matrix,exclude,nMeas_orig,value,uncert,MCstat_d,[st])
+
+
+if args.scanCorrAll:
+    makeCorrelationScan(lines,systnames,measurements,matrix,exclude,nMeas_orig,value,uncert)
