@@ -18,11 +18,13 @@ parser.add_argument('--exclude',action='store', help='provide list of measuremen
 parser.add_argument('--nToys',action='store',type=int, help='number of toys for MC stat')
 parser.add_argument('--toysIndividualSyst',action='store_true', help='also run toys for each individual (relevant) systematic')
 parser.add_argument('--scanCorrAll',action='store_true', help='scan all correlations with simple assumptions')
+parser.add_argument('--excludeOneByOne',action='store_true', help='exclude measurements one by one')
 
 args = parser.parse_args()
 
 toys_dir = 'toys_workdir'
 scan_dir = 'scan_workdir'
+tmp_dir = 'tmp_workdir'
 np.random.seed(1)
 
 
@@ -153,7 +155,11 @@ def getFullCorrelationMatrix(lines,measurements,systnames):
         sys.exit()
     return matrix_dict
 
-def newWriteOutputSteve(lines,systnames,measurements,matrix,exclude,nMeas_orig,value,uncert,toys=False,scan=False):
+def newWriteOutputSteve(lines,systnames,measurements,matrix,exclude,nMeas_orig,value,uncert,toys=False,scan=False,tmprun=True):
+    lines = copy.deepcopy(lines)
+    if tmprun and (toys or scan):
+        print 'ERROR: either tmp run or toys or scan'
+        sys.exit()
     if toys and scan:
         print 'ERROR: either toys or scan'
         sys.exit()
@@ -161,6 +167,10 @@ def newWriteOutputSteve(lines,systnames,measurements,matrix,exclude,nMeas_orig,v
         f = open('{}/CMS_Steve_negCorr_toy.txt'.format(toys_dir),'w')
     elif scan:
         f = open('{}/CMS_Steve_negCorr_scan.txt'.format(scan_dir),'w')
+    elif tmprun:
+        if not os.path.exists(tmp_dir):
+            os.makedirs(tmp_dir)
+        f = open('{}/CMS_Steve_negCorr_tmp.txt'.format(tmp_dir),'w')
     else:
         outdir = 'signed_files' #fromhere
         if not os.path.exists(outdir):
@@ -169,7 +179,7 @@ def newWriteOutputSteve(lines,systnames,measurements,matrix,exclude,nMeas_orig,v
     for i in range (0,len(lines)):
         if '# of observables' in lines[i]:
             lines[i] = lines[i].replace(' {} '.format(nMeas_orig),' {} '.format(len(measurements)))
-        if (toys or scan) and '\./combine' in lines[i]:
+        if (toys or scan or tmprun) and '\./combine' in lines[i]:
             lines[i] = lines[i].replace('\./combine','\../../code_Steve/combine')
         
         f.write('{}\n'.format(lines[i]))
@@ -687,6 +697,37 @@ def makeCorrelationScans(lines,systnames,measurements,matrix,exclude,nMeas_orig,
 
     return
 
+def getCombinationResult(lines,systnames,measurements,matrix,exclude,nMeas_orig,value,uncert):
+    p_matrix, p_uncert = propagateNegativeCorrelations(copy.deepcopy(matrix),systnames,measurements,copy.deepcopy(uncert))
+    newWriteOutputSteve(lines,systnames,measurements,p_matrix,exclude,nMeas_orig,value,uncert,False,False,True)
+    os.system('source {}/CMS_Steve_negCorr_tmp.txt > {}/log.log'.format(tmp_dir,tmp_dir))
+    result = (open('{}/log.log'.format(tmp_dir),'r')).read().splitlines()
+    res_l = []
+    for j,r in enumerate(result):
+        if r.replace(' ','').startswith('Mtop') and '+-' in r:
+            res_l.append(r)
+    res = res_l[-1]
+    res = res.replace('+-','')
+    res = res.replace('[','')
+    res = res.replace(']','')
+    res = res.replace('|','')
+    blah, mt, tot, stat, syst, blahblah = res.split()
+    return float(mt), float(tot), float(stat), float(syst)
+
+def excludeOneByOne(lines,systnames,measurements,matrix,exclude,nMeas_orig,value,uncert):
+    for meas in measurements:
+        if meas in exclude: continue
+        exclude.append(meas)
+        print 'excluded:', exclude
+        m_red = copy.deepcopy(measurements)
+        m_red.remove(meas)
+        mt, tot, stat, syst = getCombinationResult(lines,systnames,m_red,matrix,exclude,nMeas_orig,value,uncert)
+        exclude.remove(meas)
+        print 'mt\ttot\tstat\tsyst'
+        print mt, tot, stat, syst
+        print
+    return
+
 infilename = args.f
 lines = open(infilename,'r').read().splitlines()
 systnames = getSystNames(lines)
@@ -776,3 +817,6 @@ if args.nToys > 0:
 
 if args.scanCorrAll:
     makeCorrelationScans(lines,systnames,measurements,matrix,exclude,nMeas_orig,value,uncert)
+
+if args.excludeOneByOne:
+    excludeOneByOne(lines,systnames,measurements,matrix,exclude,nMeas_orig,value,uncert)
