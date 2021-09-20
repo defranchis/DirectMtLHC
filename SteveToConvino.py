@@ -476,10 +476,11 @@ def throwToys(lines,systnames,measurements,matrix,exclude,nMeas_orig,value,uncer
         
     return
 
-def getResultReducedCorrelation(lines,systnames,measurements,matrix,exclude,nMeas_orig,value,uncert,red_corr):
+def getResultReducedCorrelation(lines,systnames,measurements,matrix,exclude,nMeas_orig,value,uncert,red_corr,syst_scan='ALL'):
     m_red = copy.deepcopy(matrix)
     for syst in systnames:
         if syst == 'Stat': continue
+        if syst_scan != 'ALL' and syst != syst_scan: continue
         for m1 in measurements:
             for m2 in measurements:
                 if m1 == m2: continue
@@ -503,10 +504,11 @@ def getResultReducedCorrelation(lines,systnames,measurements,matrix,exclude,nMea
     return float(mt), float(tot), float(stat), float(syst)
 
 
-def getResultIncreasedCorrelation(lines,systnames,measurements,matrix,exclude,nMeas_orig,value,uncert,incr_corr):
+def getResultIncreasedCorrelation(lines,systnames,measurements,matrix,exclude,nMeas_orig,value,uncert,incr_corr,syst_scan='ALL'):
     m_incr = copy.deepcopy(matrix)
     for syst in systnames:
         if syst == 'Stat': continue
+        if syst_scan != 'ALL' and syst != syst_scan: continue
         for m1 in measurements:
             for m2 in measurements:
                 if m_incr[syst][m1][m2] == 0:
@@ -528,7 +530,57 @@ def getResultIncreasedCorrelation(lines,systnames,measurements,matrix,exclude,nM
 
     return float(mt), float(tot), float(stat), float(syst)
 
-def makeCorrelationScan(lines,systnames,measurements,matrix,exclude,nMeas_orig,value,uncert):
+def makeCorrelationScan(lines,systnames,measurements,matrix,exclude,nMeas_orig,value,uncert,syst_scan):
+    if not os.path.exists(scan_dir+'/syst'):
+        os.makedirs(scan_dir+'/syst')
+    step = 0.01
+    red_corrs = list(np.arange(0.7,1+step/2,step))
+    h_mt = TGraph()
+    h_tot = TGraph()
+    h_stat = TGraph()
+    h_syst = TGraph()
+    print '\n scanning systematics {} \n'.format(syst_scan)
+    for i,red_corr in enumerate(red_corrs):
+        mt, tot, stat, syst = getResultReducedCorrelation(lines,systnames,measurements,matrix,exclude,nMeas_orig,value,uncert,red_corr,syst_scan)
+        print red_corr, mt, tot, stat, syst
+        h_mt.SetPoint(i,red_corr,mt)
+        h_tot.SetPoint(i,red_corr,tot)
+        h_stat.SetPoint(i,red_corr,stat)
+        h_syst.SetPoint(i,red_corr,syst)
+        
+    h_mt.SetTitle('mt scan - {}; correlation; mt [GeV]'.format(syst_scan))
+    h_tot.SetTitle('tot uncert scan - {}; correlation; tot uncert [GeV]'.format(syst_scan))
+    h_stat.SetTitle('stat uncert scan - {}; correlation; stat uncert [GeV]'.format(syst_scan))
+    h_syst.SetTitle('syst uncert scan - {}; correlation; syst uncert [GeV]'.format(syst_scan))
+
+    h_mt.SetMarkerStyle(8)
+    h_tot.SetMarkerStyle(8)
+    h_stat.SetMarkerStyle(8)
+    h_syst.SetMarkerStyle(8)
+
+    c = TCanvas()
+    h_mt.Draw('apl')
+    c.SaveAs('{}/syst/mt_{}.pdf'.format(scan_dir,syst_scan))
+    c.SaveAs('{}/syst/mt_{}.png'.format(scan_dir,syst_scan))
+    c.Clear()
+
+    h_tot.Draw('apl')
+    c.SaveAs('{}/syst/tot_{}.pdf'.format(scan_dir,syst_scan))
+    c.SaveAs('{}/syst/tot_{}.png'.format(scan_dir,syst_scan))
+    c.Clear()
+
+    h_stat.Draw('apl')
+    c.SaveAs('{}/syst/stat_{}.pdf'.format(scan_dir,syst_scan))
+    c.SaveAs('{}/syst/stat_{}.png'.format(scan_dir,syst_scan))
+    c.Clear()
+
+    h_syst.Draw('apl')
+    c.SaveAs('{}/syst/syst_{}.pdf'.format(scan_dir,syst_scan))
+    c.SaveAs('{}/syst/syst_{}.png'.format(scan_dir,syst_scan))
+    c.Clear()
+    
+
+def makeCorrelationScans(lines,systnames,measurements,matrix,exclude,nMeas_orig,value,uncert):
 
     if not os.path.exists(scan_dir):
         os.makedirs(scan_dir)
@@ -619,7 +671,18 @@ def makeCorrelationScan(lines,systnames,measurements,matrix,exclude,nMeas_orig,v
     c.SaveAs('{}/syst_incr.png'.format(scan_dir))
     c.Clear()
 
+    f = open('{}/slides.tex'.format(scan_dir),'w')
 
+    for syst in systnames:
+        if syst == 'Stat': continue
+        makeCorrelationScan(lines,systnames,measurements,matrix,exclude,nMeas_orig,value,uncert,syst)
+
+        f.write('\\begin{{frame}}{{correlation scan for systematics {}}}\n'.format(syst))
+        f.write('\\centering\\includegraphics[width=.49\\textwidth]{{{}/syst/mt_{}.pdf}}\n'.format(scan_dir,syst))
+        f.write('\\centering\\includegraphics[width=.49\\textwidth]{{{}/syst/tot_{}.pdf}}\\\\\n'.format(scan_dir,syst))
+        f.write('\\centering\\includegraphics[width=.49\\textwidth]{{{}/syst/stat_{}.pdf}}\n'.format(scan_dir,syst))
+        f.write('\\centering\\includegraphics[width=.49\\textwidth]{{{}/syst/syst_{}.pdf}}\n'.format(scan_dir,syst))
+        f.write('\\end{frame}\n\n')
 
 
     return
@@ -712,4 +775,4 @@ if args.nToys > 0:
 
 
 if args.scanCorrAll:
-    makeCorrelationScan(lines,systnames,measurements,matrix,exclude,nMeas_orig,value,uncert)
+    makeCorrelationScans(lines,systnames,measurements,matrix,exclude,nMeas_orig,value,uncert)
