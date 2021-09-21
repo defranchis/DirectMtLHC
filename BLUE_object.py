@@ -1,8 +1,6 @@
 import sys, os, copy
 import numpy as np
 
-toys_dir = 'toys_workdir'
-scan_dir = 'scan_workdir'
 tmp_dir = 'tmp_workdir'
 
 def isSymmetricMatrix(matrix):
@@ -391,3 +389,32 @@ class BLUE_object:
         print self.log
 
     
+    def reduceCorrelations(self,red_corr,syst_scan='ALL'):
+        if syst_scan != 'ALL' and not syst_scan in self.systnames:
+            print 'ERROR: systematics {} (to scan) not in input file '
+            sys.exit()
+        for syst in self.systnames:
+            if syst == 'Stat': continue
+            if syst_scan != 'ALL' and syst != syst_scan: continue
+            for m1 in self.measurements:
+                for m2 in self.measurements:
+                    if m1 == m2: continue
+                    if self.matrix[syst][m1][m2] == 1:
+                        self.matrix[syst][m1][m2] = round(red_corr,3)
+        self.update()
+        return
+
+    def increaseCorrelations(self,incr_corr,syst_scan='ALL'):
+        if syst_scan != 'ALL' and not syst_scan in self.systnames:
+            print 'ERROR: systematics {} (to scan) not in input file '
+            sys.exit()
+        for syst in self.systnames:
+            if syst == 'Stat': continue
+            if syst_scan != 'ALL' and syst != syst_scan: continue
+            for m1 in self.measurements:
+                for m2 in self.measurements:
+                    if m1 == m2: continue
+                    if self.matrix[syst][m1][m2] == 0:
+                        self.matrix[syst][m1][m2] = round(incr_corr,3)
+        self.update()
+        return
