@@ -9,6 +9,18 @@ from BLUE_object import *
 ROOT.gROOT.SetBatch(True)
 np.random.seed(1)
 
+
+def excludeMeasOneByOne(base_obj):
+    for meas in base_obj.usedMeas:
+        obj = base_obj.clone()
+        obj.excludeMeas.append(meas)
+        obj.update()
+        print 'excluded:', obj.excludeMeas
+        obj.simplePrint()
+        print
+    return
+
+
 def main():
 
     parser = argparse.ArgumentParser(description='specify options')
@@ -37,8 +49,11 @@ def main():
     if not args.excludeSyst is None:
         excludeSyst = args.excludeSyst.split(',')
 
-    obj = BLUE_object(args.f,excludeMeas,excludeSyst)
-    obj.printResults()
+    base_obj = BLUE_object(args.f,excludeMeas,excludeSyst)
+    base_obj.printResults()
+
+    if args.excludeMeasOneByOne:
+        excludeMeasOneByOne(base_obj)
 
 
 if __name__ == "__main__":

@@ -382,6 +382,10 @@ class BLUE_object:
         print
         print self.results.weights
         print
+
+    def simplePrint(self):
+        print 'mt\t\ttot\tstat\tsyst\t[GeV]'
+        print '{}\t\t{}\t{}\t{}'.format(self.results.mt,self.results.tot,self.results.stat,self.results.syst)
     
     def printOutput(self):
         print self.log
