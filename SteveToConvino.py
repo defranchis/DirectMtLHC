@@ -820,3 +820,7 @@ if args.scanCorrAll:
 
 if args.excludeOneByOne:
     excludeOneByOne(lines,systnames,measurements,matrix,exclude,nMeas_orig,value,uncert)
+
+print 'central result: mt, tot, stat, syst'
+print getCombinationResult(lines,systnames,measurements,matrix,exclude,nMeas_orig,value,uncert)
+print
