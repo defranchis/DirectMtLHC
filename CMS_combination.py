@@ -16,8 +16,7 @@ scan_dir = 'scan_workdir'
 def excludeMeasOneByOne(base_obj):
     for meas in base_obj.usedMeas:
         obj = base_obj.clone()
-        obj.excludeMeas.append(meas)
-        obj.update()
+        obj.addExcludeMeas([meas])
         print 'excluded:', obj.excludeMeas
         obj.simplePrint()
         print

@@ -418,3 +418,12 @@ class BLUE_object:
                         self.matrix[syst][m1][m2] = round(incr_corr,3)
         self.update()
         return
+
+    def addExcludeMeas(self,l):
+        for meas in l:
+            if not meas in self.measurements:
+                print 'ERROR! measurement {} (to be added to exclude list) not found in input file'.format(meas)
+                sys.exit()
+            self.excludeMeas.append(meas)
+        self.update()
+        return
