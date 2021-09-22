@@ -64,6 +64,10 @@ class BLUE_object:
             self.log = self.runCombination()
             self.results = self.readResults()
 
+        else:
+            print 'ERROR: please provide input file'
+            sys.exit()
+
 
     def update(self):
         self.p_matrix, self.p_uncert = self.propagateNegativeCorrelations()
