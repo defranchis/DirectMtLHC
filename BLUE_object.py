@@ -502,6 +502,7 @@ class BLUE_object:
             print 'ERROR: throw toys first'
             sys.exit()
         systForToys = self.systForToys
+        print '**********'
         if len(l) > 0:
             systForToys = l
             for syst in systForToys:
@@ -511,6 +512,7 @@ class BLUE_object:
             print 'toys restricted to systematics: {}'.format(systForToys)
         else:
             print 'toys for all available systematics: {}'.format(systForToys)
+        print '**********'
         l_mt = []
         l_tot = []
         l_stat = []

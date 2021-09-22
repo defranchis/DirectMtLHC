@@ -13,8 +13,24 @@ scan_dir = 'scan_workdir'
 
 def getToyResults(base_obj,l=[]):
     l_mt, l_tot, l_stat, l_syst, d_weights, d_syst = base_obj.getToyResults(l)
-    print np.array(l_mt).mean(), np.array(l_mt).std()
-    #then do the plotting, etc
+
+    print '\nvar\tmean\t\trms\tnom'
+    print 'mt\t{}\t\t{}\t{}'.format(round(np.array(l_mt).mean(),3),round(np.array(l_mt).std(),3),base_obj.results.mt)
+    print 'tot\t{}\t\t{}\t{}'.format(round(np.array(l_tot).mean(),3),round(np.array(l_tot).std(),3),base_obj.results.tot)
+    print 'stat\t{}\t\t{}\t{}'.format(round(np.array(l_stat).mean(),3),round(np.array(l_stat).std(),3),base_obj.results.stat)
+    print 'syst\t{}\t\t{}\t{}'.format(round(np.array(l_syst).mean(),3),round(np.array(l_syst).std(),3),base_obj.results.syst)
+    print '\n-> weights\n'
+    print 'meas\t\tmean\trms\tnom'
+    for meas in d_weights.keys():
+        print '{}\t{}\t{}\t{}'.format(meas,round(np.array(d_weights[meas]).mean(),2),round(np.array(d_weights[meas]).std(),2),base_obj.results.weights[meas])
+    print
+    
+    if len(l)==0:
+        plotToyResults(l_mt, l_tot, l_stat, l_syst, d_weights, d_syst)
+    return
+
+def plotToyResults(l_mt, l_tot, l_stat, l_syst, d_weights, d_syst):
+    # to be implemented
     return
 
 def excludeMeasOneByOne(base_obj):
