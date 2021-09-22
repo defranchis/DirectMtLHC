@@ -221,6 +221,7 @@ class BLUE_object:
         for i in range (0,len(lines)):
             if '# of observables' in lines[i]:
                 lines[i] = lines[i].replace(' {} '.format(self.nMeas_orig),' {} '.format(len(self.usedMeas)))
+                lines[i] = lines[i].replace(' {} '.format(len(self.systnames)),' {} '.format(len(self.usedSyst)))
 
             f.write('{}\n'.format(lines[i]))
             if 'Stat' in lines[i]: break
@@ -433,6 +434,15 @@ class BLUE_object:
                 print 'ERROR! measurement {} (to be added to exclude list) not found in input file'.format(meas)
                 sys.exit()
             self.excludeMeas.append(meas)
+        self.update()
+        return
+
+    def addExcludeSyst(self,l):
+        for syst in l:
+            if not syst in self.systnames:
+                print 'ERROR! systematics {} (to be added to exclude list) not found in input file'.format(syst)
+                sys.exit()
+            self.excludeSyst.append(syst)
         self.update()
         return
 

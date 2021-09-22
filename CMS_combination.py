@@ -21,7 +21,8 @@ def main():
     parser.add_argument('--nToys',action='store',type=int, help='number of toys for MC stat')
     parser.add_argument('--toysIndividualSyst',action='store_true', help='also run toys for each individual (relevant) systematic')
     parser.add_argument('--scanCorrAll',action='store_true', help='scan all correlations with simple assumptions')
-    parser.add_argument('--excludeMeasOneByOne',action='store_true', help='exclude measurements one by one')
+    parser.add_argument('--excludeMeasOneByOne',action='store_true', help='exclude measurements one-by-one')
+    parser.add_argument('--excludeSystOneByOne',action='store_true', help='exclude uncertainties one-by-one')
 
     args = parser.parse_args()
 
@@ -33,12 +34,16 @@ def main():
     excludeSyst = []
     if not args.excludeSyst is None:
         excludeSyst = args.excludeSyst.split(',')
+        excludeSyst = [removeUselessCharachters(e) for e in excludeSyst]
 
     base_obj = BLUE_object(args.f,excludeMeas,excludeSyst)
     base_obj.printResults()
 
     if args.excludeMeasOneByOne:
         excludeMeasOneByOne(base_obj)
+
+    if args.excludeSystOneByOne:
+        excludeSystOneByOne(base_obj)
 
     if args.scanCorrAll:
         makeCorrelationScans(base_obj)
@@ -51,6 +56,7 @@ def main():
             for syst in base_obj.systForToys:
                 getToyResults(base_obj,[syst])
 
+    return
 
 def getToyResults(base_obj,l=[]):
     l_mt, l_tot, l_stat, l_syst, d_weights, d_syst = base_obj.getToyResults(l)
@@ -79,6 +85,16 @@ def excludeMeasOneByOne(base_obj):
         obj = base_obj.clone()
         obj.addExcludeMeas([meas])
         print 'excluded:', obj.excludeMeas
+        obj.simplePrint()
+        print
+    return
+
+def excludeSystOneByOne(base_obj):
+    for syst in base_obj.usedSyst:
+        if syst == 'Stat': continue
+        obj = base_obj.clone()
+        obj.addExcludeSyst([syst])
+        print 'excluded:', obj.excludeSyst
         obj.simplePrint()
         print
     return
