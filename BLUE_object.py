@@ -1,6 +1,8 @@
 import sys, os, copy
 import numpy as np
 
+np.random.seed(1)
+
 tmp_dir = 'tmp_workdir'
 
 def isSymmetricMatrix(matrix):
@@ -63,6 +65,8 @@ class BLUE_object:
             self.writeBLUEinputCMS()
             self.log = self.runCombination()
             self.results = self.readResults()
+            self.toysInitialised = False
+            self.toysThrown = False
 
         else:
             print 'ERROR: please provide input file'
@@ -431,3 +435,116 @@ class BLUE_object:
             self.excludeMeas.append(meas)
         self.update()
         return
+
+    def prepareForToys(self,fn):
+        f = open(fn,'r')
+        toy_lines = f.read().splitlines()
+        self.systForToys = toy_lines[0].split()
+        for s in self.systForToys:
+            if not s in self.systnames:
+                print 'ERROR: systematic {} in file MCstat.txt not found in input file'.format(s)
+                sys.exit()
+            if not s in self.usedSyst:
+                print 'logic Error: systematic {} (used for toys) excluded from combination'.format(s)
+                sys.exit()
+
+        self.MCstat_d = {}
+        for i, line in enumerate(toy_lines):
+            if i==0: continue
+            l = line.split()
+            thisMeas = l[0]
+            if not thisMeas in self.measurements:
+                print 'ERROR: measurement {} in file MCstat.txt not found in input file'.format(thisMeas)
+                sys.exit()
+            if not thisMeas in self.usedMeas:
+                print 'WARNING: measurement {} (used for toys) excluded from combination'.format(thisMeas)
+
+            MCstat_dd = {}
+            for j,ll in enumerate(l):
+                if ll == thisMeas: continue
+                MCstat_dd[self.systForToys[j-1]] = float(ll)
+            self.MCstat_d[thisMeas] = MCstat_dd
+
+        self.toysInitialised = True
+        # self.printToysInfo()
+        return
+        
+    def printToysInfo(self):            
+        for meas in self.MCstat_d.keys():
+            print '\n-> ', meas, '\n'
+            print 'syst\tnom\tMCstat'
+            for syst in self.systForToys:
+                print syst,'\t', self.uncert[meas][syst],'\t', self.MCstat_d[meas][syst]
+        print'\n'
+        return
+
+    def throwToys(self,nToys):
+        if not self.toysInitialised:
+            print 'ERROR: toys must be initialised first\n'
+            sys.exit()
+        self.nToys = nToys
+        if self.toysThrown:
+            print 'WARNING: throwing new toys with nToys = {}\n'.format(nToys)
+        else:
+            print 'INFO: throwing toys with nToys = {}\n'.format(nToys)
+        self.toy_d = {}
+        for meas in self.MCstat_d.keys():
+            toy_dd = {}
+            for syst in self.systForToys:
+                t = np.random.normal(self.uncert[meas][syst],self.MCstat_d[meas][syst],nToys)
+                toy_dd[syst] = list(t)
+            self.toy_d[meas] = toy_dd
+        self.toysThrown = True
+        return
+
+    def getToyResults(self,l=[]):
+        if not self.toysThrown:
+            print 'ERROR: throw toys first'
+            sys.exit()
+        systForToys = self.systForToys
+        if len(l) > 0:
+            systForToys = l
+            for syst in systForToys:
+                if not syst in self.systForToys:
+                    print 'ERROR: systematics {} (requested for toys) not toy input file'.format(syst)
+                    sys.exit()
+            print 'toys restricted to systematics: {}'.format(systForToys)
+        else:
+            print 'toys for all available systematics: {}'.format(systForToys)
+        l_mt = []
+        l_tot = []
+        l_stat = []
+        l_syst = []
+        d_weights = {}
+        d_syst = {}
+
+        for meas in self.usedMeas:
+            d_weights[meas] = []
+        for syst in self.usedSyst:
+            d_syst[syst] = []
+        for nToy in range(0,self.nToys):
+            toy_uncert = self.getToyUncert(nToy,systForToys)
+            tmpobj = self.clone()
+            tmpobj.setNewUncertainties(toy_uncert)
+            l_mt.append(tmpobj.results.mt)
+            l_tot.append(tmpobj.results.tot)
+            l_stat.append(tmpobj.results.stat)
+            l_syst.append(tmpobj.results.syst)
+            for syst in tmpobj.results.impacts.keys():
+                d_syst[syst].append(tmpobj.results.impacts[syst])
+            for meas in tmpobj.results.weights.keys():
+                d_weights[meas].append(tmpobj.results.weights[meas])
+        return l_mt, l_tot, l_stat, l_syst, d_weights, d_syst
+
+    def getToyUncert(self,nToy,systForToys):
+        toy_uncert = copy.deepcopy(self.uncert)
+        for meas in self.MCstat_d.keys():
+            for syst in systForToys:
+                toy_uncert[meas][syst] = self.toy_d[meas][syst][nToy]
+        return toy_uncert
+        
+    def setNewUncertainties(self,uncert):
+        self.uncert = uncert
+        self.update()
+        return
+        

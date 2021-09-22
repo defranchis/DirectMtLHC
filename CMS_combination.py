@@ -7,11 +7,15 @@ import argparse
 from BLUE_object import *
 
 ROOT.gROOT.SetBatch(True)
-np.random.seed(1)
-
 
 toys_dir = 'toys_workdir'
 scan_dir = 'scan_workdir'
+
+def getToyResults(base_obj,l=[]):
+    l_mt, l_tot, l_stat, l_syst, d_weights, d_syst = base_obj.getToyResults(l)
+    print np.array(l_mt).mean(), np.array(l_mt).std()
+    #then do the plotting, etc
+    return
 
 def excludeMeasOneByOne(base_obj):
     for meas in base_obj.usedMeas:
@@ -199,11 +203,6 @@ def main():
 
     args = parser.parse_args()
 
-    if (not args.nToys is None) and args.noBLUE:
-        print '\nERROR: cannot use nToys option with noBLUE option'
-        print 'exiting...\n'
-        sys.exit()
-
     excludeMeas = []
     if not args.excludeMeas is None:
         excludeMeas = args.excludeMeas.split(',')
@@ -221,6 +220,14 @@ def main():
 
     if args.scanCorrAll:
         makeCorrelationScans(base_obj)
+
+    if args.nToys > 0:
+        base_obj.prepareForToys('MCstat.txt')
+        base_obj.throwToys(args.nToys)
+        getToyResults(base_obj)
+        if args.toysIndividualSyst:
+            for syst in base_obj.systForToys:
+                getToyResults(base_obj,[syst])
 
 if __name__ == "__main__":
     main()
