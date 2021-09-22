@@ -11,6 +11,47 @@ ROOT.gROOT.SetBatch(True)
 toys_dir = 'toys_workdir'
 scan_dir = 'scan_workdir'
 
+def main():
+
+    parser = argparse.ArgumentParser(description='specify options')
+
+    parser.add_argument('-f',action='store',type=str, required=True, help='<Required> input file')
+    parser.add_argument('--excludeMeas',action='store', help='provide list of measurements to be excluded. Example: --exclude \'meas 1, meas 2\'')
+    parser.add_argument('--excludeSyst',action='store', help='provide list of systematics to be excluded. Example: --exclude \'syst 1, syst 2\'')
+    parser.add_argument('--nToys',action='store',type=int, help='number of toys for MC stat')
+    parser.add_argument('--toysIndividualSyst',action='store_true', help='also run toys for each individual (relevant) systematic')
+    parser.add_argument('--scanCorrAll',action='store_true', help='scan all correlations with simple assumptions')
+    parser.add_argument('--excludeMeasOneByOne',action='store_true', help='exclude measurements one by one')
+
+    args = parser.parse_args()
+
+    excludeMeas = []
+    if not args.excludeMeas is None:
+        excludeMeas = args.excludeMeas.split(',')
+        excludeMeas = [removeUselessCharachters(e) for e in excludeMeas]
+
+    excludeSyst = []
+    if not args.excludeSyst is None:
+        excludeSyst = args.excludeSyst.split(',')
+
+    base_obj = BLUE_object(args.f,excludeMeas,excludeSyst)
+    base_obj.printResults()
+
+    if args.excludeMeasOneByOne:
+        excludeMeasOneByOne(base_obj)
+
+    if args.scanCorrAll:
+        makeCorrelationScans(base_obj)
+
+    if args.nToys > 0:
+        base_obj.prepareForToys('MCstat.txt')
+        base_obj.throwToys(args.nToys)
+        getToyResults(base_obj)
+        if args.toysIndividualSyst:
+            for syst in base_obj.systForToys:
+                getToyResults(base_obj,[syst])
+
+
 def getToyResults(base_obj,l=[]):
     l_mt, l_tot, l_stat, l_syst, d_weights, d_syst = base_obj.getToyResults(l)
 
@@ -204,46 +245,5 @@ def makeCorrelationScans(base_obj):
     return
 
     
-
-def main():
-
-    parser = argparse.ArgumentParser(description='specify options')
-
-    parser.add_argument('-f',action='store',type=str, required=True, help='<Required> input file')
-    parser.add_argument('--excludeMeas',action='store', help='provide list of measurements to be excluded. Example: --exclude \'meas 1, meas 2\'')
-    parser.add_argument('--excludeSyst',action='store', help='provide list of systematics to be excluded. Example: --exclude \'syst 1, syst 2\'')
-    parser.add_argument('--nToys',action='store',type=int, help='number of toys for MC stat')
-    parser.add_argument('--toysIndividualSyst',action='store_true', help='also run toys for each individual (relevant) systematic')
-    parser.add_argument('--scanCorrAll',action='store_true', help='scan all correlations with simple assumptions')
-    parser.add_argument('--excludeMeasOneByOne',action='store_true', help='exclude measurements one by one')
-
-    args = parser.parse_args()
-
-    excludeMeas = []
-    if not args.excludeMeas is None:
-        excludeMeas = args.excludeMeas.split(',')
-        excludeMeas = [removeUselessCharachters(e) for e in excludeMeas]
-
-    excludeSyst = []
-    if not args.excludeSyst is None:
-        excludeSyst = args.excludeSyst.split(',')
-
-    base_obj = BLUE_object(args.f,excludeMeas,excludeSyst)
-    base_obj.printResults()
-
-    if args.excludeMeasOneByOne:
-        excludeMeasOneByOne(base_obj)
-
-    if args.scanCorrAll:
-        makeCorrelationScans(base_obj)
-
-    if args.nToys > 0:
-        base_obj.prepareForToys('MCstat.txt')
-        base_obj.throwToys(args.nToys)
-        getToyResults(base_obj)
-        if args.toysIndividualSyst:
-            for syst in base_obj.systForToys:
-                getToyResults(base_obj,[syst])
-
 if __name__ == "__main__":
     main()
