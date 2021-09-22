@@ -155,7 +155,7 @@ def getFullCorrelationMatrix(lines,measurements,systnames):
         sys.exit()
     return matrix_dict
 
-def newWriteOutputSteve(lines,systnames,measurements,matrix,exclude,nMeas_orig,value,uncert,toys=False,scan=False,tmprun=True):
+def newWriteOutputSteve(lines,systnames,measurements,matrix,exclude,nMeas_orig,value,uncert,toys=False,scan=False,tmprun=False):
     lines = copy.deepcopy(lines)
     if tmprun and (toys or scan):
         print 'ERROR: either tmp run or toys or scan'
