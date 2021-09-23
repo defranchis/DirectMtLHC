@@ -560,3 +560,9 @@ class BLUE_object:
         self.update()
         return
         
+    def removeSigns(self):
+        for meas in self.measurements:
+            for syst in self.systnames:
+                self.uncert[meas][syst] = abs(self.uncert[meas][syst])
+        self.update()
+        return

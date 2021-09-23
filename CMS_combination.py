@@ -23,6 +23,7 @@ def main():
     parser.add_argument('--scanCorrAll',action='store_true', help='scan all correlations with simple assumptions')
     parser.add_argument('--excludeMeasOneByOne',action='store_true', help='exclude measurements one-by-one')
     parser.add_argument('--excludeSystOneByOne',action='store_true', help='exclude uncertainties one-by-one')
+    parser.add_argument('--noSigns',action='store_true', help='remove correlation signs')
 
     args = parser.parse_args()
 
@@ -37,6 +38,8 @@ def main():
         excludeSyst = [removeUselessCharachters(e) for e in excludeSyst]
 
     base_obj = BLUE_object(args.f,excludeMeas,excludeSyst)
+    if args.noSigns:
+        base_obj.removeSigns()
     base_obj.printResults()
 
     if args.excludeMeasOneByOne:
