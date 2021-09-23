@@ -48,34 +48,44 @@ class result_object:
 
 class BLUE_object:
 
-    def __init__(self,inputfile = None, excludeMeas = [], excludeSyst = []):
-        if not inputfile is None:
-            self.inputfile = inputfile
-            self.lines = open(inputfile,'r').read().splitlines()
-            self.excludeMeas = excludeMeas
-            self.excludeSyst = excludeSyst
+    def __init__(self,inputfile = None, excludeMeas = [], excludeSyst = [], ATLAS = False):
+
+        if inputfile is None:
+            print 'ERROR: please provide input file'
+            sys.exit()
+
+        self.inputfile = inputfile
+        self.ATLAS = ATLAS
+        self.lines = open(inputfile,'r').read().splitlines()
+        self.excludeMeas = excludeMeas
+        self.excludeSyst = excludeSyst
+        if not ATLAS:
             self.systnames = self.getSystNames()
             self.measurements = self.getMeasurements()
-            self.usedMeas, self.usedSyst = self.getUsedMeasSyst()
-            self.nMeas_orig = len(self.measurements)
             self.value, self.uncert = self.getAllResults()
             self.matrix = self.getFullCorrelationMatrix()
             self.p_matrix, self.p_uncert = self.propagateNegativeCorrelations()
             self.checkMatrices()
-            self.writeBLUEinputCMS()
-            self.log = self.runCombination()
-            self.results = self.readResults()
-            self.toysInitialised = False
-            self.toysThrown = False
-
         else:
-            print 'ERROR: please provide input file'
-            sys.exit()
+            self.systnames, self.measurements, self.value, self.uncert, self.matrix = self.getAllATLASInfo()
+            self.p_matrix = self.matrix
+            self.p_uncert = self.uncert
+        self.usedMeas, self.usedSyst = self.getUsedMeasSyst()
+        self.nMeas_orig = len(self.measurements)
+        self.writeBLUEinputCMS()
+        self.log = self.runCombination()
+        self.results = self.readResults()
+        self.toysInitialised = False
+        self.toysThrown = False
 
 
     def update(self):
-        self.p_matrix, self.p_uncert = self.propagateNegativeCorrelations()
-        self.checkMatrices()
+        if not self.ATLAS:
+            self.p_matrix, self.p_uncert = self.propagateNegativeCorrelations()
+            self.checkMatrices()
+        else:
+            self.p_matrix = self.matrix
+            self.p_uncert = self.uncert            
         self.usedMeas, self.usedSyst = self.getUsedMeasSyst()
         self.log = self.runCombination()
         self.results = self.readResults()
@@ -207,7 +217,6 @@ class BLUE_object:
         return True
 
     def writeBLUEinputCMS(self,tmprun=False):
-        lines = copy.deepcopy(self.lines)
 
         if tmprun:
             if not os.path.exists(tmp_dir):
@@ -218,15 +227,13 @@ class BLUE_object:
             if not os.path.exists(outdir):
                 os.makedirs(outdir)
             f = open('{}/{}_signed.txt'.format(outdir,(self.inputfile).split('/')[-1].replace('.txt','')),'w')
-        for i in range (0,len(lines)):
-            if '# of observables' in lines[i]:
-                lines[i] = lines[i].replace(' {} '.format(self.nMeas_orig),' {} '.format(len(self.usedMeas)))
-                lines[i] = lines[i].replace(' {} '.format(len(self.systnames)),' {} '.format(len(self.usedSyst)))
-
-            f.write('{}\n'.format(lines[i]))
-            if 'Stat' in lines[i]: break
-
+        f.write('\./combine<<!\n\'Top Mass combination\'\n-1 -1 0 internal & minuit debug level, dependency flag\n')
+        f.write('1 {} {}  # of observables, measurements, error classes\n'.format(len(self.usedMeas),len(self.usedSyst)))
+        f.write('\'Mtop\'     name of observable\n\n')
+        for syst in self.usedSyst:
+            f.write('\'{}\'\t'.format(syst))
         f.write('\n')
+
 
         for meas in self.usedMeas:
             f.write('\'{}\' \'Mtop\' {}'.format(meas,self.value[meas]))
@@ -566,3 +573,61 @@ class BLUE_object:
                 self.uncert[meas][syst] = abs(self.uncert[meas][syst])
         self.update()
         return
+
+    def getAllATLASInfo(self):
+        l = self.lines
+        for i, line in enumerate(l):
+            if i==0: continue
+            if l[i-1] == '# Systematics': break
+        systnames = line.split(',')
+        start = l.index('# Measurements')
+        stop = l.index('# Correlations')
+        measurements = []
+        all_uncertainties = dict()
+        all_central = dict()
+        for line in l[start+1:stop]:
+            measurement = line.split(' ')[0]
+            measurements.append(measurement)
+            all_values = line.split(' ')[1].split(',')
+            all_central[measurement] = all_values[0]
+            uncertainties = dict()
+            for i, syst in enumerate(systnames):
+                uncertainties[syst]=abs(float(all_values[i+1]))
+            all_uncertainties[measurement] = uncertainties
+
+        start = l.index('# Correlations')
+        tempdict = dict()
+        for line in l[start+1:]:
+            name = line.split(' ')[0]
+            corrs = line.split(' ')[1].split(',')
+            tempdict[name] = corrs
+
+        all_corr_dict = dict()
+        for s, syst in enumerate(systnames):
+            if syst=='Stat': continue
+            i_corr_dict = dict()
+            for i, meas_i in enumerate(measurements):
+                j_corr_dict = dict()
+                for j, meas_j in enumerate(measurements):
+                    if meas_i==meas_j:
+                        j_corr_dict[meas_j] = 1.0
+                    else:
+                        j_corr_dict[meas_j] = float(tempdict['{}_{}'.format(meas_i,meas_j)][s])
+                i_corr_dict[meas_i] = j_corr_dict
+            all_corr_dict[syst]=i_corr_dict
+
+        goodMatrix = True
+        for syst in systnames:
+            if syst=='Stat': continue
+            for i in measurements:
+                if all_corr_dict[syst][i][i]!=1:
+                    goodMatrix=False
+                for j in measurements:
+                    if all_corr_dict[syst][i][j]!=all_corr_dict[syst][j][i]:
+                        goodMatrix=False
+
+        if not goodMatrix:
+            print 'ERROR! matrix dictionary is unphysical'
+            sys.exit()
+
+        return systnames, measurements,all_central,all_uncertainties,all_corr_dict
