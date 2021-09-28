@@ -387,10 +387,7 @@ class BLUE_object:
         if len(self.excludeSyst)>0:
             print 'excluded systematics:', self.excludeSyst
             print
-        print 'mt =', self.results.mt, 'GeV'
-        print 'tot =', self.results.tot, 'GeV'
-        print 'stat =', self.results.stat, 'GeV'
-        print 'syst =', self.results.syst, 'GeV'
+        self.simplePrint()
         print
         print self.results.impacts
         print
@@ -434,7 +431,6 @@ class BLUE_object:
                         self.matrix[syst][m1][m2] = round(incr_corr,3)
         self.update()
         return
-
     def addExcludeMeas(self,l):
         for meas in l:
             if not meas in self.measurements:
