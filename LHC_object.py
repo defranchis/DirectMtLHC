@@ -1,7 +1,9 @@
 from BLUE_object import BLUE_object
 import copy
+import sys,os
 
 corrMap = {'JES3': 0.5, 'JESFLV': 0.5, 'RAD': 0.5, 'MCGEN': 0.5, 'BKMC': 1.0, 'PDF': 1.0 , 'BTAG': 0.5, 'UE': 1.0, 'PU': 1.0, 'CR': 1.0}
+mergeMap = {'HADR': ['HADR','LHCHAD'], 'JESFLV': ['CMSFL1','JES4','JES5','JES6'], 'RAD': ['RAD','Q','JPS']}
 
 class LHC_object:
 
@@ -15,7 +17,6 @@ class LHC_object:
         self.LHCmap = self.prepareLHCcombination()
         self.writeBLUEinputCMS()
         self.LHC_obj = BLUE_object('LHC_input.txt')
-        self.LHC_obj.printResults()
 
     def removeZeroImpacts(self):
         for syst in self.ATLAS_obj.usedSyst:
@@ -33,14 +34,16 @@ class LHC_object:
         return l
 
     def prepareLHCcombination(self):
-        ATLAS_only = list(set(self.ATLAS_obj.usedSyst) -set(self.commonSyst))
-        CMS_only = list(set(self.CMS_obj.usedSyst) -set(self.commonSyst))
+        ATLAS_only = list(set(self.ATLAS_obj.usedSyst) - set(self.commonSyst))
+        CMS_only = list(set(self.CMS_obj.usedSyst) - set(self.commonSyst))
         map_d = dict()
         for syst in self.commonSyst:
             map_d[syst] = [syst]
-        map_d['HADR'] = ['HADR','LHCHAD'] 
-        map_d['JESFLV'] = ['CMSFL1','JES4','JES5','JES6']
-        map_d['RAD'] = ['RAD','Q','JPS']
+        for syst in mergeMap.keys():
+            if syst in self.commonSyst:
+                print 'ERROR: systematics {} (in merge map) is common systematic'.format(syst)
+                sys.exit()
+            map_d[syst] = mergeMap[syst]
         for syst in map_d.keys():
             for orig_syst in map_d[syst]:
                 if orig_syst in ATLAS_only:
@@ -105,7 +108,7 @@ class LHC_object:
         for syst in corrMap.keys():
             if not syst in syst_l:
                 print 'ERROR: systematics {} (in correlation map) not found in LHC grid'.format(syst)
-                syst.exit()
+                sys.exit()
         for syst in syst_l:
             for i,meas1 in enumerate(exp.keys()):
                 for j,meas2 in enumerate(exp.keys()):
@@ -131,4 +134,8 @@ class LHC_object:
 
         return
 
-        
+    def getBlueObject(self):
+        return self.LHC_obj
+
+    def printResults(self):
+        self.LHC_obj.printResults()

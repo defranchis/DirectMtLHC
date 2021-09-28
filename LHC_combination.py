@@ -15,6 +15,8 @@ def main():
     obj_CMS.printResults()
 
     LHC = LHC_object(obj_ATLAS,obj_CMS)
+    obj_LHC = LHC.getBlueObject()
+    obj_LHC.printResults()
 
     return
 
