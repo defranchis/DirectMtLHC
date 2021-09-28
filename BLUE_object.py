@@ -48,14 +48,18 @@ class result_object:
 
 class BLUE_object:
 
-    def __init__(self,inputfile = None, excludeMeas = [], excludeSyst = [], ATLAS = False):
+    def __init__(self,inputfile = None, excludeMeas = [], excludeSyst = [], ATLAS = False, LHC = False):
 
         if inputfile is None:
             print 'ERROR: please provide input file'
             sys.exit()
-
+        if ATLAS and LHC:
+            print 'ERROR! either ATLAS or LHC combination'
+            sys.exit()
+            
         self.inputfile = inputfile
         self.ATLAS = ATLAS
+        self.LHC = LHC
         self.lines = open(inputfile,'r').read().splitlines()
         self.excludeMeas = excludeMeas
         self.excludeSyst = excludeSyst
@@ -80,7 +84,7 @@ class BLUE_object:
 
 
     def update(self):
-        if not self.ATLAS:
+        if not self.ATLAS and not self.LHC:
             self.p_matrix, self.p_uncert = self.propagateNegativeCorrelations()
             self.checkMatrices()
         else:
@@ -414,6 +418,14 @@ class BLUE_object:
                     if m1 == m2: continue
                     if self.matrix[syst][m1][m2] == 1:
                         self.matrix[syst][m1][m2] = round(red_corr,3)
+        self.update()
+        return
+
+    def setCorrelationLHC(self,corr,syst):
+        for m1 in self.measurements:
+            for m2 in self.measurements:
+                if m1 == m2: continue
+                self.matrix[syst][m1][m2] = round(corr,3)
         self.update()
         return
 

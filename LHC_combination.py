@@ -1,6 +1,7 @@
 
-from BLUE_object import *
-from LHC_object import *
+from BLUE_object import BLUE_object
+from LHC_object import LHC_object
+from combTools import makeCorrelationScansLHC
 
 f_ATLAS = 'original_inputs/ATLASnew.txt'
 f_CMS = 'original_inputs/CMS_negCorr_V4_v2_CMSGrid.txt'
@@ -17,6 +18,8 @@ def main():
     LHC = LHC_object(obj_ATLAS,obj_CMS)
     obj_LHC = LHC.getBlueObject()
     obj_LHC.printResults()
+
+    makeCorrelationScansLHC(obj_LHC)
 
     return
 

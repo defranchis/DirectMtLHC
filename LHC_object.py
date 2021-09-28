@@ -16,7 +16,7 @@ class LHC_object:
         self.commonSyst = self.getCommonSyst()
         self.LHCmap = self.prepareLHCcombination()
         self.writeBLUEinputCMS()
-        self.LHC_obj = BLUE_object('LHC_input.txt')
+        self.LHC_obj = BLUE_object('LHC_input.txt',LHC=True)
 
     def removeZeroImpacts(self):
         for syst in self.ATLAS_obj.usedSyst:
