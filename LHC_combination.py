@@ -16,13 +16,16 @@ def main():
 
     obj_ATLAS = BLUE_object(f_ATLAS,ATLAS=True)
     obj_ATLAS.printResults()
+    obj_ATLAS.printImpactsSorted()
 
     obj_CMS = BLUE_object(f_CMS,ATLAS=False,excludeMeas=['CMS12_SVX'])
     obj_CMS.printResults()
+    obj_CMS.printImpactsSorted()
 
     LHC = LHC_object(obj_ATLAS,obj_CMS)
     obj_LHC = LHC.getBlueObject()
     obj_LHC.printResults()
+    obj_LHC.printImpactsSorted()
 
     if args.scanCorr:
         makeCorrelationScansLHC(obj_LHC)

@@ -1,5 +1,6 @@
 import sys, os, copy
 import numpy as np
+from operator import itemgetter
 
 np.random.seed(1)
 
@@ -639,3 +640,8 @@ class BLUE_object:
             sys.exit()
 
         return systnames, measurements,all_central,all_uncertainties,all_corr_dict
+
+    def printImpactsSorted(self):
+        for k, v in sorted(self.results.impacts.items(), key=itemgetter(1), reverse = True):
+            print '{}\t{}'.format(k,v)
+        print
