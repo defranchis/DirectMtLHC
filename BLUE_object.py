@@ -46,6 +46,7 @@ class result_object:
         self.syst = -999
         self.impacts = dict()
         self.weights = dict()
+        self.signedImpacts = dict()
 
 class BLUE_object:
 
@@ -94,7 +95,6 @@ class BLUE_object:
         self.usedMeas, self.usedSyst = self.getUsedMeasSyst()
         self.log = self.runCombination()
         self.results = self.readResults()
-
 
     def clone(self):
         return copy.deepcopy(self)
@@ -394,7 +394,10 @@ class BLUE_object:
             print
         self.simplePrint()
         print
-        print self.results.impacts
+        if len(self.results.signedImpacts.keys())>0:
+            print self.results.signedImpacts
+        else:
+            print self.results.impacts
         print
         print self.results.weights
         print
@@ -598,7 +601,7 @@ class BLUE_object:
             measurement = line.split(' ')[0]
             measurements.append(measurement)
             all_values = line.split(' ')[1].split(',')
-            all_central[measurement] = all_values[0]
+            all_central[measurement] = float(all_values[0])
             uncertainties = dict()
             for i, syst in enumerate(systnames):
                 uncertainties[syst]=abs(float(all_values[i+1]))
@@ -645,3 +648,32 @@ class BLUE_object:
         for k, v in sorted(self.results.impacts.items(), key=itemgetter(1), reverse = True):
             print '{}\t{}'.format(k,v)
         print
+
+    def deriveSignedImpact(self,syst):
+
+        obj_up = self.clone()
+        for meas in obj_up.usedMeas:
+            obj_up.value[meas] += obj_up.uncert[meas][syst]
+        obj_up.update()
+        up = obj_up.results.mt - self.results.mt
+
+        obj_down = self.clone()
+        for meas in obj_down.usedMeas:
+            obj_down.value[meas] -= obj_down.uncert[meas][syst]
+        obj_down.update()
+        down = obj_down.results.mt - self.results.mt
+
+        return up, down
+
+    def deriveSignedImpacts(self):
+        for syst in self.results.impacts.keys():
+            if syst == 'Stat' or self.results.impacts[syst] == 0:
+                self.results.signedImpacts[syst] = self.results.impacts[syst]
+                continue
+            up, down = self.deriveSignedImpact(syst)
+            # print syst, round(up,3), round(down,3), round(self.results.impacts[syst],3)
+            if up*down > 0:
+                print '\nWARNING: sign of impact of {} not defined\n'.format(syst)
+            else:
+                self.results.signedImpacts[syst] = (up/abs(up)) * self.results.impacts[syst]
+        return

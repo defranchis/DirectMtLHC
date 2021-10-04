@@ -16,6 +16,7 @@ def main():
     parser.add_argument('--excludeMeasOneByOne',action='store_true', help='exclude measurements one-by-one')
     parser.add_argument('--excludeSystOneByOne',action='store_true', help='exclude uncertainties one-by-one')
     parser.add_argument('--noSigns',action='store_true', help='remove correlation signs')
+    parser.add_argument('--deriveImpactSigns',action='store_true', help='derive signs of the impacts')
 
     args = parser.parse_args()
 
@@ -32,6 +33,11 @@ def main():
     base_obj = BLUE_object(args.f,excludeMeas,excludeSyst)
     if args.noSigns:
         base_obj.removeSigns()
+
+    if args.deriveImpactSigns:
+        print '\nestimating signs of impacts, this will take a short while...\n'
+        base_obj.deriveSignedImpacts()
+
     base_obj.printResults()
 
     if args.excludeMeasOneByOne:
