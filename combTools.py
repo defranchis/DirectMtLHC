@@ -363,11 +363,14 @@ def makeCorrelationScans(base_obj):
 
     return
 
-def makeCorrelationScanLHC(base_obj,syst_scan):
+def makeCorrelationScanLHC(base_obj,syst_scan,brutal=False):
 
     step = 0.01
     orig_corr = round(base_obj.matrix[syst_scan]['CMS_comb']['ATLAS_comb'],1)
-    corrs = list(np.arange(max(0,orig_corr -.5),min(1,orig_corr+.5)+step/2,step))
+    if not brutal:
+        corrs = list(np.arange(max(0,orig_corr -.5),min(1,orig_corr+.5)+step/2,step))
+    else:
+        corrs = list(np.arange(-1.*min(1,orig_corr+.5),min(1,orig_corr+.5)+step/2,step))
 
     h_mt = TGraph()
     h_tot = TGraph()
@@ -394,23 +397,48 @@ def makeCorrelationScanLHC(base_obj,syst_scan):
     h_stat.SetMarkerStyle(8)
     h_syst.SetMarkerStyle(8)
 
+    href_mt = TGraph()
+    href_tot = TGraph()
+    href_stat = TGraph()
+    href_syst = TGraph()
+
+    href_mt.SetPoint(0,orig_corr,base_obj.results.mt)
+    href_tot.SetPoint(0,orig_corr,base_obj.results.tot)
+    href_stat.SetPoint(0,orig_corr,base_obj.results.stat)
+    href_syst.SetPoint(0,orig_corr,base_obj.results.syst)
+
+    href_mt.SetMarkerStyle(8)
+    href_tot.SetMarkerStyle(8)
+    href_stat.SetMarkerStyle(8)
+    href_syst.SetMarkerStyle(8)
+
+    href_mt.SetMarkerColor(ROOT.kRed)
+    href_tot.SetMarkerColor(ROOT.kRed)
+    href_stat.SetMarkerColor(ROOT.kRed)
+    href_syst.SetMarkerColor(ROOT.kRed)
+
+
     c = TCanvas()
     h_mt.Draw('apl')
+    href_mt.Draw('p same')
     c.SaveAs('{}/mt_{}.pdf'.format(scan_dir_LHC,syst_scan))
     c.SaveAs('{}/mt_{}.png'.format(scan_dir_LHC,syst_scan))
     c.Clear()
 
     h_tot.Draw('apl')
+    href_tot.Draw('p same')
     c.SaveAs('{}/tot_{}.pdf'.format(scan_dir_LHC,syst_scan))
     c.SaveAs('{}/tot_{}.png'.format(scan_dir_LHC,syst_scan))
     c.Clear()
 
     h_stat.Draw('apl')
+    href_stat.Draw('p same')
     c.SaveAs('{}/stat_{}.pdf'.format(scan_dir_LHC,syst_scan))
     c.SaveAs('{}/stat_{}.png'.format(scan_dir_LHC,syst_scan))
     c.Clear()
 
     h_syst.Draw('apl')
+    href_syst.Draw('p same')
     c.SaveAs('{}/syst_{}.pdf'.format(scan_dir_LHC,syst_scan))
     c.SaveAs('{}/syst_{}.png'.format(scan_dir_LHC,syst_scan))
     c.Clear()
@@ -418,14 +446,14 @@ def makeCorrelationScanLHC(base_obj,syst_scan):
     return
 
 
-def makeCorrelationScansLHC(base_obj):
+def makeCorrelationScansLHC(base_obj,brutal=False):
     if not os.path.exists(scan_dir_LHC):
         os.makedirs(scan_dir_LHC)
 
     f = open('{}/slides.tex'.format(scan_dir_LHC),'w')
 
     for syst in base_obj.matrix.keys():
-        makeCorrelationScanLHC(base_obj,syst)
+        makeCorrelationScanLHC(base_obj,syst,brutal)
         f.write('\\begin{{frame}}{{correlation scan for systematics {}}}\n'.format(syst))
         f.write('\\centering\\includegraphics[width=.49\\textwidth]{{{}/mt_{}.pdf}}\n'.format(scan_dir_LHC,syst))
         f.write('\\centering\\includegraphics[width=.49\\textwidth]{{{}/tot_{}.pdf}}\\\\\n'.format(scan_dir_LHC,syst))

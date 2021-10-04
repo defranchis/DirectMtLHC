@@ -12,6 +12,7 @@ def main():
 
     parser = argparse.ArgumentParser(description='specify options')
     parser.add_argument('--scanCorr',action='store_true', help='scan all correlations with simple assumptions')
+    parser.add_argument('--scanBrutal',action='store_true', help='scan all correlations wildly')
     args = parser.parse_args()
 
     obj_ATLAS = BLUE_object(f_ATLAS,ATLAS=True)
@@ -23,12 +24,13 @@ def main():
     obj_CMS.printImpactsSorted()
 
     LHC = LHC_object(obj_ATLAS,obj_CMS)
+    # LHC = LHC_object(obj_ATLAS,obj_CMS,separateCombinations=False)
     obj_LHC = LHC.getBlueObject()
     obj_LHC.printResults()
     obj_LHC.printImpactsSorted()
 
-    if args.scanCorr:
-        makeCorrelationScansLHC(obj_LHC)
+    if args.scanCorr or args.scanBrutal:
+        makeCorrelationScansLHC(obj_LHC,args.scanBrutal)
 
     return
 
