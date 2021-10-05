@@ -50,7 +50,7 @@ class result_object:
 
 class BLUE_object:
 
-    def __init__(self,inputfile = None, excludeMeas = [], excludeSyst = [], ATLAS = False, LHC = False):
+    def __init__(self,inputfile = None, excludeMeas = [], excludeSyst = [], ATLAS = False, LHC = False, signsOnImpacts = False):
 
         if inputfile is None:
             print 'ERROR: please provide input file'
@@ -62,20 +62,27 @@ class BLUE_object:
         self.inputfile = inputfile
         self.ATLAS = ATLAS
         self.LHC = LHC
+        self.CMS = not (self.ATLAS or self.LHC)
+        self.signsOnImpacts = self.CMS or signsOnImpacts
         self.lines = open(inputfile,'r').read().splitlines()
         self.excludeMeas = excludeMeas
         self.excludeSyst = excludeSyst
-        if not ATLAS:
+
+        if self.ATLAS:
+            self.systnames, self.measurements, self.value, self.uncert, self.matrix = self.getAllATLASInfo()
+        else:
             self.systnames = self.getSystNames()
             self.measurements = self.getMeasurements()
             self.value, self.uncert = self.getAllResults()
             self.matrix = self.getFullCorrelationMatrix()
+
+        if self.signsOnImpacts:
             self.p_matrix, self.p_uncert = self.propagateNegativeCorrelations()
             self.checkMatrices()
         else:
-            self.systnames, self.measurements, self.value, self.uncert, self.matrix = self.getAllATLASInfo()
             self.p_matrix = self.matrix
             self.p_uncert = self.uncert
+
         self.usedMeas, self.usedSyst = self.getUsedMeasSyst()
         self.nMeas_orig = len(self.measurements)
         self.writeBLUEinputCMS()
@@ -86,7 +93,7 @@ class BLUE_object:
 
 
     def update(self):
-        if not self.ATLAS and not self.LHC:
+        if self.signsOnImpacts:
             self.p_matrix, self.p_uncert = self.propagateNegativeCorrelations()
             self.checkMatrices()
         else:
@@ -604,7 +611,7 @@ class BLUE_object:
             all_central[measurement] = float(all_values[0])
             uncertainties = dict()
             for i, syst in enumerate(systnames):
-                uncertainties[syst]=abs(float(all_values[i+1]))
+                uncertainties[syst]=float(all_values[i+1])
             all_uncertainties[measurement] = uncertainties
 
         start = l.index('# Correlations')
@@ -624,7 +631,10 @@ class BLUE_object:
                     if meas_i==meas_j:
                         j_corr_dict[meas_j] = 1.0
                     else:
-                        j_corr_dict[meas_j] = float(tempdict['{}_{}'.format(meas_i,meas_j)][s])
+                        corr = float(tempdict['{}_{}'.format(meas_i,meas_j)][s])
+                        if self.signsOnImpacts:
+                            corr = abs(corr)
+                        j_corr_dict[meas_j] = corr
                 i_corr_dict[meas_i] = j_corr_dict
             all_corr_dict[syst]=i_corr_dict
 
