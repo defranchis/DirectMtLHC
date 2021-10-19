@@ -39,6 +39,8 @@ def main():
         base_obj.deriveSignedImpacts()
 
     base_obj.printResults()
+    base_obj.printImpactsSorted()
+    drawWeights(base_obj,path='plots')
 
     if args.excludeMeasOneByOne:
         excludeMeasOneByOne(base_obj)
@@ -48,6 +50,7 @@ def main():
 
     if args.scanCorrAll:
         makeCorrelationScans(base_obj)
+        plotScanSummary(base_obj)
 
     if args.nToys > 0:
         base_obj.prepareForToys('MCstat.txt')

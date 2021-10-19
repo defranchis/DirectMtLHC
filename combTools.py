@@ -1,7 +1,7 @@
 import os, sys, copy
 import numpy as np
 import ROOT
-from ROOT import TH1F, TCanvas, TGraph
+from ROOT import TH1F, TCanvas, TGraph, TMath, TLegend
 from BLUE_object import *
 
 ROOT.gROOT.SetBatch(True)
@@ -181,12 +181,30 @@ def plotToyResults(l_mt, l_tot, l_stat, l_syst, d_weights, d_syst, base_obj):
     return
 
 def excludeMeasOneByOne(base_obj):
-    for meas in base_obj.usedMeas:
+    h = TH1F('h','excluding measurements one-by-one; excluded measurement; combined mt [GeV]',len(base_obj.usedMeas), -0.5, -.5+len(base_obj.usedMeas))
+    for i, meas in enumerate(base_obj.usedMeas):
         obj = base_obj.clone()
         obj.addExcludeMeas([meas])
         print 'excluded:', obj.excludeMeas
-        obj.simplePrint()
         print
+        obj.simplePrint()
+        h.SetBinContent(i+1,obj.results.mt)
+        h.SetBinError(i+1,obj.results.tot)
+        h.GetXaxis().SetBinLabel(i+1,nameForCMSPlots(meas))
+
+    if not os.path.exists('plots'):
+        os.makedirs('plots')
+
+    ROOT.gStyle.SetOptStat(0000)
+    l=ROOT.TLine(0,base_obj.results.mt,len(base_obj.usedMeas)-1,base_obj.results.mt)
+    l.SetLineColor(ROOT.kGreen+1)
+    l.SetLineWidth(2)
+    c = TCanvas()
+    h.Draw('E1')
+    l.Draw('same')
+    c.SaveAs('plots/exclude.png')
+    c.SaveAs('plots/exclude.pdf')
+    
     return
 
 def excludeSystOneByOne(base_obj):
@@ -339,6 +357,90 @@ def makeCorrelationScan(base_obj,syst_scan):
     c.SaveAs('{}/syst/syst_{}.png'.format(scan_dir,syst_scan))
     c.Clear()
 
+    rf = ROOT.TFile('{}/syst/{}.root'.format(scan_dir,syst_scan),'recreate')
+    h_mt.SetName('mt')
+    h_tot.SetName('tot')
+    h_stat.SetName('stat')
+    h_syst.SetName('syst')
+    h_mt.Write()
+    h_tot.Write()
+    h_stat.Write()
+    h_syst.Write()
+    rf.Close()
+
+    return
+
+def plotScanSummary(base_obj):
+    mt_maxdiff = {}
+    tot_maxdiff = {}
+    mt_m = 0
+    mt_M = 0
+    tot_m = 0
+    tot_M = 0
+
+    for i, syst in enumerate(base_obj.usedSyst):
+        if syst == 'Stat': continue
+        rf = ROOT.TFile('{}/syst/{}.root'.format(scan_dir,syst),'read')
+        mt = rf.Get('mt')
+        tot = rf.Get('tot')
+        mt_diff = TMath.MaxElement(mt.GetN(),mt.GetY()) - TMath.MinElement(mt.GetN(),mt.GetY())
+        tot_diff = TMath.MaxElement(tot.GetN(),tot.GetY()) - TMath.MinElement(tot.GetN(),tot.GetY())
+        if mt_diff/base_obj.results.mt > 0.00004:
+            mt_maxdiff[syst] = mt_diff
+            if len(mt_maxdiff.keys())==1:
+                mt_m = TMath.MinElement(mt.GetN(),mt.GetY())
+                mt_M = TMath.MaxElement(mt.GetN(),mt.GetY())
+            else:
+                if TMath.MinElement(mt.GetN(),mt.GetY()) < mt_m:
+                    mt_m = TMath.MinElement(mt.GetN(),mt.GetY())
+                if TMath.MaxElement(mt.GetN(),mt.GetY()) > mt_M:
+                    mt_M = TMath.MaxElement(mt.GetN(),mt.GetY())
+        if tot_diff/base_obj.results.tot > 0.006:
+            tot_maxdiff[syst] = tot_diff
+            if len(tot_maxdiff.keys())==1:
+                tot_m = TMath.MinElement(tot.GetN(),tot.GetY())
+                tot_M = TMath.MaxElement(tot.GetN(),tot.GetY())
+            else:
+                if TMath.MinElement(tot.GetN(),tot.GetY()) < tot_m:
+                    tot_m = TMath.MinElement(tot.GetN(),tot.GetY())
+                if TMath.MaxElement(tot.GetN(),tot.GetY()) > tot_M:
+                    tot_M = TMath.MaxElement(tot.GetN(),tot.GetY())
+
+    c = TCanvas()
+    leg = TLegend(.7,.5,.87,.87)
+    leg.SetBorderSize(0)
+    for i,syst in enumerate(mt_maxdiff.keys()):
+        rf = ROOT.TFile('{}/syst/{}.root'.format(scan_dir,syst),'read')
+        mt = rf.Get('mt')
+        mt.SetMarkerColor(i+1)
+        mt.SetLineColor(i+1)
+        leg.AddEntry(mt,syst,'pl')
+        if i==0:
+            mt.SetTitle('mt dependence on correlations')
+            mt.GetYaxis().SetRangeUser(mt_m-.003,mt_M+.003)
+            mt.Draw('apl')
+        else:
+            mt.Draw('pl same')
+    leg.Draw('same')
+    c.SaveAs(scan_dir+'/scan_mt_summary.png')
+    c.Clear()
+    leg.Clear()
+
+    for i,syst in enumerate(tot_maxdiff.keys()):
+        rf = ROOT.TFile('{}/syst/{}.root'.format(scan_dir,syst),'read')
+        tot = rf.Get('tot')
+        tot.SetMarkerColor(i+1)
+        tot.SetLineColor(i+1)
+        leg.AddEntry(tot,syst,'pl')
+        if i==0:
+            tot.SetTitle('total uncertainty - dependence on correlations')
+            tot.GetYaxis().SetRangeUser(tot_m-.001,tot_M+.001)
+            tot.Draw('apl')
+        else:
+            tot.Draw('pl same')
+    leg.Draw('same')
+    c.SaveAs(scan_dir+'/scan_tot_summary.png')
+
     return
 
 def makeCorrelationScans(base_obj):
@@ -360,6 +462,7 @@ def makeCorrelationScans(base_obj):
         f.write('\\centering\\includegraphics[width=.49\\textwidth]{{{}/syst/stat_{}.pdf}}\n'.format(scan_dir,syst))
         f.write('\\centering\\includegraphics[width=.49\\textwidth]{{{}/syst/syst_{}.pdf}}\n'.format(scan_dir,syst))
         f.write('\\end{frame}\n\n')
+        
 
     return
 
@@ -462,3 +565,28 @@ def makeCorrelationScansLHC(base_obj,brutal=False):
         f.write('\\end{frame}\n\n')
 
     return
+
+def drawWeights(base_obj,path):
+    h = TH1F('h','measurement weights; measurement; weight',len(base_obj.usedMeas), -0.5, -.5+len(base_obj.usedMeas))
+    for i, meas in enumerate(base_obj.usedMeas):
+        h.Fill(i,base_obj.results.weights[meas])
+        h.GetXaxis().SetBinLabel(i+1,nameForCMSPlots(meas))
+
+    if not os.path.exists(path):
+        os.makepaths(path)
+
+    ROOT.gStyle.SetOptStat(0000)
+    c = TCanvas()
+    h.SetFillColor(ROOT.kYellow)
+    h.Draw('hist')
+    c.SaveAs(path+'/weights.png')
+    c.SaveAs(path+'/weights.pdf')
+
+    return
+
+def nameForCMSPlots(name):
+    if 'CMS11' in name:
+        name += ' 7TeV'
+    elif 'CMS12' in name:
+        name += ' 8TeV'
+    return name.replace('CMS11_','').replace('CMS12_','')
