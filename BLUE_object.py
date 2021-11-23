@@ -6,6 +6,9 @@ np.random.seed(1)
 
 tmp_dir = 'tmp_workdir'
 
+# tocheck = ['MCGEN', 'CR', 'METH', 'RAD', 'AtlFastFull', 'TRIG', 'JES3', 'UE', 'JES8', 'HADR']
+
+
 def isSymmetricMatrix(matrix):
     if len(matrix[0]) != len(matrix[:][0]) : return False
     for i in range(0,len(matrix[0])):
@@ -656,7 +659,7 @@ class BLUE_object:
 
     def printImpactsSorted(self):
         for k, v in sorted(self.results.impacts.items(), key=itemgetter(1), reverse = True):
-            print '{}\t{}'.format(k,v)
+            print '{}\t{}'.format(k,round(v,2))
         print
 
     def deriveSignedImpact(self,syst):
@@ -675,15 +678,21 @@ class BLUE_object:
 
         return up, down
 
+
+
     def deriveSignedImpacts(self):
         for syst in self.results.impacts.keys():
             if syst == 'Stat' or self.results.impacts[syst] == 0:
                 self.results.signedImpacts[syst] = self.results.impacts[syst]
                 continue
             up, down = self.deriveSignedImpact(syst)
-            # print syst, round(up,3), round(down,3), round(self.results.impacts[syst],3)
+            # if syst in tocheck:
+            #     print syst, round(up,3), round(down,3), round(self.results.impacts[syst],3)
             if up*down > 0:
                 print '\nWARNING: sign of impact of {} not defined\n'.format(syst)
+            elif up*down == 0:
+                self.results.signedImpacts[syst] = 0
             else:
                 self.results.signedImpacts[syst] = (up/abs(up)) * self.results.impacts[syst]
         return
+
