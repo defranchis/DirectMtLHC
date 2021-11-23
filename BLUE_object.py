@@ -705,3 +705,8 @@ class BLUE_object:
         for meas in self.measurements:
             self.value[meas] = 199.9
         return
+
+    def makeBlind(self):
+        self.blindCentralValues()
+        self.update()
+        return
