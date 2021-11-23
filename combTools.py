@@ -423,6 +423,7 @@ def plotScanSummary(base_obj):
             mt.Draw('pl same')
     leg.Draw('same')
     c.SaveAs(scan_dir+'/scan_mt_summary.png')
+    c.SaveAs(scan_dir+'/scan_mt_summary.pdf')
     c.Clear()
     leg.Clear()
 
@@ -440,6 +441,7 @@ def plotScanSummary(base_obj):
             tot.Draw('pl same')
     leg.Draw('same')
     c.SaveAs(scan_dir+'/scan_tot_summary.png')
+    c.SaveAs(scan_dir+'/scan_tot_summary.pdf')
 
     return
 
