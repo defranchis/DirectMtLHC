@@ -53,7 +53,7 @@ class result_object:
 
 class BLUE_object:
 
-    def __init__(self,inputfile = None, excludeMeas = [], excludeSyst = [], ATLAS = False, LHC = False, signsOnImpacts = False):
+    def __init__(self,inputfile = None, excludeMeas = [], excludeSyst = [], ATLAS = False, LHC = False, signsOnImpacts = False, blind = False):
 
         if inputfile is None:
             print 'ERROR: please provide input file'
@@ -67,6 +67,7 @@ class BLUE_object:
         self.LHC = LHC
         self.CMS = not (self.ATLAS or self.LHC)
         self.signsOnImpacts = self.CMS or signsOnImpacts
+        self.blind = blind
         self.lines = open(inputfile,'r').read().splitlines()
         self.excludeMeas = excludeMeas
         self.excludeSyst = excludeSyst
@@ -85,6 +86,9 @@ class BLUE_object:
         else:
             self.p_matrix = self.matrix
             self.p_uncert = self.uncert
+
+        if self.blind:
+            self.blindCentralValues()
 
         self.usedMeas, self.usedSyst = self.getUsedMeasSyst()
         self.nMeas_orig = len(self.measurements)
@@ -696,3 +700,8 @@ class BLUE_object:
                 self.results.signedImpacts[syst] = (up/abs(up)) * self.results.impacts[syst]
         return
 
+
+    def blindCentralValues(self):
+        for meas in self.measurements:
+            self.value[meas] = 199.9
+        return
