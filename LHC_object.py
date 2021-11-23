@@ -7,9 +7,12 @@ mergeMap = {'HADR': ['HADR','LHCHAD'], 'JESFLV': ['CMSFL1','JES4','JES5','JES6']
 
 class LHC_object:
 
-    def __init__(self,ATLAS_obj, CMS_obj):
+    def __init__(self,ATLAS_obj, CMS_obj, blind = False):
         self.ATLAS_obj = ATLAS_obj.clone()
         self.CMS_obj = CMS_obj.clone()
+        if blind:
+            self.ATLAS_obj.makeBlind()
+            self.CMS_obj.makeBlind()
         self.removeZeroImpacts()
         self.ATLAS_obj.simplePrint()
         self.CMS_obj.simplePrint()
