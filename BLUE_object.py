@@ -53,7 +53,7 @@ class result_object:
 
 class BLUE_object:
 
-    def __init__(self,inputfile = None, excludeMeas = [], excludeSyst = [], ATLAS = False, LHC = False, signsOnImpacts = False, blind = False):
+    def __init__(self,inputfile = None, excludeMeas = [], excludeSyst = [], ATLAS = False, LHC = False, blind = False):
 
         if inputfile is None:
             print 'ERROR: please provide input file'
@@ -66,7 +66,6 @@ class BLUE_object:
         self.ATLAS = ATLAS
         self.LHC = LHC
         self.CMS = not (self.ATLAS or self.LHC)
-        self.signsOnImpacts = self.CMS or signsOnImpacts
         self.blind = blind
         self.lines = open(inputfile,'r').read().splitlines()
         self.excludeMeas = excludeMeas
@@ -80,12 +79,7 @@ class BLUE_object:
             self.value, self.uncert = self.getAllResults()
             self.matrix = self.getFullCorrelationMatrix()
 
-        if self.signsOnImpacts:
-            self.p_matrix, self.p_uncert = self.propagateNegativeCorrelations()
-            self.checkMatrices()
-        else:
-            self.p_matrix = self.matrix
-            self.p_uncert = self.uncert
+        self.p_matrix, self.p_uncert = self.propagateNegativeCorrelations()
 
         if self.blind:
             self.blindCentralValues()
@@ -100,12 +94,7 @@ class BLUE_object:
 
 
     def update(self):
-        if self.signsOnImpacts:
-            self.p_matrix, self.p_uncert = self.propagateNegativeCorrelations()
-            self.checkMatrices()
-        else:
-            self.p_matrix = self.matrix
-            self.p_uncert = self.uncert            
+        self.p_matrix, self.p_uncert = self.propagateNegativeCorrelations()
         self.usedMeas, self.usedSyst = self.getUsedMeasSyst()
         self.log = self.runCombination()
         self.results = self.readResults()
@@ -291,7 +280,18 @@ class BLUE_object:
     def propagateNegativeCorrelations(self):
         matrix = copy.deepcopy(self.matrix)
         uncert = copy.deepcopy(self.uncert)
+        affectedSyst = []
         for syst in self.systnames:
+            for meas in self.measurements:
+                if self.uncert[meas][syst] < 0:
+                    affectedSyst.append(syst)
+                    break
+        print
+        print 'testMD'
+        print affectedSyst
+        print
+
+        for syst in affectedSyst:
             if syst == 'Stat': 
                 continue
             for meas1 in self.measurements:
@@ -300,6 +300,7 @@ class BLUE_object:
                         continue
                     u1 = uncert[meas1][syst]
                     u2 = uncert[meas2][syst]
+                    matrix[syst][meas1][meas2] = abs(matrix[syst][meas1][meas2])
                     if u1 != 0 and u2 != 0:
                         matrix[syst][meas1][meas2] *= u1*u2/abs(u1*u2)
                     elif u1 != 0:
@@ -619,6 +620,7 @@ class BLUE_object:
             uncertainties = dict()
             for i, syst in enumerate(systnames):
                 uncertainties[syst]=float(all_values[i+1])
+
             all_uncertainties[measurement] = uncertainties
 
         start = l.index('# Correlations')
@@ -639,8 +641,6 @@ class BLUE_object:
                         j_corr_dict[meas_j] = 1.0
                     else:
                         corr = float(tempdict['{}_{}'.format(meas_i,meas_j)][s])
-                        if self.signsOnImpacts:
-                            corr = abs(corr)
                         j_corr_dict[meas_j] = corr
                 i_corr_dict[meas_i] = j_corr_dict
             all_corr_dict[syst]=i_corr_dict
