@@ -3,46 +3,71 @@ import copy
 import sys,os
 
 corrMap_default = {'JES3': 0.5, 'JESFLV': 0.5, 'RAD': 0.5, 'MCGEN': 0.5, 'BKMC': 1.0, 'PDF': 1.0 , 'BTAG': 0.5, 'UE': 1.0, 'PU': 1.0, 'CR': 1.0}
-mergeMap_default = {'HADR': ['HADR','LHCHAD'], 'JESFLV': ['CMSFL1','JES4','JES5','JES6'], 'RAD': ['RAD','Q','JPS']}
-noSignsOnImpacts = {'ATLAS':['JESFLV', 'BKMC', 'BTAG', 'PDF'], 'CMS': []} #to check
+mergeMap_default = {'ATLAS':{}, 'CMS': {'RAD': ['Q','JPS']}}
+renameMap_default = {'ATLAS':{} ,'CMS': {'CMSFL1':'JESFLV'}}
+
+noSignsOnImpacts = {'ATLAS':['JESFLV', 'BKMC', 'BTAG', 'PDF'], 'CMS': []}
 
 class LHC_object:
 
-    def __init__(self,ATLAS_obj, CMS_obj, separateCombinations = True, corrMap = None, mergeMap = None, blind = False):
+    def __init__(self,ATLAS_obj, CMS_obj, separateCombinations = True, corrMap = None, mergeMap = None, renameMap = None, blind = False):
         self.ATLAS_obj = ATLAS_obj.clone()
         self.CMS_obj = CMS_obj.clone()
+        self.obj_d = {'ATLAS':self.ATLAS_obj, 'CMS':self.CMS_obj}
+        self.experiments = self.obj_d.keys()
         self.blind = blind
         if blind:
-            self.ATLAS_obj.makeBlind()
-            self.CMS_obj.makeBlind()
+            for obj in self.obj_d.values():
+                obj.makeBlind()
         self.separateCombinations = separateCombinations
-        if separateCombinations:
-            if len(self.ATLAS_obj.results.signedImpacts.keys()) == 0:
-                self.ATLAS_obj.deriveSignedImpacts()
-            if len(self.CMS_obj.results.signedImpacts.keys()) == 0:
-                self.CMS_obj.deriveSignedImpacts()
         # self.removeZeroImpacts()
-        self.ATLAS_obj.simplePrint()
-        self.CMS_obj.simplePrint()
+        for exp in self.experiments:
+            print '->', exp
+            self.obj_d[exp].simplePrint()
+
+        self.noSignsOnImpacts = noSignsOnImpacts
 
         if corrMap is None:  self.corrMap = corrMap_default
         else: self.corrMap = corrMap
         if mergeMap is None: self.mergeMap = mergeMap_default
         else: self.mergeMap = mergeMap
+        if renameMap is None: self.renameMap = renameMap_default
+        else: self.renameMap = renameMap
 
+        self.renameAllSyst()
+        self.mergeAllSyst()
+
+        if self.separateCombinations:
+            for obj in self.obj_d.values():
+                if len(obj.results.signedImpacts.keys()) == 0:
+                    obj.deriveSignedImpacts()
 
         self.commonSyst = self.getCommonSyst()
-        self.LHCmap = self.prepareLHCcombination()
-        self.writeBLUEinputCMS(separateCombinations=self.separateCombinations)
+        self.LHCsyst = self.prepareLHCcombination()
+        self.writeBLUEinputCMS(separateCombinations=self.separateCombinations) # to be changed (merging happens before)
         self.LHC_obj = BLUE_object('LHC_input.txt',LHC=True,blind=self.blind)
 
+    def renameAllSyst(self):
+        for exp in self.experiments:
+            for old, new in self.renameMap[exp].items():
+                self.obj_d[exp].renameSyst(old,new)
+        return
+
+    def mergeAllSyst(self):
+        for exp in self.experiments:
+            for merged, original_l in self.mergeMap[exp].items():
+                signs_propagated = self.obj_d[exp].mergeSyst(merged,original_l) # function to be implemented
+                if not signs_propagated:
+                    self.noSignsOnImpacts[exp].append(merged)
+        return
+
+
     def removeZeroImpacts(self):
-        for syst in self.ATLAS_obj.usedSyst:
-            if self.ATLAS_obj.results.impacts[syst] == 0:
-                self.ATLAS_obj.addExcludeSyst([syst])
-        for syst in self.CMS_obj.usedSyst:
-            if self.CMS_obj.results.impacts[syst] == 0:
-                self.CMS_obj.addExcludeSyst([syst])
+        for obj in self.obj_d.values():
+            for syst in obj.usedSyst:
+                if obj.results.impacts[syst] == 0:
+                    obj.addExcludeSyst([syst])
+        return
 
     def getCommonSyst(self):
         l = []
@@ -54,20 +79,8 @@ class LHC_object:
     def prepareLHCcombination(self):
         ATLAS_only = list(set(self.ATLAS_obj.usedSyst) - set(self.commonSyst))
         CMS_only = list(set(self.CMS_obj.usedSyst) - set(self.commonSyst))
-        map_d = dict()
-        for syst in self.commonSyst:
-            map_d[syst] = [syst]
-        for syst in self.mergeMap.keys():
-            if syst in self.commonSyst:
-                print 'ERROR: systematics {} (in merge map) is common systematic'.format(syst)
-                sys.exit()
-            map_d[syst] = self.mergeMap[syst]
-        for syst in map_d.keys():
-            for orig_syst in map_d[syst]:
-                if orig_syst in ATLAS_only:
-                    ATLAS_only.remove(orig_syst)
-                if orig_syst in CMS_only:
-                    CMS_only.remove(orig_syst)
+        LHCsyst = ATLAS_only + CMS_only + self.commonSyst
+
         print
         print '-> unique to ATLAS'
         print ATLAS_only
@@ -75,23 +88,16 @@ class LHC_object:
         print '-> unique to CMS'
         print CMS_only
         print
-        for syst in ATLAS_only:
-            map_d[syst] = [syst]
-        for syst in CMS_only:
-            map_d[syst] = [syst]
-        
-        return map_d
+
+        return LHCsyst
 
     def writeSeparateCombinationsInput(self,f):
 
         f.write('\./combine<<!\n\'LHC Top Mass combination\'\n-1 -1 0 internal & minuit debug level, dependency flag\n')
-        f.write('1 2 {}  # of observables, measurements, error classes\n'.format(len(self.LHCmap.keys())))
+        f.write('1 2 {}  # of observables, measurements, error classes\n'.format(len(self.LHCsyst)))
         f.write('\'Mtop\'     name of observable\n\n')
 
-        exp = dict()
-        exp['ATLAS'] = self.ATLAS_obj
-        exp['CMS'] = self.CMS_obj
-        syst_l = self.LHCmap.keys()
+        syst_l = self.LHCsyst
         syst_l.remove('Stat')
         syst_l = ['Stat'] + sorted(syst_l)
 
@@ -100,20 +106,16 @@ class LHC_object:
         f.write('\n')
 
 
-        for meas in exp.keys():
-            f.write('\'{}\' \'Mtop\' {}'.format(meas+' comb',exp[meas].results.mt))
+        for exp in self.experiments:
+            f.write('\'{}\' \'Mtop\' {}'.format(exp+' comb',self.obj_d[exp].results.mt))
             for syst in syst_l:
-                if syst in exp[meas].results.impacts.keys():
-                    #tochange!
-                    # f.write(' {}'.format(exp[meas].results.impacts[syst]))
-                    f.write(' {}'.format(exp[meas].results.signedImpacts[syst]))
+                if syst in self.obj_d[exp].results.impacts.keys():
+                    factor = 1.
+                    if syst != 'Stat' and self.obj_d[exp].results.signedImpacts[syst] < 0:
+                        factor = -1.
+                    f.write(' {}'.format(factor*self.obj_d[exp].results.impacts[syst]))
                 else:
-                    comb = 0
-                    for orig_syst in self.LHCmap[syst]:
-                        if orig_syst in exp[meas].results.impacts.keys():
-                            comb += exp[meas].results.impacts[orig_syst]**2
-                    comb = comb**.5
-                    f.write(' {}'.format(comb))
+                    f.write(' 0.0')
             f.write('\n')
 
         f.write('\n')
@@ -124,8 +126,8 @@ class LHC_object:
                 print 'ERROR: systematics {} (in correlation map) not found in LHC grid'.format(syst)
                 sys.exit()
         for syst in syst_l:
-            for i,meas1 in enumerate(exp.keys()):
-                for j,meas2 in enumerate(exp.keys()):
+            for i,meas1 in enumerate(self.experiments):
+                for j,meas2 in enumerate(self.experiments):
                     corr = 0.0
                     if syst in self.corrMap.keys():
                         corr = self.corrMap[syst]
@@ -148,7 +150,7 @@ class LHC_object:
         return
         
     def writeSimultaneousCombinationInput(self,f):
-        #to implement
+        # to implement
         return
 
     def writeBLUEinputCMS(self,tmprun=False,separateCombinations=True):
