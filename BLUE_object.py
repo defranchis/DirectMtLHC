@@ -719,3 +719,69 @@ class BLUE_object:
         self.update()
                 
         return
+
+
+    def mergeSyst(self,merged,original_l):
+        for original in original_l:
+            if not original in self.usedSyst:
+                print 'ERROR: systematics {} not in input file or not in use'.format(original)
+                sys.exit()
+        m_tot = None
+        for syst in original_l:
+            m_syst = self.getSystMatrix(syst,self.matrix[syst],self.uncert)
+            if m_tot == None: m_tot = m_syst
+            else: m_tot += m_syst
+
+        ref_measurement = None
+        ref_sign = 1.
+        for meas in self.measurements:
+            all_same_sign = True
+            for syst in original_l:
+                if self.uncert[meas][syst]*self.uncert[meas][original_l[0]] < 0:
+                    all_same_sign = False
+                    break
+            if all_same_sign:
+                ref_measurement = meas
+                if self.uncert[ref_measurement][original_l[0]] < 0:
+                    ref_sign = -1.
+                break
+        
+        for syst in original_l:
+            self.systnames.remove(syst)
+            self.matrix[merged] = self.matrix.pop(syst) #just copy something
+            for meas in self.measurements:
+                self.uncert[meas].pop(syst)
+
+        self.systnames.append(merged)
+        
+        # first merge without signs
+        for i, meas in enumerate(self.measurements):
+            self.uncert[meas][merged] = m_tot[i][i]**.5
+        for i, meas1 in enumerate(self.measurements):
+            for j, meas2 in enumerate(self.measurements):
+                self.matrix[merged][meas1][meas2] = m_tot[i][j]/(self.uncert[meas1][merged]*self.uncert[meas2][merged])
+
+        self.update()
+
+        if ref_measurement is None:
+            return False
+
+        goodComb = self.clone()
+        orig_matrix = self.getSystMatrix(merged,self.matrix[merged],self.uncert) 
+
+        # try propagating back the signs
+        for meas in self.measurements:
+            if self.matrix[merged][ref_measurement][meas] == 0: continue
+            self.uncert[meas][merged] *= ref_sign * (self.matrix[merged][ref_measurement][meas]/abs(self.matrix[merged][ref_measurement][meas]))
+
+        self.update()
+
+        # if failed, restore previous values
+        new_matrix = self.getSystMatrix(merged,self.p_matrix[merged],self.p_uncert) 
+        if not (new_matrix == orig_matrix).all():
+            self.uncert = goodComb.uncert
+            self.matrix[merged] = goodComb.matrix[merged]
+            self.update()
+            return False
+
+        return True
