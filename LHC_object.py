@@ -48,14 +48,18 @@ class LHC_object:
         self.LHC_obj = BLUE_object('LHC_input.txt',LHC=True,blind=self.blind)
 
     def renameAllSyst(self):
+        print
         for exp in self.experiments:
             for old, new in self.renameMap[exp].items():
+                print '{}: renaming syst {} to {}'.format(exp,old,new)
                 self.obj_d[exp].renameSyst(old,new)
         return
 
     def mergeAllSyst(self):
+        print
         for exp in self.experiments:
             for merged, original_l in self.mergeMap[exp].items():
+                print '{}: creating new syst {} from sources {}'.format(exp,merged,original_l)
                 signs_propagated = self.obj_d[exp].mergeSyst(merged,original_l) # function to be implemented
                 if not signs_propagated:
                     self.noSignsOnImpacts[exp].append(merged)
