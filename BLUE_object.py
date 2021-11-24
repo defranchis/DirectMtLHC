@@ -286,10 +286,6 @@ class BLUE_object:
                 if self.uncert[meas][syst] < 0:
                     affectedSyst.append(syst)
                     break
-        print
-        print 'testMD'
-        print affectedSyst
-        print
 
         for syst in affectedSyst:
             if syst == 'Stat': 
