@@ -706,3 +706,16 @@ class BLUE_object:
         self.blindCentralValues()
         self.update()
         return
+
+    def renameSyst(self,old,new):
+        if not old in self.systnames:
+            print 'ERROR: systematics {} not found: cannot be renamed'
+            sys.exit()
+        self.systnames.remove(old)
+        self.systnames.append(new)
+        for meas in self.measurements:
+            self.uncert[meas][new] = self.uncert[meas].pop(old)
+        self.matrix[new] = self.matrix.pop(old)
+        self.update()
+                
+        return
