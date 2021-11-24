@@ -4,6 +4,7 @@ import sys,os
 
 corrMap_default = {'JES3': 0.5, 'JESFLV': 0.5, 'RAD': 0.5, 'MCGEN': 0.5, 'BKMC': 1.0, 'PDF': 1.0 , 'BTAG': 0.5, 'UE': 1.0, 'PU': 1.0, 'CR': 1.0}
 mergeMap_default = {'HADR': ['HADR','LHCHAD'], 'JESFLV': ['CMSFL1','JES4','JES5','JES6'], 'RAD': ['RAD','Q','JPS']}
+noSignsOnImpacts = {'ATLAS':['JESFLV', 'BKMC', 'BTAG', 'PDF'], 'CMS': []} #to check
 
 class LHC_object:
 
@@ -33,7 +34,7 @@ class LHC_object:
         self.commonSyst = self.getCommonSyst()
         self.LHCmap = self.prepareLHCcombination()
         self.writeBLUEinputCMS(separateCombinations=self.separateCombinations)
-        self.LHC_obj = BLUE_object('LHC_input.txt',LHC=True,signsOnImpacts=True,blind=self.blind)
+        self.LHC_obj = BLUE_object('LHC_input.txt',LHC=True,blind=self.blind)
 
     def removeZeroImpacts(self):
         for syst in self.ATLAS_obj.usedSyst:
@@ -81,14 +82,8 @@ class LHC_object:
         
         return map_d
 
-    def writeBLUEinputCMS(self,tmprun=False,separateCombinations=True):
+    def writeSeparateCombinationsInput(self,f):
 
-        if tmprun:
-            if not os.path.exists(tmp_dir):
-                os.makedirs(tmp_dir)
-            f = open('{}/LHC_combination_tmp.txt'.format(tmp_dir),'w')
-        else:
-            f = open('LHC_input.txt','w')
         f.write('\./combine<<!\n\'LHC Top Mass combination\'\n-1 -1 0 internal & minuit debug level, dependency flag\n')
         f.write('1 2 {}  # of observables, measurements, error classes\n'.format(len(self.LHCmap.keys())))
         f.write('\'Mtop\'     name of observable\n\n')
@@ -150,6 +145,25 @@ class LHC_object:
                 sys.exit()
 
         f.write('!\n')
+        return
+        
+    def writeSimultaneousCombinationInput(self,f):
+        #to implement
+        return
+
+    def writeBLUEinputCMS(self,tmprun=False,separateCombinations=True):
+
+        if tmprun:
+            if not os.path.exists(tmp_dir):
+                os.makedirs(tmp_dir)
+            f = open('{}/LHC_combination_tmp.txt'.format(tmp_dir),'w')
+        else:
+            f = open('LHC_input.txt','w')
+
+        if separateCombinations:
+            self.writeSeparateCombinationsInput(f)
+        else:
+            self.writeSimultaneousCombinationInput(f)
 
         return
 
