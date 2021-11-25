@@ -350,7 +350,7 @@ class BLUE_object:
         self.writeBLUEinputCMS(tmprun=True)
         os.system('source {}/CMS_combination_tmp.txt > {}/log.log'.format(tmp_dir,tmp_dir))
         result = (open('{}/log.log'.format(tmp_dir),'r')).read()
-        if not 'End of derived quantities.' in result.splitlines()[-1]:
+        if not 'End of derived quantities.' in result.splitlines()[-1] and not 'POST>' in result.splitlines()[-1]:
             print 'ERROR: combination failed'
             sys.exit()
         return result
