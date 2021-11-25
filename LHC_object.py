@@ -1,6 +1,7 @@
 from BLUE_object import BLUE_object
 import copy
 import sys,os
+import numpy as np
 
 # corrMap_default = {'JES3': 0.5, 'JESFLV': 0.5, 'RAD': 0.5, 'MCGEN': 0.5, 'BKMC': 1.0, 'PDF': 1.0 , 'BTAG': 0.5, 'UE': 1.0, 'PU': 1.0, 'CR': 1.0}
 corrMap_default = {'JES3': 0.5, 'JESFLV': 0.5, 'RAD': 0.5, 'MCGEN': 0.5, 'BKMC': .85, 'PDF': .85 , 'BTAG': 0.5, 'UE': .85, 'PU': .85, 'CR': .85}
@@ -11,20 +12,31 @@ noSignsOnImpacts = {'ATLAS':['JESFLV', 'BKMC', 'BTAG', 'PDF'], 'CMS': []}
 
 class LHC_object:
 
-    def __init__(self,ATLAS_obj, CMS_obj, separateCombinations = False, corrMap = None, mergeMap = None, renameMap = None, blind = False):
+    def __init__(self,ATLAS_obj, CMS_obj, separateCombinations = False, corrMap = None, mergeMap = None, renameMap = None, blind = False, rescale = False):
         self.ATLAS_obj = ATLAS_obj.clone()
         self.CMS_obj = CMS_obj.clone()
         self.obj_d = {'ATLAS':self.ATLAS_obj, 'CMS':self.CMS_obj}
+        print ATLAS_obj.uncertWithSign
+        print CMS_obj.uncertWithSign
+
         self.experiments = self.obj_d.keys()
         self.blind = blind
+        self.rescale = rescale
         if blind:
             for obj in self.obj_d.values():
                 obj.makeBlind()
+        elif self.rescale:
+            # np.random.seed(1)
+            rescale_f = np.random.normal(1,0.01)
+            for obj in self.obj_d.values():
+                obj.rescaleCentralValues(rescale_f)
+            
         self.separateCombinations = separateCombinations
         # self.removeZeroImpacts()
-        for exp in self.experiments:
-            print '->', exp
-            self.obj_d[exp].simplePrint()
+        if not rescale:
+            for exp in self.experiments:
+                print '->', exp
+                self.obj_d[exp].simplePrint()
 
         self.noSignsOnImpacts = noSignsOnImpacts
 
@@ -48,7 +60,13 @@ class LHC_object:
         else:
             self.LHCmeas = self.getLHCmeas()
             self.LHCmatrix = self.createLHCmatrix()
-            
+
+        for exp, obj in self.obj_d.items():
+            for syst in self.noSignsOnImpacts[exp]:
+                if syst in obj.uncertWithSign:
+                    print 'ERROR: something wrong in signs of syst {} in {}'.format(syst,exp)
+                    sys.exit()
+
         self.writeBLUEinputCMS(separateCombinations=self.separateCombinations)
         self.LHC_obj = BLUE_object('LHC_input.txt',LHC=True,blind=self.blind)
 
@@ -125,11 +143,15 @@ class LHC_object:
                     if '_ATLAS' in meas1 and '_ATLAS' in meas2:
                         if syst in self.obj_d['ATLAS'].matrix.keys():
                             corr = self.obj_d['ATLAS'].matrix[syst][meas1.replace('_ATLAS','')][meas2.replace('_ATLAS','')]
+                            if not syst in self.noSignsOnImpacts['ATLAS']:
+                                corr = abs(corr)
                         else:
                             corr = 0.
                     elif '_CMS' in meas1 and '_CMS' in meas2:
                         if syst in self.obj_d['CMS'].matrix.keys():
                             corr = self.obj_d['CMS'].matrix[syst][meas1.replace('_CMS','')][meas2.replace('_CMS','')]
+                            if not syst in self.noSignsOnImpacts['CMS']:
+                                corr = abs(corr)
                         else:
                             corr = 0.
                     else:

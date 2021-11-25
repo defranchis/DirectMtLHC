@@ -79,7 +79,7 @@ class BLUE_object:
             self.value, self.uncert = self.getAllResults()
             self.matrix = self.getFullCorrelationMatrix()
 
-        self.p_matrix, self.p_uncert = self.propagateNegativeCorrelations()
+        self.p_matrix, self.p_uncert, self.uncertWithSign = self.propagateNegativeCorrelations()
 
         if self.blind:
             self.blindCentralValues()
@@ -94,7 +94,7 @@ class BLUE_object:
 
 
     def update(self):
-        self.p_matrix, self.p_uncert = self.propagateNegativeCorrelations()
+        self.p_matrix, self.p_uncert, self.uncertWithSign = self.propagateNegativeCorrelations()
         self.usedMeas, self.usedSyst = self.getUsedMeasSyst()
         self.log = self.runCombination()
         self.results = self.readResults()
@@ -308,7 +308,8 @@ class BLUE_object:
             for syst in self.systnames:
                 if uncert[meas][syst] < 0:
                     uncert[meas][syst] *= -1.
-        return matrix, uncert
+
+        return matrix, uncert, affectedSyst
 
     def checkMatrices(self):
         if not (self.checkFullMatrix(self.matrix, self.uncert) == self.checkFullMatrix(self.p_matrix,self.p_uncert)).all():
@@ -700,6 +701,12 @@ class BLUE_object:
     def blindCentralValues(self):
         for meas in self.measurements:
             self.value[meas] = 199.9
+        return
+
+    def rescaleCentralValues(self,factor):
+        for meas in self.measurements:
+            self.value[meas] *= factor
+        self.update()
         return
 
     def makeBlind(self):
