@@ -159,6 +159,8 @@ class LHC_object:
                             corr = self.corrMap[syst]
                         else:
                             corr = 0.
+                    # if abs(corr) > 0.85:
+                    #     corr = 0.85 * (corr/abs(corr))
                 m_dd[meas2] = corr
             m_d[meas1] = m_dd
 
@@ -246,7 +248,7 @@ class LHC_object:
             f.write('\'{}\' \'Mtop\' {}'.format(meas_exp.replace('_',' '), obj.value[meas_exp]))
 
             for syst in syst_l:
-                if syst in obj.matrix.keys():
+                if syst in obj.matrix.keys() or syst == 'Stat':
                     f.write(' {}'.format(obj.uncert[meas_exp][syst]))
                 else:
                     f.write(' 0.0')
