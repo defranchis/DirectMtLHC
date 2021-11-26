@@ -16,8 +16,6 @@ class LHC_object:
         self.ATLAS_obj = ATLAS_obj.clone()
         self.CMS_obj = CMS_obj.clone()
         self.obj_d = {'ATLAS':self.ATLAS_obj, 'CMS':self.CMS_obj}
-        print ATLAS_obj.uncertWithSign
-        print CMS_obj.uncertWithSign
 
         self.experiments = self.obj_d.keys()
         self.blind = blind
@@ -64,6 +62,10 @@ class LHC_object:
         for exp, obj in self.obj_d.items():
             for syst in self.noSignsOnImpacts[exp]:
                 if syst in obj.uncertWithSign:
+                    print 'ERROR: something wrong in signs of syst {} in {}'.format(syst,exp)
+                    sys.exit()
+            for syst in obj.uncertWithSign:
+                if syst in self.noSignsOnImpacts[exp]:
                     print 'ERROR: something wrong in signs of syst {} in {}'.format(syst,exp)
                     sys.exit()
 
@@ -143,8 +145,11 @@ class LHC_object:
                     if '_ATLAS' in meas1 and '_ATLAS' in meas2:
                         if syst in self.obj_d['ATLAS'].matrix.keys():
                             corr = self.obj_d['ATLAS'].matrix[syst][meas1.replace('_ATLAS','')][meas2.replace('_ATLAS','')]
-                            if not syst in self.noSignsOnImpacts['ATLAS']:
+                            if syst in self.noSignsOnImpacts['ATLAS']:
+                                pass
+                            elif syst in self.ATLAS_obj.uncertWithSign:
                                 corr = abs(corr)
+
                         else:
                             corr = 0.
                     elif '_CMS' in meas1 and '_CMS' in meas2:
