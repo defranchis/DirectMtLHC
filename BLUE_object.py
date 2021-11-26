@@ -296,7 +296,8 @@ class BLUE_object:
                         continue
                     u1 = uncert[meas1][syst]
                     u2 = uncert[meas2][syst]
-                    matrix[syst][meas1][meas2] = abs(matrix[syst][meas1][meas2])
+                    if self.ATLAS:
+                        matrix[syst][meas1][meas2] = abs(matrix[syst][meas1][meas2])
                     if u1 != 0 and u2 != 0:
                         matrix[syst][meas1][meas2] *= u1*u2/abs(u1*u2)
                     elif u1 != 0:
