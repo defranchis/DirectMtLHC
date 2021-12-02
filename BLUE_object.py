@@ -793,3 +793,24 @@ class BLUE_object:
             return False
 
         return True
+
+
+    def checkAllSystMatrices(self):
+        for syst in self.usedSyst:
+            if syst == 'Stat': continue
+            self.checkSystMatrix(syst)
+        return
+
+    def checkSystMatrix(self,syst):
+        m = self.getSystCorrMatrix(syst)
+        print syst, isPositiveDefinite(m)
+        if not isPositiveDefinite(m):
+            print 'det =', np.linalg.det(m), '\n'
+        return
+        
+    def getSystCorrMatrix(self,syst):
+        m = np.zeros((len(self.usedMeas),len(self.usedMeas)))
+        for i,meas1 in enumerate(self.usedMeas):
+            for j,meas2 in enumerate(self.usedMeas):
+                m[i,j] = self.p_matrix[syst][meas1][meas2]
+        return m
