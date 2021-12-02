@@ -71,6 +71,7 @@ class LHC_object:
 
         self.writeBLUEinputCMS(separateCombinations=self.separateCombinations)
         self.LHC_obj = BLUE_object('LHC_input.txt',LHC=True,blind=self.blind)
+        # self.LHC_obj.checkAllSystMatrices()
 
     def renameAllSyst(self):
         print
@@ -120,19 +121,18 @@ class LHC_object:
 
         return LHCsyst
 
-
-    def createLHCmatrix(self):
-        LHCmatrix = dict()
-        for syst in self.LHCsyst:
-            LHCmatrix[syst] = self.getLHCsystDict(syst)
-        return LHCmatrix
-
     def getLHCmeas(self):
         allMeas = []
         for exp, obj in self.obj_d.items():
             for meas in obj.usedMeas:
                 allMeas.append('{}_{}'.format(meas,exp))
         return allMeas
+
+    def createLHCmatrix(self):
+        LHCmatrix = dict()
+        for syst in self.LHCsyst:
+            LHCmatrix[syst] = self.getLHCsystDict(syst)
+        return LHCmatrix
 
     def getLHCsystDict(self,syst):
         m_d = dict()
@@ -309,4 +309,3 @@ class LHC_object:
 
     def printResults(self):
         self.LHC_obj.printResults()
-
