@@ -12,11 +12,15 @@ noSignsOnImpacts = {'ATLAS':['JESFLV', 'BKMC', 'BTAG', 'PDF'], 'CMS': []}
 
 class LHC_object:
 
-    def __init__(self,ATLAS_obj, CMS_obj, separateCombinations = False, corrMap = None, mergeMap = None, renameMap = None, blind = False, rescale = False):
+    def __init__(self,ATLAS_obj, CMS_obj, excludeSyst = [], separateCombinations = False, corrMap = None, mergeMap = None, renameMap = None, blind = False, rescale = False):
         self.ATLAS_obj = ATLAS_obj.clone()
         self.CMS_obj = CMS_obj.clone()
         self.obj_d = {'ATLAS':self.ATLAS_obj, 'CMS':self.CMS_obj}
 
+        if len(excludeSyst) > 0:
+            for obj in self.obj_d.values():
+                obj.addExcludeSyst(excludeSyst)
+            
         self.experiments = self.obj_d.keys()
         self.blind = blind
         self.rescale = rescale
