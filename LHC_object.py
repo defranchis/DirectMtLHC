@@ -17,9 +17,10 @@ class LHC_object:
         self.CMS_obj = CMS_obj.clone()
         self.obj_d = {'ATLAS':self.ATLAS_obj, 'CMS':self.CMS_obj}
 
-        if len(excludeSyst) > 0:
+        self.excludeSyst = excludeSyst
+        if len(self.excludeSyst) > 0:
             for obj in self.obj_d.values():
-                obj.addExcludeSyst(excludeSyst)
+                obj.addExcludeSyst(self.excludeSyst)
             
         self.experiments = self.obj_d.keys()
         self.blind = blind
@@ -214,7 +215,7 @@ class LHC_object:
 
         used = []
         for syst in self.corrMap.keys():
-            if not syst in syst_l:
+            if not syst in syst_l and not syst in self.excludeSyst:
                 print 'ERROR: systematics {} (in correlation map) not found in LHC grid'.format(syst)
                 sys.exit()
         for syst in syst_l:
@@ -234,7 +235,7 @@ class LHC_object:
             f.write('\n')
 
         for syst in self.corrMap.keys():
-            if not syst in used:
+            if not syst in used and not syst in self.excludeSyst:
                 print 'ERROR: systematic {} (in correlation map) not used'.format(syst)
                 sys.exit()
 
@@ -324,7 +325,8 @@ class LHC_object:
 
     def setNewLHCcorrMap(self,corrMap):
         self.corrMap = corrMap
-        self.LHCmatrix = self.createLHCmatrix()
+        if not self.separateCombinations:
+            self.LHCmatrix = self.createLHCmatrix()
         self.update()
 
     def printResults(self):
