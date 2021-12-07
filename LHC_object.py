@@ -77,6 +77,14 @@ class LHC_object:
         self.LHC_obj = BLUE_object('LHC_input.txt',LHC=True,blind=self.blind)
         # self.LHC_obj.checkAllSystMatrices()
 
+    def clone(self):
+        return copy.deepcopy(self)
+
+    def update(self):
+        self.writeBLUEinputCMS(separateCombinations=self.separateCombinations)
+        self.LHC_obj = BLUE_object('LHC_input.txt',LHC=True,blind=self.blind)
+
+
     def renameAllSyst(self):
         print
         for exp in self.experiments:
@@ -181,7 +189,7 @@ class LHC_object:
         f.write('1 2 {}  # of observables, measurements, error classes\n'.format(len(self.LHCsyst)))
         f.write('\'Mtop\'     name of observable\n\n')
 
-        syst_l = self.LHCsyst
+        syst_l = copy.deepcopy(self.LHCsyst)
         syst_l.remove('Stat')
         syst_l = ['Stat'] + sorted(syst_l)
 
@@ -238,7 +246,7 @@ class LHC_object:
         f.write('1 {} {}  # of observables, measurements, error classes\n'.format(len(self.ATLAS_obj.usedMeas)+len(self.CMS_obj.usedMeas),len(self.LHCsyst)))
         f.write('\'Mtop\'     name of observable\n\n')
 
-        syst_l = self.LHCsyst
+        syst_l = copy.deepcopy(self.LHCsyst)
         syst_l.remove('Stat')
         syst_l = ['Stat'] + sorted(syst_l)
 
@@ -277,7 +285,7 @@ class LHC_object:
         f.write('\n')
 
 
-        for syst in self.LHCsyst:
+        for syst in syst_l:
             if syst == 'Stat': 
                 continue
             for i,meas1 in enumerate(self.LHCmeas):
@@ -313,3 +321,17 @@ class LHC_object:
 
     def printResults(self):
         self.LHC_obj.printResults()
+
+    def setNewLHCcorrMap(self,corrMap):
+        self.corrMap = corrMap
+        self.LHCmatrix = self.createLHCmatrix()
+        self.update()
+
+    def printResults(self):
+        self.LHC_obj.printResults()
+
+    def simplePrint(self):
+        self.LHC_obj.simplePrint()
+
+    def printImpactsSorted(self):
+        self.LHC_obj.printImpactsSorted()
