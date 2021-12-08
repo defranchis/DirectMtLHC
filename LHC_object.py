@@ -36,10 +36,10 @@ class LHC_object:
             
         self.separateCombinations = separateCombinations
         # self.removeZeroImpacts()
-        if not rescale:
-            for exp in self.experiments:
-                print '->', exp
-                self.obj_d[exp].simplePrint()
+        # if not rescale:
+        #     for exp in self.experiments:
+        #         print '->', exp
+        #         self.obj_d[exp].simplePrint()
 
         self.noSignsOnImpacts = copy.deepcopy(noSignsOnImpacts)
 
