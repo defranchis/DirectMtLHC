@@ -6,13 +6,28 @@ from BLUE_object import BLUE_object
 from LHC_object import LHC_object
 
 ROOT.gROOT.SetBatch(True)
-
+np.random.seed(1)
 LHC_dir = 'LHC_scans'
 
-def makeAllCorrelationScansLHC(full,sep):
+def makeAllCorrelationScansLHC(full,sep,blind=False):
 
     if not os.path.exists(LHC_dir):
         os.makedirs(LHC_dir)
+
+    if full.blind or sep.blind:
+        if not blind:
+            print 'ERROR: unblinded scan requested but objects are blinded'
+            sys.exit()
+        else:
+            print '*******'
+            print 'WARNING: one or more input objects are blind - mt scan will be meaningless'
+            print '*******'
+
+    mt_smear = 0
+    rand_offset_small = 0
+    if blind:
+        mt_smear = np.random.normal(0,1) # 1 GeV smear
+        rand_offset_small = np.random.normal(0,0.1)
 
     LHC_full = full.clone()
     LHC_sep = sep.clone()
@@ -22,10 +37,10 @@ def makeAllCorrelationScansLHC(full,sep):
         sys.exit()
     for syst in LHC_full.LHCsyst:
         if syst == 'Stat': continue
-        makeCorrelationScan(LHC_full,LHC_sep,orig_corrMap,syst)
+        makeCorrelationScan(LHC_full,LHC_sep,orig_corrMap,syst,mt_smear,rand_offset_small)
     return
 
-def makeCorrelationScan(LHC_full,LHC_sep,corrMap,syst):
+def makeCorrelationScan(LHC_full,LHC_sep,corrMap,syst,mt_smear=0,rand_offset_small=0):
     print 'scanning', syst
 
     obj_d = {'full' : LHC_full, 'separate' : LHC_sep}
@@ -45,7 +60,8 @@ def makeCorrelationScan(LHC_full,LHC_sep,corrMap,syst):
         result_l = scanOne(obj,orig_corrMap,syst,corrs)
         scan_d[meth] = result_l
 
-    plotScanResults(corrs,scan_d,syst)
+    plotScanResults(corrs,scan_d,syst,'tot')
+    plotScanResults(corrs,scan_d,syst,'mt',mt_smear,rand_offset_small)
 
     return
 
@@ -60,7 +76,7 @@ def scanOne(obj,corrMap,syst,corrs):
         result_l.append(tmp_obj.getBlueObject().results)
     return result_l
 
-def plotScanResults(corrs,scan_d,syst):
+def plotScanResults(corrs,scan_d,syst,variable,mt_smear=0,rand_offset_small=0):
     c = TCanvas()
     leg = TLegend(.15,.15,.4,.3)
     leg.SetBorderSize(0)
@@ -69,7 +85,13 @@ def plotScanResults(corrs,scan_d,syst):
         g = TGraph()
         g.SetName(meth)
         for i, corr in enumerate(corrs):
-            g.SetPoint(i,corr,scan[i].tot)
+            if variable == 'tot':
+                g.SetPoint(i,corr,scan[i].tot)
+            elif variable == 'mt':
+                g.SetPoint(i,corr,scan[i].mt+mt_smear)
+            else:
+                print 'ERROR: variable {} not supported'.format(variable)
+                sys.exit()
         if meth == 'full':
             g.SetLineColor(ROOT.kBlue)
         else:
@@ -78,12 +100,17 @@ def plotScanResults(corrs,scan_d,syst):
         gd[meth] = g
     for i, meth in enumerate(gd.keys()):
         if i==0:
-            gd[meth].SetMinimum(0.27)
-            gd[meth].SetMaximum(0.31)
-            gd[meth].SetTitle('{}; correlation; total uncertainty [GeV]'.format(syst))
+            if variable == 'tot':
+                gd[meth].SetMinimum(0.27)
+                gd[meth].SetMaximum(0.31)
+                gd[meth].SetTitle('{}; correlation; total uncertainty [GeV]'.format(syst))
+            else:
+                gd[meth].SetMinimum(round(172.5+mt_smear+rand_offset_small-0.1,1))
+                gd[meth].SetMaximum(round(172.5+mt_smear+rand_offset_small+0.1,1))
+                gd[meth].SetTitle('{}; correlation; combined mt [GeV]'.format(syst))
             gd[meth].Draw('al')
         else:
             gd[meth].Draw('l same')
     leg.Draw('same')
-    c.SaveAs('{}/scan_{}.png'.format(LHC_dir,syst))
+    c.SaveAs('{}/scan_{}_{}.png'.format(LHC_dir,variable,syst))
     return
