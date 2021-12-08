@@ -17,7 +17,7 @@ class LHC_object:
         self.CMS_obj = CMS_obj.clone()
         self.obj_d = {'ATLAS':self.ATLAS_obj, 'CMS':self.CMS_obj}
 
-        self.excludeSyst = excludeSyst
+        self.excludeSyst = copy.deepcopy(excludeSyst)
         if len(self.excludeSyst) > 0:
             for obj in self.obj_d.values():
                 obj.addExcludeSyst(self.excludeSyst)
@@ -41,14 +41,14 @@ class LHC_object:
                 print '->', exp
                 self.obj_d[exp].simplePrint()
 
-        self.noSignsOnImpacts = noSignsOnImpacts
+        self.noSignsOnImpacts = copy.deepcopy(noSignsOnImpacts)
 
-        if corrMap is None:  self.corrMap = corrMap_default
-        else: self.corrMap = corrMap
-        if mergeMap is None: self.mergeMap = mergeMap_default
-        else: self.mergeMap = mergeMap
-        if renameMap is None: self.renameMap = renameMap_default
-        else: self.renameMap = renameMap
+        if corrMap is None:  self.corrMap = copy.deepcopy(corrMap_default)
+        else: self.corrMap = copy.deepcopy(corrMap)
+        if mergeMap is None: self.mergeMap = copy.deepcopy(mergeMap_default)
+        else: self.mergeMap = copy.deepcopy(mergeMap)
+        if renameMap is None: self.renameMap = copy.deepcopy(renameMap_default)
+        else: self.renameMap = copy.deepcopy(renameMap)
 
         self.renameAllSyst()
         self.mergeAllSyst()
