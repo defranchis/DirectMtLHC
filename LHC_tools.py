@@ -114,3 +114,61 @@ def plotScanResults(corrs,scan_d,syst,variable,mt_smear=0,rand_offset_small=0):
     leg.Draw('same')
     c.SaveAs('{}/scan_{}_{}.png'.format(LHC_dir,variable,syst))
     return
+
+def flipAmbiguousSigns(full,sep):
+
+    if full.blind or sep.blind:
+        print '*******'
+        print 'WARNING: one or more input objects are blind - mt results will be meaningless'
+        print '*******'
+
+    LHC_full = full.clone()
+    LHC_sep = sep.clone()
+    orig_corrMap = copy.deepcopy(LHC_full.corrMap)
+
+    if LHC_sep.corrMap != orig_corrMap:
+        print 'ERROR: correlation maps should be the same for both methods'
+        sys.exit()
+    if LHC_full.noSignsOnImpacts != LHC_sep.noSignsOnImpacts:
+        print 'ERROR: list of ambiguous signs different in the two combinations'
+        sys.exit()
+    
+    ambiguous_l = LHC_full.noSignsOnImpacts['ATLAS']
+    for amb in LHC_full.noSignsOnImpacts['CMS']:
+        if not amb in ambiguous_l:
+            ambiguous_l.append(amb)
+
+    for syst in ambiguous_l:
+        flipSignLHC(LHC_full,LHC_sep,syst,orig_corrMap)
+    print
+
+    return
+
+def flipSignLHC(LHC_full,LHC_sep,syst,orig_corrMap):
+
+    if not syst in orig_corrMap.keys():
+        print 'WARNING: systematics {} (for sign flip) not in correlation map. Nothing done'.format(syst)
+        return
+
+    corrMap = copy.deepcopy(orig_corrMap)
+    full = LHC_full.clone()
+    sep = LHC_sep.clone()
+
+    obj_d = {'full': full, 'separate': sep}
+    corrMap[syst] *= -1
+    
+    print
+    print
+    print '*sign flip for systematics {}*'.format(syst)
+
+    
+    for meth, obj in obj_d.items():
+        print
+        print '-> method =', meth
+        print 'uncertainty original signs =', obj.getBlueObject().results.tot, 'GeV'
+        mt_orig = obj.getBlueObject().results.mt
+        obj.setNewLHCcorrMap(corrMap)
+        print 'uncertainty flipped signs =', obj.getBlueObject().results.tot, 'GeV'
+        print 'mt(flip) - mt(original) =', round(obj.getBlueObject().results.mt-mt_orig,3) , 'GeV'
+
+    return
