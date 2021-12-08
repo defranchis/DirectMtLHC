@@ -12,7 +12,7 @@ noSignsOnImpacts = {'ATLAS':['JESFLV', 'BKMC', 'BTAG', 'PDF'], 'CMS': []}
 
 class LHC_object:
 
-    def __init__(self,ATLAS_obj, CMS_obj, excludeSyst = [], separateCombinations = False, corrMap = None, mergeMap = None, renameMap = None, blind = False, rescale = False):
+    def __init__(self,ATLAS_obj, CMS_obj, excludeSyst = [], separateCombinations = False, corrMap = None, mergeMap = None, renameMap = None, blind = False):
         self.ATLAS_obj = ATLAS_obj.clone()
         self.CMS_obj = CMS_obj.clone()
         self.obj_d = {'ATLAS':self.ATLAS_obj, 'CMS':self.CMS_obj}
@@ -24,22 +24,16 @@ class LHC_object:
             
         self.experiments = self.obj_d.keys()
         self.blind = blind
-        self.rescale = rescale
         if blind:
             for obj in self.obj_d.values():
                 obj.makeBlind()
-        elif self.rescale:
-            # np.random.seed(1)
-            rescale_f = np.random.normal(1,0.01)
-            for obj in self.obj_d.values():
-                obj.rescaleCentralValues(rescale_f)
             
         self.separateCombinations = separateCombinations
+
         # self.removeZeroImpacts()
-        # if not rescale:
-        #     for exp in self.experiments:
-        #         print '->', exp
-        #         self.obj_d[exp].simplePrint()
+        # for exp in self.experiments:
+        #     print '->', exp
+        #     self.obj_d[exp].simplePrint()
 
         self.noSignsOnImpacts = copy.deepcopy(noSignsOnImpacts)
 
