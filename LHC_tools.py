@@ -62,6 +62,8 @@ def scanOne(obj,corrMap,syst,corrs):
 
 def plotScanResults(corrs,scan_d,syst):
     c = TCanvas()
+    leg = TLegend(.15,.15,.4,.3)
+    leg.SetBorderSize(0)
     gd = dict()
     for meth, scan in scan_d.items():
         g = TGraph()
@@ -72,6 +74,7 @@ def plotScanResults(corrs,scan_d,syst):
             g.SetLineColor(ROOT.kBlue)
         else:
             g.SetLineColor(ROOT.kRed)
+        leg.AddEntry(g,meth,'l')
         gd[meth] = g
     for i, meth in enumerate(gd.keys()):
         if i==0:
@@ -81,5 +84,6 @@ def plotScanResults(corrs,scan_d,syst):
             gd[meth].Draw('al')
         else:
             gd[meth].Draw('l same')
+    leg.Draw('same')
     c.SaveAs('{}/scan_{}.png'.format(LHC_dir,syst))
     return
