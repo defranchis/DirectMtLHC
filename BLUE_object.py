@@ -34,6 +34,12 @@ def isPositiveDefinite(m):
     w,v = np.linalg.eig(m)
     return (w > 0).all()
 
+def isNonNegativeDefinite(m):
+    if not isInvertible(m):
+        return False
+    w,v = np.linalg.eig(m)
+    return (w >= 0).all()
+
 def isInvertible(m):
     if np.isfinite(np.linalg.cond(m)):
         return True
@@ -803,9 +809,10 @@ class BLUE_object:
 
     def checkSystMatrix(self,syst):
         m = self.getSystCorrMatrix(syst)
-        print syst, isPositiveDefinite(m)
-        if not isPositiveDefinite(m):
-            print 'det =', np.linalg.det(m), '\n'
+        # print syst, isPositiveDefinite(m)
+        # if not isPositiveDefinite(m):
+        #     print 'det =', np.linalg.det(m), '\n'
+        print syst, isInvertible(m), isNonNegativeDefinite(m)
         return
         
     def getSystCorrMatrix(self,syst):
