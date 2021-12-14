@@ -30,6 +30,7 @@ def main():
 
         LHC_sep = LHC_object(obj_ATLAS, obj_CMS, blind=True, separateCombinations=True)
         LHC_sep.printResults()
+        LHC_sep.printImpactsSorted()
     
     LHC_full_unblind = LHC_object(obj_ATLAS, obj_CMS, blind=False, separateCombinations=False)
     LHC_sep_unblind = LHC_object(obj_ATLAS, obj_CMS, blind=False, separateCombinations=True)
