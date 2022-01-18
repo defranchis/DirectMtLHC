@@ -512,13 +512,23 @@ class BLUE_object:
                 if ll == thisMeas: continue
                 MCstat_dd[self.systForToys[j-1]] = float(ll)
             self.MCstat_d[thisMeas] = MCstat_dd
+            
+        for syst in self.systForToys:
+            allzeros = True
+            for meas in self.usedMeas:
+                if self.MCstat_d[meas][syst] > 0:
+                    allzeros = False
+                    break
+            if allzeros:
+                self.systForToys.remove(syst)
 
         self.toysInitialised = True
         # self.printToysInfo()
+
         return
         
     def printToysInfo(self):            
-        for meas in self.MCstat_d.keys():
+        for meas in self.usedMeas:
             print '\n-> ', meas, '\n'
             print 'syst\tnom\tMCstat'
             for syst in self.systForToys:
@@ -539,7 +549,10 @@ class BLUE_object:
         for meas in self.MCstat_d.keys():
             toy_dd = {}
             for syst in self.systForToys:
-                t = np.random.normal(self.uncert[meas][syst],self.MCstat_d[meas][syst],nToys)
+                if self.MCstat_d[meas][syst] > 0:
+                    t = np.random.normal(self.uncert[meas][syst],self.MCstat_d[meas][syst],nToys)
+                else:
+                    t = np.repeat(self.uncert[meas][syst],nToys)
                 toy_dd[syst] = list(t)
             self.toy_d[meas] = toy_dd
         self.toysThrown = True

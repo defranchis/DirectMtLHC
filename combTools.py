@@ -11,7 +11,7 @@ scan_dir = 'scan_workdir'
 scan_dir_LHC = 'LHC_scan_workdir'
 
 
-def getToyResults(base_obj,l=[]):
+def getToyResults(base_obj,l=[],plotToys=True):
     l_mt, l_tot, l_stat, l_syst, d_weights, d_syst = base_obj.getToyResults(l)
 
     print '\nvar\tmean\t\trms\tnom'
@@ -25,7 +25,7 @@ def getToyResults(base_obj,l=[]):
         print '{}\t{}\t{}\t{}'.format(meas,round(np.array(d_weights[meas]).mean(),2),round(np.array(d_weights[meas]).std(),2),base_obj.results.weights[meas])
     print
     
-    if len(l)==0:
+    if len(l)==0 and plotToys:
         plotToyResults(l_mt, l_tot, l_stat, l_syst, d_weights, d_syst, base_obj)
     return
 
