@@ -490,7 +490,7 @@ class BLUE_object:
         self.systForToys = toy_lines[0].split()
         for s in self.systForToys:
             if not s in self.systnames:
-                print 'ERROR: systematic {} in file MCstat.txt not found in input file'.format(s)
+                print 'ERROR: systematic {} in file {} not found in input file'.format(s,fn)
                 sys.exit()
             if not s in self.usedSyst:
                 print 'logic Error: systematic {} (used for toys) excluded from combination'.format(s)
@@ -502,7 +502,7 @@ class BLUE_object:
             l = line.split()
             thisMeas = l[0]
             if not thisMeas in self.measurements:
-                print 'ERROR: measurement {} in file MCstat.txt not found in input file'.format(thisMeas)
+                print 'ERROR: measurement {} in file {} not found in input file'.format(thisMeas,fn)
                 sys.exit()
             if not thisMeas in self.usedMeas:
                 print 'WARNING: measurement {} (used for toys) excluded from combination'.format(thisMeas)
