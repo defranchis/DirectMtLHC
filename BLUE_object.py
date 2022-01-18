@@ -515,7 +515,7 @@ class BLUE_object:
             
         for syst in self.systForToys:
             allzeros = True
-            for meas in self.usedMeas:
+            for meas in self.MCstat_d.keys():
                 if self.MCstat_d[meas][syst] > 0:
                     allzeros = False
                     break
@@ -528,7 +528,7 @@ class BLUE_object:
         return
         
     def printToysInfo(self):            
-        for meas in self.usedMeas:
+        for meas in self.MCstat_d.keys():
             print '\n-> ', meas, '\n'
             print 'syst\tnom\tMCstat'
             for syst in self.systForToys:
