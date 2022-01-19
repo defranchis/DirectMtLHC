@@ -568,7 +568,7 @@ class BLUE_object:
             systForToys = l
             for syst in systForToys:
                 if not syst in self.systForToys:
-                    print 'ERROR: systematics {} (requested for toys) not toy input file'.format(syst)
+                    print 'ERROR: systematics {} (requested for toys) not in toy input file'.format(syst)
                     sys.exit()
             print 'toys restricted to systematics: {}'.format(systForToys)
         else:
@@ -736,7 +736,7 @@ class BLUE_object:
 
     def renameSyst(self,old,new):
         if not old in self.systnames:
-            print 'ERROR: systematics {} not found: cannot be renamed'
+            print 'ERROR: systematics {} not found: cannot be renamed'.format(old)
             sys.exit()
         self.systnames.remove(old)
         self.systnames.append(new)
