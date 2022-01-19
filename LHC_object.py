@@ -12,7 +12,7 @@ noSignsOnImpacts = {'ATLAS':['JESFLV', 'BKMC', 'BTAG', 'PDF'], 'CMS': []}
 
 class LHC_object:
 
-    def __init__(self,ATLAS_obj, CMS_obj, excludeSyst = [], separateCombinations = False, corrMap = None, mergeMap = None, renameMap = None, blind = False):
+    def __init__(self,ATLAS_obj, CMS_obj, excludeSyst = [], separateCombinations = False, corrMap = None, mergeMap = None, renameMap = None, blind = False, merge_and_rename=True):
         self.ATLAS_obj = ATLAS_obj.clone()
         self.CMS_obj = CMS_obj.clone()
         self.obj_d = {'ATLAS':self.ATLAS_obj, 'CMS':self.CMS_obj}
@@ -29,6 +29,7 @@ class LHC_object:
                 obj.makeBlind()
             
         self.separateCombinations = separateCombinations
+        self.merge_and_rename = merge_and_rename
 
         # self.removeZeroImpacts()
         # for exp in self.experiments:
@@ -44,8 +45,9 @@ class LHC_object:
         if renameMap is None: self.renameMap = copy.deepcopy(renameMap_default)
         else: self.renameMap = copy.deepcopy(renameMap)
 
-        self.renameAllSyst()
-        self.mergeAllSyst()
+        if self.merge_and_rename:
+            self.renameAllSyst()
+            self.mergeAllSyst()
 
         self.commonSyst = self.getCommonSyst()
         self.LHCsyst = self.prepareLHCcombination()
@@ -117,14 +119,15 @@ class LHC_object:
         ATLAS_only = list(set(self.ATLAS_obj.usedSyst) - set(self.commonSyst))
         CMS_only = list(set(self.CMS_obj.usedSyst) - set(self.commonSyst))
         LHCsyst = ATLAS_only + CMS_only + self.commonSyst
-
-        print
-        print '-> unique to ATLAS'
-        print ATLAS_only
-        print
-        print '-> unique to CMS'
-        print CMS_only
-        print
+        
+        if self.merge_and_rename:
+            print
+            print '-> unique to ATLAS'
+            print ATLAS_only
+            print
+            print '-> unique to CMS'
+            print CMS_only
+            print
 
         return LHCsyst
 
@@ -331,3 +334,36 @@ class LHC_object:
 
     def printImpactsSorted(self):
         self.LHC_obj.printImpactsSorted()
+
+    def getToyResults(self):
+        if not self.ATLAS_obj.toysThrown:
+            print 'ERROR: throw ATLAS toys first'
+            sys.exit()
+        if not self.CMS_obj.toysThrown:
+            print 'ERROR: throw CMS toys first'
+            sys.exit()
+        l_mt = []
+        l_tot = []
+        l_stat = []
+        l_syst = []
+        if self.ATLAS_obj.nToys != self.CMS_obj.nToys:
+            print 'ERROR: number of toys must be the same for ATLAS and CMS'
+            sys.exit()
+        nToys = self.ATLAS_obj.nToys
+        for nToy in range(0,nToys):
+            if nToy % 10 == 0:
+                print 'toy n.', nToy
+            toy_uncert_ATLAS = self.ATLAS_obj.getToyUncert(nToy,self.ATLAS_obj.systForToys)
+            toy_uncert_CMS = self.CMS_obj.getToyUncert(nToy,self.CMS_obj.systForToys)
+            tmpobj_ATLAS = self.ATLAS_obj.clone()
+            tmpobj_CMS = self.CMS_obj.clone()
+            tmpobj_ATLAS.setNewUncertainties(toy_uncert_ATLAS)
+            tmpobj_CMS.setNewUncertainties(toy_uncert_CMS)
+            tmpobj_LHC = LHC_object(tmpobj_ATLAS, tmpobj_CMS, blind=False, separateCombinations=True, merge_and_rename = False)
+            l_mt.append(tmpobj_LHC.getBlueObject().results.mt)
+            l_tot.append(tmpobj_LHC.getBlueObject().results.tot)
+            l_stat.append(tmpobj_LHC.getBlueObject().results.stat)
+            l_syst.append(tmpobj_LHC.getBlueObject().results.syst)
+        print
+
+        return l_mt, l_tot, l_stat, l_syst

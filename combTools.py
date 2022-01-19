@@ -13,7 +13,7 @@ scan_dir_LHC = 'LHC_scan_workdir'
 
 def getToyResults(base_obj,l=[],plotToys=True,blind=False):
     l_mt, l_tot, l_stat, l_syst, d_weights, d_syst = base_obj.getToyResults(l)
-
+    
     print '\nvar\tmean\t\trms\tnom'
     if not blind:
         print 'mt\t{}\t\t{}\t{}'.format(round(np.array(l_mt).mean(),3),round(np.array(l_mt).std(),3),base_obj.results.mt)
@@ -30,6 +30,21 @@ def getToyResults(base_obj,l=[],plotToys=True,blind=False):
     
     if len(l)==0 and plotToys and not blind:
         plotToyResults(l_mt, l_tot, l_stat, l_syst, d_weights, d_syst, base_obj)
+    return
+
+def getToyResultsLHCobj(LHC_base_obj,blind=False):
+    l_mt, l_tot, l_stat, l_syst = LHC_base_obj.getToyResults()
+    
+    print '\nvar\tmean\t\trms\tnom'
+    if not blind:
+        print 'mt\t{}\t\t{}\t{}'.format(round(np.array(l_mt).mean(),3),round(np.array(l_mt).std(),3),LHC_base_obj.getBlueObject().results.mt)
+    else:
+        print 'mt\t{}\t\t{}\t{}'.format(round(np.array(l_mt).mean()/LHC_base_obj.getBlueObject().results.mt,5),round(np.array(l_mt).std(),3),LHC_base_obj.getBlueObject().results.mt/LHC_base_obj.getBlueObject().results.mt)
+    print 'tot\t{}\t\t{}\t{}'.format(round(np.array(l_tot).mean(),3),round(np.array(l_tot).std(),3),LHC_base_obj.getBlueObject().results.tot)
+    print 'stat\t{}\t\t{}\t{}'.format(round(np.array(l_stat).mean(),3),round(np.array(l_stat).std(),3),LHC_base_obj.getBlueObject().results.stat)
+    print 'syst\t{}\t\t{}\t{}'.format(round(np.array(l_syst).mean(),3),round(np.array(l_syst).std(),3),LHC_base_obj.getBlueObject().results.syst)
+    print
+    
     return
 
 
