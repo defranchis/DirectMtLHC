@@ -138,11 +138,34 @@ def flipAmbiguousSigns(full,sep):
         if not amb in ambiguous_l:
             ambiguous_l.append(amb)
 
+    flipAllSignsLHC(LHC_full,LHC_sep,ambiguous_l,orig_corrMap)
     for syst in ambiguous_l:
         flipSignLHC(LHC_full,LHC_sep,syst,orig_corrMap)
     print
 
     return
+
+def flipAllSignsLHC(LHC_full,LHC_sep,ambiguous_l,orig_corrMap):
+
+    corrMap = copy.deepcopy(orig_corrMap)
+    full = LHC_full.clone()
+    sep = LHC_sep.clone()
+
+    obj_d = {'full': full, 'separate': sep}
+    for syst in ambiguous_l:
+        corrMap[syst] *= -1
+    print
+    print
+    print '*sign flip for all ambiguous systematics'
+
+    for meth, obj in obj_d.items():
+        print
+        print '-> method =', meth
+        print 'uncertainty original signs =', obj.getBlueObject().results.tot, 'GeV'
+        mt_orig = obj.getBlueObject().results.mt
+        obj.setNewLHCcorrMap(corrMap)
+        print 'uncertainty flipped signs =', obj.getBlueObject().results.tot, 'GeV'
+        print 'mt(flip) - mt(original) =', round(obj.getBlueObject().results.mt-mt_orig,3) , 'GeV'
 
 def flipSignLHC(LHC_full,LHC_sep,syst,orig_corrMap):
 

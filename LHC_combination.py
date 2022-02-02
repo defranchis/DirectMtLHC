@@ -72,8 +72,11 @@ def main():
         LHC_sep_unblind.printResults()
 
     print
-    print 'separate / full'
-    print (LHC_sep_unblind.getBlueObject().results.mt/LHC_full_unblind.getBlueObject().results.mt -1)*100, '%\n'
+    print '|separate / full -1 |'
+    print abs(LHC_sep_unblind.getBlueObject().results.mt/LHC_full_unblind.getBlueObject().results.mt -1)*100, '%\n'
+    print
+    print '|full - separate|'
+    print abs(LHC_sep_unblind.getBlueObject().results.mt - LHC_full_unblind.getBlueObject().results.mt), 'GeV\n'
 
     if args.scanAllCorr:
         makeAllCorrelationScansLHC(LHC_full_unblind,LHC_sep_unblind,blind=not args.unblind)
