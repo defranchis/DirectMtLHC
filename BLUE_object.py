@@ -56,10 +56,11 @@ class result_object:
         self.impacts = dict()
         self.weights = dict()
         self.signedImpacts = dict()
+        self.mergedImpacts = dict()
 
 class BLUE_object:
 
-    def __init__(self,inputfile = None, excludeMeas = [], excludeSyst = [], ATLAS = False, LHC = False, blind = False):
+    def __init__(self,inputfile = None, excludeMeas = [], excludeSyst = [], ATLAS = False, LHC = False, blind = False, mergeImpacts = {}):
 
         if inputfile is None:
             print 'ERROR: please provide input file'
@@ -76,6 +77,7 @@ class BLUE_object:
         self.lines = open(inputfile,'r').read().splitlines()
         self.excludeMeas = excludeMeas
         self.excludeSyst = excludeSyst
+        self.mergeImpacts = mergeImpacts
 
         if self.ATLAS:
             self.systnames, self.measurements, self.value, self.uncert, self.matrix = self.getAllATLASInfo()
@@ -396,6 +398,28 @@ class BLUE_object:
         for i,syst in enumerate(self.usedSyst):
             resobj.impacts[syst] = res_syst[i]
 
+        systsToMergeForTable = []
+        for l in self.mergeImpacts.values():
+            systsToMergeForTable.extend(l)
+        for syst in systsToMergeForTable:
+            if not syst in self.usedSyst:
+                print 'ERROR: systematics {} (to be merged) not found'
+                sys.exit()
+
+        if len(systsToMergeForTable) != len(set(systsToMergeForTable)):
+            print 'ERROR: same systematics added twice in merge table'
+            sys.exit()
+
+        for syst in resobj.impacts.keys():
+            if not syst in systsToMergeForTable:
+                resobj.mergedImpacts[syst] = resobj.impacts[syst]
+        for syst in self.mergeImpacts.keys():
+            resobj.mergedImpacts[syst] = 0
+            for subsyst in self.mergeImpacts[syst]:
+                resobj.mergedImpacts[syst] += resobj.impacts[subsyst]**2
+            resobj.mergedImpacts[syst] = resobj.mergedImpacts[syst]**.5
+        
+
         w_index = w_index_l[-1]
         for z in range(w_index,w_index+len(self.usedMeas)):
             m, w = result[z].split()
@@ -679,7 +703,7 @@ class BLUE_object:
         return systnames, measurements,all_central,all_uncertainties,all_corr_dict
 
     def printImpactsSorted(self):
-        for k, v in sorted(self.results.impacts.items(), key=itemgetter(1), reverse = True):
+        for k, v in sorted(self.results.mergedImpacts.items(), key=itemgetter(1), reverse = True):
             print '{}\t{}'.format(k,round(v,2))
         print
 

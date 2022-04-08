@@ -12,7 +12,7 @@ noSignsOnImpacts = {'ATLAS':['JESFLV', 'BKMC', 'BTAG', 'PDF'], 'CMS': []}
 
 class LHC_object:
 
-    def __init__(self,ATLAS_obj, CMS_obj, excludeSyst = [], separateCombinations = False, corrMap = None, mergeMap = None, renameMap = None, blind = False, merge_and_rename=True):
+    def __init__(self,ATLAS_obj, CMS_obj, excludeSyst = [], separateCombinations = False, corrMap = None, mergeMap = None, renameMap = None, blind = False, merge_and_rename=True,mergeImpacts={}):
         self.ATLAS_obj = ATLAS_obj.clone()
         self.CMS_obj = CMS_obj.clone()
         self.obj_d = {'ATLAS':self.ATLAS_obj, 'CMS':self.CMS_obj}
@@ -30,6 +30,7 @@ class LHC_object:
             
         self.separateCombinations = separateCombinations
         self.merge_and_rename = merge_and_rename
+        self.mergeImpacts = mergeImpacts
 
         # self.removeZeroImpacts()
         # for exp in self.experiments:
@@ -71,7 +72,7 @@ class LHC_object:
                     sys.exit()
 
         self.writeBLUEinputCMS(separateCombinations=self.separateCombinations)
-        self.LHC_obj = BLUE_object('LHC_input.txt',LHC=True,blind=self.blind)
+        self.LHC_obj = BLUE_object('LHC_input.txt',LHC=True,blind=self.blind,mergeImpacts=self.mergeImpacts)
         # self.LHC_obj.checkAllSystMatrices()
 
     def clone(self):
@@ -79,7 +80,7 @@ class LHC_object:
 
     def update(self):
         self.writeBLUEinputCMS(separateCombinations=self.separateCombinations)
-        self.LHC_obj = BLUE_object('LHC_input.txt',LHC=True,blind=self.blind)
+        self.LHC_obj = BLUE_object('LHC_input.txt',LHC=True,blind=self.blind,mergeImpacts=self.mergeImpacts)
 
 
     def renameAllSyst(self):
