@@ -5,7 +5,7 @@ import numpy as np
 
 # corrMap_default = {'JES3': 0.5, 'JESFLV': 0.5, 'RAD': 0.5, 'MCGEN': 0.5, 'BKMC': 1.0, 'PDF': 1.0 , 'BTAG': 0.5, 'UE': 1.0, 'PU': 1.0, 'CR': 1.0}
 corrMap_default = {'JES3': 0.5, 'JESFLV': 0.5, 'RAD': 0.5, 'MCGEN': 0.5, 'BKMC': .85, 'PDF': .85 , 'BTAG': 0.5, 'UE': .85, 'CR': .85}
-mergeMap_default = {'ATLAS':{}, 'CMS': {'RAD': ['Q','JPS']}}
+mergeMap_default = {'ATLAS':{}, 'CMS': {'RAD': ['Q','JPS'],'HADR':['SLEPB','BFRAG']}}
 renameMap_default = {'ATLAS':{} ,'CMS': {'CMSFL1':'JESFLV'}}
 
 noSignsOnImpacts = {'ATLAS':['JESFLV', 'BKMC', 'BTAG', 'PDF'], 'CMS': []}
@@ -97,8 +97,7 @@ class LHC_object:
             for merged, original_l in self.mergeMap[exp].items():
                 print '{}: creating new syst {} from sources {}'.format(exp,merged,original_l)
                 signs_propagated = self.obj_d[exp].mergeSyst(merged,original_l)
-                if not signs_propagated:
-                    self.noSignsOnImpacts[exp].append(merged)
+                self.noSignsOnImpacts[exp].append(merged)
         return
 
 
