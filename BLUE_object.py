@@ -810,7 +810,10 @@ class BLUE_object:
             self.uncert[meas][merged] = m_tot[i][i]**.5
         for i, meas1 in enumerate(self.measurements):
             for j, meas2 in enumerate(self.measurements):
-                self.matrix[merged][meas1][meas2] = m_tot[i][j]/(self.uncert[meas1][merged]*self.uncert[meas2][merged])
+                if  m_tot[i][j] != 0:
+                    self.matrix[merged][meas1][meas2] = m_tot[i][j]/(self.uncert[meas1][merged]*self.uncert[meas2][merged])
+                else:
+                    self.matrix[merged][meas1][meas2] = 0
 
         self.update()
 
