@@ -772,7 +772,9 @@ class BLUE_object:
         return
 
 
-    def mergeSyst(self,merged,original_l):
+    # not very well tested, doesn't work in certain cases
+    # do not use for now
+    def mergeSystWithSigns(self,merged,original_l): 
         for original in original_l:
             if not original in self.usedSyst:
                 print 'ERROR: systematics {} not in input file or not in use'.format(original)
@@ -839,6 +841,42 @@ class BLUE_object:
             return False
 
         return True
+
+
+
+
+    def mergeSyst(self,merged,original_l):
+        for original in original_l:
+            if not original in self.usedSyst:
+                print 'ERROR: systematics {} not in input file or not in use'.format(original)
+                sys.exit()
+        m_tot = None
+        for syst in original_l:
+            m_syst = self.getSystMatrix(syst,self.matrix[syst],self.uncert)
+            if m_tot == None: m_tot = m_syst
+            else: m_tot += m_syst
+
+        
+        for syst in original_l:
+            self.systnames.remove(syst)
+            self.matrix[merged] = self.matrix.pop(syst) #just copy something
+            for meas in self.measurements:
+                self.uncert[meas].pop(syst)
+
+        self.systnames.append(merged)
+        
+        for i, meas in enumerate(self.measurements):
+            self.uncert[meas][merged] = m_tot[i][i]**.5
+        for i, meas1 in enumerate(self.measurements):
+            for j, meas2 in enumerate(self.measurements):
+                if  m_tot[i][j] != 0:
+                    self.matrix[merged][meas1][meas2] = m_tot[i][j]/(self.uncert[meas1][merged]*self.uncert[meas2][merged])
+                else:
+                    self.matrix[merged][meas1][meas2] = 0
+
+        self.update()
+
+        return
 
 
     def checkAllSystMatrices(self):
