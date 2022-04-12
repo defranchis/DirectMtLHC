@@ -19,10 +19,10 @@ systNameDict = {
     'JES3':'LHC JES 3',
     'JES7':'LHC JES 7', # to remove
     'BKDT':'Background (data)',
-    'AtlJetUnc':'ATLAS JES 2',
+    'AtlJetUnc':'ATLAS jet reconstruction',
     'MET':'Missing transverse energy',
     'Extra':'Extra', # to check
-    'AtlFastFull':'ATLAS JES 1',
+    'AtlFastFull':'ATLAS fast simulation',
     'TRIG':'Trigger efficiency',
     'JES8':'LHC JES 8', # to remove
     'CMSJES1':'CMS JES 1',
