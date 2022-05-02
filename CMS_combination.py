@@ -3,11 +3,13 @@ import argparse
 from BLUE_object import *
 from combTools import *
 
+default_file = 'original_inputs/CMS_negCorr_CMSGrid_V5_Dec.txt'
+
 def main():
 
     parser = argparse.ArgumentParser(description='specify options')
 
-    parser.add_argument('-f',action='store',type=str, required=True, help='<Required> input file')
+    parser.add_argument('-f',action='store',type=str, default=default_file, help='input file')
     parser.add_argument('--excludeMeas',action='store', help='provide list of measurements to be excluded. Example: --exclude \'meas 1, meas 2\'')
     parser.add_argument('--excludeSyst',action='store', help='provide list of systematics to be excluded. Example: --exclude \'syst 1, syst 2\'')
     parser.add_argument('--nToys',action='store',type=int, help='number of toys for MC stat')
@@ -19,6 +21,9 @@ def main():
     parser.add_argument('--deriveImpactSigns',action='store_true', help='derive signs of the impacts')
 
     args = parser.parse_args()
+
+    if args.f == default_file:
+        print('\n WARNING: using default file "{}"'.format(default_file))
 
     excludeMeas = []
     if not args.excludeMeas is None:
