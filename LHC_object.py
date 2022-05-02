@@ -326,9 +326,6 @@ class LHC_object:
             self.LHCmatrix = self.createLHCmatrix()
         self.update()
 
-    def printResults(self):
-        self.LHC_obj.printResults()
-
     def simplePrint(self):
         self.LHC_obj.simplePrint()
 
