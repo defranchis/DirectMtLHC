@@ -705,7 +705,7 @@ class BLUE_object:
     def printImpactsSorted(self):
         import systNameDict as snd
         for k, v in sorted(self.results.mergedImpacts.items(), key=itemgetter(1), reverse = True):
-            print '{}\t{:.2f}'.format(snd.systNameDict[k],v).replace('0.00','< 0.01')
+            print '{:>25}\t{:.2f}'.format(snd.systNameDict[k],v).replace('0.00','< 0.01')
         print
 
     def deriveSignedImpact(self,syst):
