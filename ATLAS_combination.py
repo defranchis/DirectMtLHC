@@ -2,7 +2,7 @@ from BLUE_object import BLUE_object
 from combTools import *
 import argparse
 
-infile = 'original_inputs/ATLAS_signed_2021_12_14.txt'
+infile = 'original_inputs/ATLASallinputs_2022_05_05.txt'
 
 def makeATLAS_MCstat_file(obj):
     f = open('MCstat_ATLAS.txt','w')

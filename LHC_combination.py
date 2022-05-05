@@ -5,7 +5,7 @@ from LHC_tools import makeAllCorrelationScansLHC, flipAmbiguousSigns
 from combTools import getToyResults, getToyResultsLHCobj
 import argparse, sys, copy
 
-f_ATLAS = 'original_inputs/ATLAS_signed_2021_12_14.txt'
+f_ATLAS = 'original_inputs/ATLASallinputs_2022_05_05.txt'
 f_CMS = 'original_inputs/CMS_negCorr_CMSGrid_V5_Dec.txt'
 
 def makeLHC_MCstat_file(obj_ATLAS,obj_CMS):
