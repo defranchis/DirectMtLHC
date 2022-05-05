@@ -48,12 +48,20 @@ def main():
     args = parser.parse_args()
 
     obj_ATLAS = BLUE_object(f_ATLAS, ATLAS=True)
-    obj_ATLAS.printResults()
+    # obj_ATLAS.printResults()
     # obj_ATLAS.printImpactsSorted()
 
     obj_CMS = BLUE_object(f_CMS,ATLAS=False)
-    obj_CMS.printResults()
+    # obj_CMS.printResults()`
     # obj_CMS.printImpactsSorted()
+
+    LHC_full_unblind = LHC_object(obj_ATLAS, obj_CMS, blind=False, separateCombinations=False)
+    LHC_sep_unblind = LHC_object(obj_ATLAS, obj_CMS, blind=False, separateCombinations=True)
+
+    print 'CMS combination \n'
+    LHC_full_unblind.obj_d['CMS'].simplePrint()
+    LHC_full_unblind.obj_d['CMS'].printImpactsSorted()
+
 
     if not args.unblind:
         LHC_full = LHC_object(obj_ATLAS, obj_CMS, blind=True, separateCombinations=False)
@@ -64,12 +72,11 @@ def main():
         LHC_sep.printResults()
         LHC_sep.printImpactsSorted()
     
-    LHC_full_unblind = LHC_object(obj_ATLAS, obj_CMS, blind=False, separateCombinations=False)
-    LHC_sep_unblind = LHC_object(obj_ATLAS, obj_CMS, blind=False, separateCombinations=True)
-
-    if args.unblind:
+    else:
         LHC_full_unblind.printResults()
+        LHC_full_unblind.printImpactsSorted()
         LHC_sep_unblind.printResults()
+        LHC_sep_unblind.printImpactsSorted()
 
     print
     print '|separate / full -1 |'
