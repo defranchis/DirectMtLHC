@@ -2,6 +2,10 @@ import sys, os, copy
 import numpy as np
 from operator import itemgetter
 
+import ROOT as rt
+rt.gSystem.Load('libBlue.so')
+from ROOT import Blue
+
 np.random.seed(1)
 
 tmp_dir = 'tmp_workdir'
@@ -94,9 +98,7 @@ class BLUE_object:
 
         self.usedMeas, self.usedSyst = self.getUsedMeasSyst()
         self.nMeas_orig = len(self.measurements)
-        self.writeBLUEinputCMS()
-        self.log = self.runCombination()
-        self.results = self.readResults()
+        self.runBLUEcombination()
         self.toysInitialised = False
         self.toysThrown = False
 
@@ -104,8 +106,7 @@ class BLUE_object:
     def update(self):
         self.p_matrix, self.p_uncert, self.uncertWithSign = self.propagateNegativeCorrelations()
         self.usedMeas, self.usedSyst = self.getUsedMeasSyst()
-        self.log = self.runCombination()
-        self.results = self.readResults()
+        self.runBLUEcombination()
 
     def clone(self):
         return copy.deepcopy(self)
@@ -232,59 +233,6 @@ class BLUE_object:
                 if matrix[meas_i][meas_j] != matrix[meas_j][meas_i]: return False
         return True
 
-    def writeBLUEinputCMS(self,tmprun=False):
-
-        if tmprun:
-            if not os.path.exists(tmp_dir):
-                os.makedirs(tmp_dir)
-            f = open('{}/CMS_combination_tmp.txt'.format(tmp_dir),'w')
-        else:
-            outdir = 'signed_files'
-            if not os.path.exists(outdir):
-                os.makedirs(outdir)
-            f = open('{}/{}_signed.txt'.format(outdir,(self.inputfile).split('/')[-1].replace('.txt','')),'w')
-        f.write('\./combine<<!\n\'Top Mass combination\'\n-1 -1 0 internal & minuit debug level, dependency flag\n')
-        f.write('1 {} {}  # of observables, measurements, error classes\n'.format(len(self.usedMeas),len(self.usedSyst)))
-        f.write('\'Mtop\'     name of observable\n\n')
-        for syst in self.usedSyst:
-            f.write('\'{}\'\t'.format(syst))
-        f.write('\n')
-
-
-        for meas in self.usedMeas:
-            f.write('\'{}\' \'Mtop\' {}'.format(meas,self.value[meas]))
-            for syst in self.usedSyst:
-                f.write(' {}'.format(self.p_uncert[meas][syst]))
-            f.write('\n')
-
-        f.write('\n')
-
-        for i,meas1 in enumerate(self.usedMeas):
-            for j,meas2 in enumerate(self.usedMeas):
-                corr = 0.0
-                if i==j:
-                    corr = 1.0
-                f.write('{} '.format(corr))
-            if i == 0:
-                f.write('\'Stat\'')
-            f.write('\n')
-        f.write('\n')
-
-
-        for syst in self.usedSyst:
-            if syst == 'Stat': 
-                continue
-            for i,meas1 in enumerate(self.usedMeas):
-                for meas2 in self.usedMeas:
-                    f.write('{} '.format(self.p_matrix[syst][meas1][meas2]))
-                if i == 0:
-                    f.write('\'{}\''.format(syst))
-                f.write('\n')
-            f.write('\n')
-        f.write('!\n')
-
-        return
-
     def propagateNegativeCorrelations(self):
         matrix = copy.deepcopy(self.matrix)
         uncert = copy.deepcopy(self.uncert)
@@ -356,77 +304,6 @@ class BLUE_object:
             m[i,i] = uncert[meas]['Stat']*uncert[meas]['Stat']
         return m
 
-    def runCombination(self):
-        self.writeBLUEinputCMS(tmprun=True)
-        os.system('source {}/CMS_combination_tmp.txt > {}/log.log'.format(tmp_dir,tmp_dir))
-        result = (open('{}/log.log'.format(tmp_dir),'r')).read()
-        if not 'End of derived quantities.' in result.splitlines()[-1] and not 'POST>' in result.splitlines()[-1]:
-            print 'ERROR: combination failed'
-            sys.exit()
-        return result
-        
-    def readResults(self):
-        resobj = result_object()
-        result = (self.log).splitlines()
-        res_l = []
-        res_syst_l = []
-        w_index_l = []
-        for j,r in enumerate(result):
-            if r.replace(' ','').startswith('Mtop') and '+-' in r:
-                res_l.append(r)
-            if 'Errors:' in r:
-                res_syst_l.append(result[j+1])
-            if 'Relative weights of measurements' in r:
-                w_index_l.append(j+3)
-        res = res_l[-1]
-        res_syst = res_syst_l[-1]
-
-        res = res.replace('+-','')
-        res = res.replace('[','')
-        res = res.replace(']','')
-        res = res.replace('|','')
-        blah, mt, tot, stat, syst, blahblah = res.split()
-
-        resobj.mt = float(mt)
-        resobj.tot = float(tot)
-        resobj.stat = float(stat)
-        resobj.syst = float(syst)
-
-        res_syst = res_syst.split()
-        res_syst = [float(r) for r in res_syst if r!='Mtop']        
-        
-        for i,syst in enumerate(self.usedSyst):
-            resobj.impacts[syst] = res_syst[i]
-
-        systsToMergeForTable = []
-        for l in self.mergeImpacts.values():
-            systsToMergeForTable.extend(l)
-        for syst in systsToMergeForTable:
-            if not syst in self.usedSyst:
-                print 'ERROR: systematics {} (to be merged) not found'
-                sys.exit()
-
-        if len(systsToMergeForTable) != len(set(systsToMergeForTable)):
-            print 'ERROR: same systematics added twice in merge table'
-            sys.exit()
-
-        for syst in resobj.impacts.keys():
-            if not syst in systsToMergeForTable:
-                resobj.mergedImpacts[syst] = resobj.impacts[syst]
-        for syst in self.mergeImpacts.keys():
-            resobj.mergedImpacts[syst] = 0
-            for subsyst in self.mergeImpacts[syst]:
-                resobj.mergedImpacts[syst] += resobj.impacts[subsyst]**2
-            resobj.mergedImpacts[syst] = resobj.mergedImpacts[syst]**.5
-        
-
-        w_index = w_index_l[-1]
-        for z in range(w_index,w_index+len(self.usedMeas)):
-            m, w = result[z].split()
-            resobj.weights[m] = float(w)
-
-        return resobj
-
     def printResults(self):
         print '\n-> combination results\n'
         if len(self.excludeMeas)>0:
@@ -447,7 +324,7 @@ class BLUE_object:
 
     def simplePrint(self):
         print 'mt\t\ttot\tstat\tsyst\t[GeV]'
-        print '{}\t\t{}\t{}\t{}'.format(self.results.mt,self.results.tot,self.results.stat,self.results.syst)
+        print '{:.3f}\t\t{:.3f}\t{:.3f}\t{:.3f}'.format(self.results.mt,self.results.tot,self.results.stat,self.results.syst)
     
     def printOutput(self):
         print self.log
@@ -732,8 +609,6 @@ class BLUE_object:
                 self.results.signedImpacts[syst] = self.results.impacts[syst]
                 continue
             up, down = self.deriveSignedImpact(syst)
-            # if syst in tocheck:
-            #     print syst, round(up,3), round(down,3), round(self.results.impacts[syst],3)
             if up*down > 0:
                 print '\nWARNING: sign of impact of {} not defined\n'.format(syst)
             elif up*down == 0:
@@ -900,3 +775,95 @@ class BLUE_object:
             for j,meas2 in enumerate(self.usedMeas):
                 m[i,j] = self.p_matrix[syst][meas1][meas2]
         return m
+
+    def getBlueEstArray(self,meas):
+        l = [self.p_uncert[meas][syst] for syst in self.usedSyst]
+        l.insert(0,self.value[meas])
+        return np.array(l)
+        
+    def getSystCorrMatrixForBlue(self,syst):
+        if syst == 'Stat':
+            return np.diag(np.ones(len(self.usedMeas)))
+        m_dict = self.p_matrix[syst]
+        m = np.empty([len(self.usedMeas),len(self.usedMeas)])
+        for i,m1 in enumerate(self.usedMeas):
+            for j,m2 in enumerate(self.usedMeas):
+                m[i][j] = m_dict[m1][m2]
+        return m
+
+    def getTotalUncertainty(self):
+        tot = 0
+        sys = 0
+        for syst in self.usedSyst:
+            tot += self.results.impacts[syst]**2
+            if syst != 'Stat':
+                sys += self.results.impacts[syst]**2
+        self.results.syst = sys**.5
+        self.results.tot = tot**.5
+        return
+
+    def prepareTable(self):
+        systsToMergeForTable = []
+        for l in self.mergeImpacts.values():
+            systsToMergeForTable.extend(l)
+        for syst in systsToMergeForTable:
+            if not syst in self.usedSyst:
+                print 'ERROR: systematics {} (to be merged) not found'
+                sys.exit()
+
+        if len(systsToMergeForTable) != len(set(systsToMergeForTable)):
+            print 'ERROR: same systematics added twice in merge table'
+            sys.exit()
+
+        for syst in self.results.impacts.keys():
+            if not syst in systsToMergeForTable:
+                self.results.mergedImpacts[syst] = self.results.impacts[syst]
+        for syst in self.mergeImpacts.keys():
+            self.results.mergedImpacts[syst] = 0
+            for subsyst in self.mergeImpacts[syst]:
+                self.results.mergedImpacts[syst] += self.results.impacts[subsyst]**2
+            self.results.mergedImpacts[syst] = self.results.mergedImpacts[syst]**.5
+        return
+
+    def runBLUEcombination(self):
+
+        myBlue = Blue(len(self.usedMeas),len(self.usedSyst))
+        myBlue.SetQuiet()
+
+        for im, meas in enumerate(self.usedMeas):
+            myBlue.FillEst(im,self.getBlueEstArray(meas))
+        vecNam = rt.vector('TString')(self.usedMeas)
+        vecSys = rt.vector('TString')(self.usedSyst)
+        myBlue.FillNamEst(vecNam[0])
+        myBlue.FillNamUnc(vecSys[0])
+
+        vecObsNam = rt.vector('TString')(['mt'])
+        myBlue.FillNamObs(vecObsNam[0])
+        
+        for iu, syst in enumerate(self.usedSyst):
+            myBlue.FillCor(iu, self.getSystCorrMatrixForBlue(syst))
+
+        myBlue.FixInp()
+        myBlue.Solve()
+        # myBlue.PrintResult()
+        # myBlue.PrintWeight()
+
+        self.results = result_object()
+
+        results = rt.TMatrixD(1,len(self.usedSyst)+1)
+        myBlue.GetResult(results)
+
+        self.results.mt = results[0][0]
+        for i,syst in enumerate(self.usedSyst):
+            self.results.impacts[syst] = results[0][i+1]
+        self.results.stat = self.results.impacts['Stat']
+
+        self.getTotalUncertainty()
+        self.prepareTable()
+
+        weights = rt.TMatrixD(len(self.usedMeas))
+        myBlue.GetWeight(weights)
+        for i, meas in enumerate(self.usedMeas):
+            self.results.weights[meas]=weights[i][0]
+        
+        return
