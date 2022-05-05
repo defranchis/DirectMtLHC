@@ -204,8 +204,8 @@ def excludeMeasOneByOne(base_obj):
         obj = base_obj.clone()
         obj.addExcludeMeas([meas])
         print 'excluded:', obj.excludeMeas
-        print
         obj.simplePrint()
+        print
         h.SetBinContent(i+1,obj.results.mt)
         h.SetBinError(i+1,obj.results.tot)
         h.GetXaxis().SetBinLabel(i+1,nameForCMSPlots(meas))
