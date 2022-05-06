@@ -3,7 +3,7 @@ import argparse
 from BLUE_object import *
 from combTools import *
 
-default_file = 'original_inputs/CMS_negCorr_CMSGrid_V5_Dec.txt'
+default_file = 'inputs/CMS_negCorr_CMSGrid_V5_Dec.txt'
 
 def main():
 
@@ -60,7 +60,7 @@ def main():
         plotScanSummary(base_obj)
 
     if args.nToys > 0:
-        base_obj.prepareForToys('MCstat_CMS.txt')
+        base_obj.prepareForToys('inputs/MCstat_CMS.txt')
         base_obj.throwToys(args.nToys)
         getToyResults(base_obj)
         if args.toysIndividualSyst:

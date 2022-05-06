@@ -2,10 +2,11 @@ from BLUE_object import BLUE_object
 from combTools import *
 import argparse
 
-infile = 'original_inputs/ATLASallinputs_2022_05_05.txt'
+infile = 'inputs/ATLASallinputs_2022_05_05.txt'
+MC_file = 'MCstat_ATLAS.txt'
 
 def makeATLAS_MCstat_file(obj):
-    f = open('MCstat_ATLAS.txt','w')
+    f = open(MC_file,'w')
     for syst in obj.usedSyst:
         f.write('\t{}'.format(syst))
     f.write('\n')
@@ -35,7 +36,7 @@ def main():
 
     if args.nToys > 0:
         makeATLAS_MCstat_file(base_obj)
-        base_obj.prepareForToys('MCstat_ATLAS.txt')
+        base_obj.prepareForToys(MC_file)
         base_obj.throwToys(args.nToys)
         getToyResults(base_obj,plotToys=False)
         if args.toysIndividualSyst:
