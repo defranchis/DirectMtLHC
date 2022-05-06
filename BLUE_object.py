@@ -867,3 +867,51 @@ class BLUE_object:
             self.results.weights[meas]=weights[i][0]
         
         return
+
+    def doSubCombination(self,obsDict,printResults=False):
+
+        nObs = len(obsDict.keys())
+
+        vecObs = rt.vector('Int_t')()
+        for i,meas in enumerate(self.usedMeas):
+            for j, sub in enumerate(obsDict.keys()):
+                if meas in obsDict[sub]:
+                    vecObs.push_back(int(j))
+                    break
+        
+        myBlue = Blue(len(self.usedMeas),len(self.usedSyst),nObs,vecObs)
+        myBlue.SetQuiet()
+
+        for im, meas in enumerate(self.usedMeas):
+            myBlue.FillEst(im,self.getBlueEstArray(meas))
+        vecNam = rt.vector('TString')(self.usedMeas)
+        vecSys = rt.vector('TString')(self.usedSyst)
+        myBlue.FillNamEst(vecNam[0])
+        myBlue.FillNamUnc(vecSys[0])
+
+        vecObsNam = rt.vector('TString')(obsDict.keys())
+        myBlue.FillNamObs(vecObsNam[0])
+        
+        for iu, syst in enumerate(self.usedSyst):
+            myBlue.FillCor(iu, self.getSystCorrMatrixForBlue(syst))
+
+        myBlue.FixInp()
+        myBlue.Solve()
+        if printResults:
+            myBlue.PrintResult()
+            myBlue.PrintWeight()
+            myBlue.PrintRhoRes()
+
+        results = rt.TMatrixD(nObs,len(self.usedSyst)+1)
+        myBlue.GetResult(results)
+
+        res = dict()
+        unc = dict()
+        for i, obs in enumerate(obsDict.keys()):
+            res[obs] = results[i][0]
+            uncobs = dict()
+            for j,syst in enumerate(self.usedSyst):
+                uncobs[syst] = results[i][j+1]
+            unc[obs] = uncobs
+
+        return res, unc
