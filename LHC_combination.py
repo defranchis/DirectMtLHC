@@ -44,6 +44,7 @@ def main():
     parser.add_argument('--flipSigns',action='store_true', help='flip all ambiguous signs in LHC correlations')
     parser.add_argument('--unblind',action='store_true', help='do not blind the LHC combination')
     parser.add_argument('--nToys',action='store',type=int, help='number of toys for MC stat')
+    parser.add_argument('--subCombinations',action='store_true', help='perform sub-combinations')
 
     args = parser.parse_args()
 
@@ -109,6 +110,11 @@ def main():
         LHC_sep_unblind.ATLAS_obj.throwToys(args.nToys)
         getToyResultsLHCobj(LHC_sep_unblind,blind=not args.unblind)
         
+    if args.subCombinations:
+        CMS = [meas for meas in LHC_full_unblind.LHC_obj.usedMeas if 'CMS' in meas]
+        ATLAS = [meas for meas in LHC_full_unblind.LHC_obj.usedMeas if not meas in CMS]
+        obsDict = {'ATLAS':ATLAS, 'CMS':CMS}
+        LHC_full_unblind.LHC_obj.doSubCombination(obsDict=obsDict,printResults=True)
 
     return
 

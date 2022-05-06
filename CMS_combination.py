@@ -19,6 +19,8 @@ def main():
     parser.add_argument('--excludeSystOneByOne',action='store_true', help='exclude uncertainties one-by-one')
     parser.add_argument('--noSigns',action='store_true', help='remove correlation signs')
     parser.add_argument('--deriveImpactSigns',action='store_true', help='derive signs of the impacts')
+    parser.add_argument('--subCombinations',action='store_true', help='perform sub-combinations')
+
 
     args = parser.parse_args()
 
@@ -64,6 +66,12 @@ def main():
         if args.toysIndividualSyst:
             for syst in base_obj.systForToys:
                 getToyResults(base_obj,[syst])
+
+    if args.subCombinations:
+        l_7TeV = [m for m in base_obj.usedMeas if 'CMS11' in m]
+        l_8TeV = [m for m in base_obj.usedMeas if m not in l_7TeV]
+        obsDict = {'7TeV':l_7TeV, '8TeV':l_8TeV}
+        base_obj.doSubCombination(obsDict=obsDict,printResults=True)
 
     return
 
