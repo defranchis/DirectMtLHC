@@ -29,6 +29,7 @@ class LHC_object:
                 obj.makeBlind()
             
         self.separateCombinations = separateCombinations
+        self.LHC_file = 'LHC_input_sep.txt' if self.separateCombinations else 'LHC_input_full.txt'
         self.merge_and_rename = merge_and_rename
         self.mergeImpacts = mergeImpacts
 
@@ -72,7 +73,7 @@ class LHC_object:
                     sys.exit()
 
         self.writeBLUEinputCMS(separateCombinations=self.separateCombinations)
-        self.LHC_obj = BLUE_object('LHC_input.txt',LHC=True,blind=self.blind,mergeImpacts=self.mergeImpacts)
+        self.LHC_obj = BLUE_object(self.LHC_file,LHC=True,blind=self.blind,mergeImpacts=self.mergeImpacts)
         # self.LHC_obj.checkAllSystMatrices()
 
     def clone(self):
@@ -80,7 +81,7 @@ class LHC_object:
 
     def update(self):
         self.writeBLUEinputCMS(separateCombinations=self.separateCombinations)
-        self.LHC_obj = BLUE_object('LHC_input.txt',LHC=True,blind=self.blind,mergeImpacts=self.mergeImpacts)
+        self.LHC_obj = BLUE_object(self.LHC_file,LHC=True,blind=self.blind,mergeImpacts=self.mergeImpacts)
 
 
     def renameAllSyst(self):
@@ -305,7 +306,7 @@ class LHC_object:
                 os.makedirs(tmp_dir)
             f = open('{}/LHC_combination_tmp.txt'.format(tmp_dir),'w')
         else:
-            f = open('LHC_input.txt','w')
+            f = open(self.LHC_file,'w')
 
         if separateCombinations:
             self.writeSeparateCombinationsInput(f)
