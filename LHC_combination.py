@@ -116,6 +116,11 @@ def main():
         obsDict = {'ATLAS':ATLAS, 'CMS':CMS}
         LHC_full_unblind.LHC_obj.doSubCombination(obsDict=obsDict,printResults=True)
 
+        CMS = [meas for meas in LHC_sep_unblind.LHC_obj.usedMeas if 'CMS' in meas]
+        ATLAS = [meas for meas in LHC_sep_unblind.LHC_obj.usedMeas if not meas in CMS]
+        obsDict = {'ATLAS':ATLAS, 'CMS':CMS}
+        LHC_sep_unblind.LHC_obj.doSubCombination(obsDict=obsDict,printResults=True)
+
     return
 
 
