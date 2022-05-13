@@ -845,10 +845,15 @@ class BLUE_object:
 
         myBlue.FixInp()
         myBlue.Solve()
+        # print myBlue.GetProb()
         # myBlue.PrintResult()
         # myBlue.PrintWeight()
 
         self.results = result_object()
+        self.chi2 = myBlue.GetChiq()
+        self.ndf = myBlue.GetNdof()
+        self.prob = myBlue.GetProb()
+
 
         results = rt.TMatrixD(1,len(self.usedSyst)+1)
         myBlue.GetResult(results)
