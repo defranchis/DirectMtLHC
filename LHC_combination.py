@@ -59,6 +59,8 @@ def main():
     LHC_full_unblind = LHC_object(obj_ATLAS, obj_CMS, blind=False, separateCombinations=False)
     LHC_sep_unblind = LHC_object(obj_ATLAS, obj_CMS, blind=False, separateCombinations=True)
 
+    LHC_full_unblind.printCorrTables()
+
     print 'CMS combination \n'
     LHC_full_unblind.obj_d['CMS'].simplePrint()
     LHC_full_unblind.obj_d['CMS'].printImpactsSorted()

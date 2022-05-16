@@ -10,6 +10,8 @@ renameMap_default = {'ATLAS':{} ,'CMS': {'CMSFL1':'JESFLV'}}
 
 noSignsOnImpacts = {'ATLAS':['JESFLV', 'BKMC', 'BTAG', 'PDF'], 'CMS': []}
 
+tab_dir = 'corr_tables'
+
 class LHC_object:
 
     def __init__(self,ATLAS_obj, CMS_obj, excludeSyst = [], separateCombinations = False, corrMap = None, mergeMap = None, renameMap = None, blind = False, merge_and_rename=True,mergeImpacts={}):
@@ -363,5 +365,43 @@ class LHC_object:
             l_stat.append(tmpobj_LHC.getBlueObject().results.stat)
             l_syst.append(tmpobj_LHC.getBlueObject().results.syst)
         print
-
+        
         return l_mt, l_tot, l_stat, l_syst
+
+    def printCorrTables(self):
+        if self.separateCombinations:
+            print ('WARNING: LHC correlation tables are trivial')
+            sys.exit()
+
+        if not os.path.exists(tab_dir):
+            os.makedirs(tab_dir)
+    
+        for syst in self.corrMap.keys():
+            self.printCorrTable(syst,tab_dir)
+
+        return
+
+    def printCorrTable(self,syst,tab_dir):
+        m = self.BLUE_obj.p_matrix[syst]
+        o = open('{}/LHC_corr_{}.tex'.format(tab_dir,syst),'w')
+        for i, meas in enumerate(self.BLUE_obj.usedMeas):
+            if not 'CMS' in meas:
+                meas = 'ATLAS\_'+meas
+            else:
+                meas=meas.replace('_','\_')
+            if i==0:
+                o.write('\t& {} '.format(meas))
+            else:
+                o.write('& {} '.format(meas))
+        o.write('\\\\\n')
+        for meas1 in self.BLUE_obj.usedMeas:
+            if 'CMS' in meas1:
+                o.write(meas1.replace('_','\_')+' ')
+            else:
+                o.write('ATLAS\_'+meas1+' ')
+            for meas2 in self.BLUE_obj.usedMeas:
+                o.write('& {} '.format(m[meas1][meas2]))
+            o.write('\\\\\n')
+
+            
+        return
