@@ -8,7 +8,7 @@ from ROOT import Blue
 
 np.random.seed(1)
 
-tmp_dir = 'tmp_workdir'
+tab_dir = 'results_tables'
 
 # tocheck = ['MCGEN', 'CR', 'METH', 'RAD', 'AtlFastFull', 'TRIG', 'JES3', 'UE', 'JES8', 'HADR']
 
@@ -59,6 +59,7 @@ class result_object:
         self.syst = -999
         self.impacts = dict()
         self.weights = dict()
+        self.pulls = dict()
         self.signedImpacts = dict()
         self.mergedImpacts = dict()
 
@@ -854,6 +855,8 @@ class BLUE_object:
         self.ndf = myBlue.GetNdof()
         self.prob = myBlue.GetProb()
 
+        for i, meas in enumerate(self.usedMeas):
+            self.results.pulls[meas] = myBlue.GetPull(i)
 
         results = rt.TMatrixD(1,len(self.usedSyst)+1)
         myBlue.GetResult(results)
@@ -920,3 +923,24 @@ class BLUE_object:
             unc[obs] = uncobs
 
         return res, unc
+
+
+    def printPulls(self,prefix):
+        if not os.path.exists(tab_dir):
+            os.makedirs(tab_dir)
+        o = open('{}/{}_pulls.tex'.format(tab_dir,prefix),'w')
+        o.write('measurement & pull //\n')
+        o.write('\\hline\n')
+        for meas in self.usedMeas:
+            o.write('{} & {:.2f} //\n'.format(meas,self.results.pulls[meas]))
+        return
+
+    def printWeights(self,prefix):
+        if not os.path.exists(tab_dir):
+            os.makedirs(tab_dir)
+        o = open('{}/{}_weights.tex'.format(tab_dir,prefix),'w')
+        o.write('measurement & weight //\n')
+        o.write('\\hline\n')
+        for meas in self.usedMeas:
+            o.write('{} & {:.2f} //\n'.format(meas,self.results.weights[meas]))
+        return

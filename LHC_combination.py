@@ -86,6 +86,15 @@ def main():
     print '|full - separate|'
     print abs(LHC_sep_unblind.getBlueObject().results.mt - LHC_full_unblind.getBlueObject().results.mt), 'GeV\n'
 
+
+    LHC_full_unblind.BLUE_obj.printWeights(prefix='LHC_A')
+    LHC_sep_unblind.BLUE_obj.printWeights(prefix='LHC_B')
+
+    if args.unblind:
+        LHC_full_unblind.BLUE_obj.printPulls(prefix='LHC_A')
+        LHC_sep_unblind.BLUE_obj.printPulls(prefix='LHC_B')
+
+
     if args.scanAllCorr:
         makeAllCorrelationScansLHC(LHC_full_unblind,LHC_sep_unblind,blind=not args.unblind)
     if args.flipSigns:
@@ -111,15 +120,15 @@ def main():
         getToyResultsLHCobj(LHC_sep_unblind,blind=not args.unblind)
         
     if args.subCombinations:
-        CMS = [meas for meas in LHC_full_unblind.LHC_obj.usedMeas if 'CMS' in meas]
-        ATLAS = [meas for meas in LHC_full_unblind.LHC_obj.usedMeas if not meas in CMS]
+        CMS = [meas for meas in LHC_full_unblind.BLUE_obj.usedMeas if 'CMS' in meas]
+        ATLAS = [meas for meas in LHC_full_unblind.BLUE_obj.usedMeas if not meas in CMS]
         obsDict = {'ATLAS':ATLAS, 'CMS':CMS}
-        LHC_full_unblind.LHC_obj.doSubCombination(obsDict=obsDict,printResults=True)
+        LHC_full_unblind.BLUE_obj.doSubCombination(obsDict=obsDict,printResults=True)
 
-        CMS = [meas for meas in LHC_sep_unblind.LHC_obj.usedMeas if 'CMS' in meas]
-        ATLAS = [meas for meas in LHC_sep_unblind.LHC_obj.usedMeas if not meas in CMS]
+        CMS = [meas for meas in LHC_sep_unblind.BLUE_obj.usedMeas if 'CMS' in meas]
+        ATLAS = [meas for meas in LHC_sep_unblind.BLUE_obj.usedMeas if not meas in CMS]
         obsDict = {'ATLAS':ATLAS, 'CMS':CMS}
-        LHC_sep_unblind.LHC_obj.doSubCombination(obsDict=obsDict,printResults=True)
+        LHC_sep_unblind.BLUE_obj.doSubCombination(obsDict=obsDict,printResults=True)
 
     return
 

@@ -20,6 +20,7 @@ def main():
     parser.add_argument('--noSigns',action='store_true', help='remove correlation signs')
     parser.add_argument('--deriveImpactSigns',action='store_true', help='derive signs of the impacts')
     parser.add_argument('--subCombinations',action='store_true', help='perform sub-combinations')
+    parser.add_argument('--printPulls',action='store_true', help='print pulls')
 
 
     args = parser.parse_args()
@@ -47,6 +48,8 @@ def main():
 
     base_obj.printResults()
     base_obj.printImpactsSorted()
+    base_obj.printPulls(prefix='CMS')
+    base_obj.printWeights(prefix='CMS')
     drawWeights(base_obj,path='plots')
 
     if args.excludeMeasOneByOne:

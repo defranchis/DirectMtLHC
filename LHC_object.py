@@ -73,15 +73,15 @@ class LHC_object:
                     sys.exit()
 
         self.writeBLUEinputCMS(separateCombinations=self.separateCombinations)
-        self.LHC_obj = BLUE_object(self.LHC_file,LHC=True,blind=self.blind,mergeImpacts=self.mergeImpacts)
-        # self.LHC_obj.checkAllSystMatrices()
+        self.BLUE_obj = BLUE_object(self.LHC_file,LHC=True,blind=self.blind,mergeImpacts=self.mergeImpacts)
+        # self.BLUE_obj.checkAllSystMatrices()
 
     def clone(self):
         return copy.deepcopy(self)
 
     def update(self):
         self.writeBLUEinputCMS(separateCombinations=self.separateCombinations)
-        self.LHC_obj = BLUE_object(self.LHC_file,LHC=True,blind=self.blind,mergeImpacts=self.mergeImpacts)
+        self.BLUE_obj = BLUE_object(self.LHC_file,LHC=True,blind=self.blind,mergeImpacts=self.mergeImpacts)
 
 
     def renameAllSyst(self):
@@ -316,10 +316,10 @@ class LHC_object:
         return
 
     def getBlueObject(self):
-        return self.LHC_obj
+        return self.BLUE_obj
 
     def printResults(self):
-        self.LHC_obj.printResults()
+        self.BLUE_obj.printResults()
 
     def setNewLHCcorrMap(self,corrMap):
         self.corrMap = corrMap
@@ -328,10 +328,10 @@ class LHC_object:
         self.update()
 
     def simplePrint(self):
-        self.LHC_obj.simplePrint()
+        self.BLUE_obj.simplePrint()
 
     def printImpactsSorted(self):
-        self.LHC_obj.printImpactsSorted()
+        self.BLUE_obj.printImpactsSorted()
 
     def getToyResults(self):
         if not self.ATLAS_obj.toysThrown:
