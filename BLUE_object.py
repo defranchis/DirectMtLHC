@@ -929,18 +929,18 @@ class BLUE_object:
         if not os.path.exists(tab_dir):
             os.makedirs(tab_dir)
         o = open('{}/{}_pulls.tex'.format(tab_dir,prefix),'w')
-        o.write('measurement & pull //\n')
+        o.write('measurement & pull \\\\\n')
         o.write('\\hline\n')
         for meas in self.usedMeas:
-            o.write('{} & {:.2f} //\n'.format(meas,self.results.pulls[meas]))
+            o.write('{} & {:.2f} \\\\\n'.format(meas,self.results.pulls[meas]))
         return
 
     def printWeights(self,prefix):
         if not os.path.exists(tab_dir):
             os.makedirs(tab_dir)
         o = open('{}/{}_weights.tex'.format(tab_dir,prefix),'w')
-        o.write('measurement & weight //\n')
+        o.write('measurement & weight \\\\\n')
         o.write('\\hline\n')
         for meas in self.usedMeas:
-            o.write('{} & {:.2f} //\n'.format(meas,self.results.weights[meas]))
+            o.write('{} & {:.2f} \\\\\n'.format(meas,self.results.weights[meas]))
         return
