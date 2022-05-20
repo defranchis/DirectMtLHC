@@ -410,7 +410,7 @@ class LHC_object:
             else:
                 o.write('ATLAS\_'+meas1+' ')
             for meas2 in usedMeas:
-                o.write('& {} '.format(m[meas1][meas2]))
+                o.write('& {:.2f} '.format(m[meas1][meas2]))
             o.write('\\\\\n')
 
             
