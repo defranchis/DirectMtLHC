@@ -380,9 +380,15 @@ class LHC_object:
         usedMeas += [m for m in self.BLUE_obj.usedMeas if '7' in m and not 'CMS' in m and not m in usedMeas]
         usedMeas += [m for m in self.BLUE_obj.usedMeas if '8' in m and not 'CMS' in m]
         usedMeas += [m for m in self.BLUE_obj.usedMeas if 'CMS' in m]
+
+        if sorted(usedMeas) != sorted(self.BLUE_obj.usedMeas):
+            print 'ERROR in printCorrTable: re-ordering of input measurements did not work'
+            sys.exit()
     
         for syst in self.corrMap.keys():
             self.printCorrTable(usedMeas,syst,tab_dir)
+
+        self.printFullCorrTable(usedMeas,tab_dir)
 
         return
 
@@ -392,16 +398,45 @@ class LHC_object:
         else:
             return meas.replace('_','\_')
         
+    def printFullCorrTable(self,usedMeas,tab_dir):
+        m = np.zeros((len(usedMeas),len(usedMeas)))
+        for syst in self.BLUE_obj.usedSyst:
+            m += self.getCovariance(syst,usedMeas)
+        u = np.diag(np.diag(m)**.5)
+        c = np.dot(np.linalg.inv(u),np.dot(m,np.linalg.inv(u)))
+        o = open('{}/LHC_corr_full.tex'.format(tab_dir),'w')
+
+        for i, meas in enumerate(usedMeas):
+            if i==0:
+                o.write('\t& {} '.format(self.measToTex(meas)))
+            else:
+                o.write('& {} '.format(self.measToTex(meas)))
+        o.write('\\\\\n')
+        for i,meas1 in enumerate(usedMeas):
+            o.write(self.measToTex(meas1)+' ')
+            for j,meas2 in enumerate(usedMeas):
+                o.write('& {:.2f} '.format(c[i][j]))
+            o.write('\\\\\n')
+
+        return
+
+    def getCovariance(self,syst,usedMeas=[]):
+        if len(usedMeas) == 0:
+            usedMeas = self.BLUE_obj.usedMeas
+        u = np.array([self.BLUE_obj.p_uncert[meas][syst] for meas in usedMeas])
+        corr = np.diag(np.ones(len(usedMeas)))
+        if syst != 'Stat':
+            for i,meas1 in enumerate(usedMeas):
+                for j,meas2 in enumerate(usedMeas):
+                    corr[i][j] = self.BLUE_obj.p_matrix[syst][meas1][meas2]
+        m = np.dot(np.diag(u),np.dot(corr,np.diag(u)))
+        return m
 
     def printCorrTable(self,usedMeas,syst,tab_dir):
-        #re-ordering
 
         m = self.BLUE_obj.p_matrix[syst]
         o = open('{}/LHC_corr_{}.tex'.format(tab_dir,syst),'w')
 
-        if sorted(usedMeas) != sorted(self.BLUE_obj.usedMeas):
-            print 'ERROR in printCorrTable: re-ordering of input measurements did not work'
-            sys.exit()
         for i, meas in enumerate(usedMeas):
             if i==0:
                 o.write('\t& {} '.format(self.measToTex(meas)))
