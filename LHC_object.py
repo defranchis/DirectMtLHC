@@ -375,18 +375,26 @@ class LHC_object:
 
         if not os.path.exists(tab_dir):
             os.makedirs(tab_dir)
-    
-        for syst in self.corrMap.keys():
-            self.printCorrTable(syst,tab_dir)
 
-        return
-
-    def printCorrTable(self,syst,tab_dir):
-        #re-ordering
         usedMeas = [m for m in self.BLUE_obj.usedMeas if 'dil7' in m and not 'CMS' in m]
         usedMeas += [m for m in self.BLUE_obj.usedMeas if '7' in m and not 'CMS' in m and not m in usedMeas]
         usedMeas += [m for m in self.BLUE_obj.usedMeas if '8' in m and not 'CMS' in m]
         usedMeas += [m for m in self.BLUE_obj.usedMeas if 'CMS' in m]
+    
+        for syst in self.corrMap.keys():
+            self.printCorrTable(usedMeas,syst,tab_dir)
+
+        return
+
+    def measToTex(self,meas):
+        if not 'CMS' in meas:
+            return 'ATLAS\_'+meas
+        else:
+            return meas.replace('_','\_')
+        
+
+    def printCorrTable(self,usedMeas,syst,tab_dir):
+        #re-ordering
 
         m = self.BLUE_obj.p_matrix[syst]
         o = open('{}/LHC_corr_{}.tex'.format(tab_dir,syst),'w')
@@ -395,20 +403,13 @@ class LHC_object:
             print 'ERROR in printCorrTable: re-ordering of input measurements did not work'
             sys.exit()
         for i, meas in enumerate(usedMeas):
-            if not 'CMS' in meas:
-                meas = 'ATLAS\_'+meas
-            else:
-                meas=meas.replace('_','\_')
             if i==0:
-                o.write('\t& {} '.format(meas))
+                o.write('\t& {} '.format(self.measToTex(meas)))
             else:
-                o.write('& {} '.format(meas))
+                o.write('& {} '.format(self.measToTex(meas)))
         o.write('\\\\\n')
         for meas1 in usedMeas:
-            if 'CMS' in meas1:
-                o.write(meas1.replace('_','\_')+' ')
-            else:
-                o.write('ATLAS\_'+meas1+' ')
+            o.write(self.measToTex(meas1)+' ')
             for meas2 in usedMeas:
                 o.write('& {:.2f} '.format(m[meas1][meas2]))
             o.write('\\\\\n')
