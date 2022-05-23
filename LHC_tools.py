@@ -153,7 +153,8 @@ def flipAllSignsLHC(LHC_full,LHC_sep,ambiguous_l,orig_corrMap):
 
     obj_d = {'full': full, 'separate': sep}
     for syst in ambiguous_l:
-        corrMap[syst] *= -1
+        if syst in list(corrMap.keys()):
+            corrMap[syst] *= -1
     print()
     print()
     print('*sign flip for all ambiguous systematics')
@@ -170,7 +171,7 @@ def flipAllSignsLHC(LHC_full,LHC_sep,ambiguous_l,orig_corrMap):
 def flipSignLHC(LHC_full,LHC_sep,syst,orig_corrMap):
 
     if not syst in list(orig_corrMap.keys()):
-        print('WARNING: systematics {} (for sign flip) not in correlation map. Nothing done'.format(syst))
+        print('\nWARNING: systematics {} (for sign flip) not in correlation map. Nothing done'.format(syst))
         return
 
     corrMap = copy.deepcopy(orig_corrMap)
