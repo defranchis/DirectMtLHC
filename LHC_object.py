@@ -21,13 +21,13 @@ class LHC_object:
 
         self.excludeSyst = copy.deepcopy(excludeSyst)
         if len(self.excludeSyst) > 0:
-            for obj in self.obj_d.values():
+            for obj in list(self.obj_d.values()):
                 obj.addExcludeSyst(self.excludeSyst)
             
-        self.experiments = self.obj_d.keys()
+        self.experiments = list(self.obj_d.keys())
         self.blind = blind
         if blind:
-            for obj in self.obj_d.values():
+            for obj in list(self.obj_d.values()):
                 obj.makeBlind()
             
         self.separateCombinations = separateCombinations
@@ -57,21 +57,21 @@ class LHC_object:
         self.LHCsyst = self.prepareLHCcombination()
 
         if self.separateCombinations:
-            for obj in self.obj_d.values():
-                if len(obj.results.signedImpacts.keys()) == 0:
+            for obj in list(self.obj_d.values()):
+                if len(list(obj.results.signedImpacts.keys())) == 0:
                     obj.deriveSignedImpacts()
         else:
             self.LHCmeas = self.getLHCmeas()
             self.LHCmatrix = self.createLHCmatrix()
 
-        for exp, obj in self.obj_d.items():
+        for exp, obj in list(self.obj_d.items()):
             for syst in self.noSignsOnImpacts[exp]:
                 if syst in obj.uncertWithSign:
-                    print 'ERROR: something wrong in signs of syst {} in {}'.format(syst,exp)
+                    print('ERROR: something wrong in signs of syst {} in {}'.format(syst,exp))
                     sys.exit()
             for syst in obj.uncertWithSign:
                 if syst in self.noSignsOnImpacts[exp]:
-                    print 'ERROR: something wrong in signs of syst {} in {}'.format(syst,exp)
+                    print('ERROR: something wrong in signs of syst {} in {}'.format(syst,exp))
                     sys.exit()
 
         self.writeBLUEinputCMS(separateCombinations=self.separateCombinations)
@@ -87,25 +87,25 @@ class LHC_object:
 
 
     def renameAllSyst(self):
-        print
+        print()
         for exp in self.experiments:
-            for old, new in self.renameMap[exp].items():
-                print '{}: renaming syst {} to {}'.format(exp,old,new)
+            for old, new in list(self.renameMap[exp].items()):
+                print('{}: renaming syst {} to {}'.format(exp,old,new))
                 self.obj_d[exp].renameSyst(old,new)
         return
 
     def mergeAllSyst(self):
-        print
+        print()
         for exp in self.experiments:
-            for merged, original_l in self.mergeMap[exp].items():
-                print '{}: creating new syst {} from sources {}'.format(exp,merged,original_l)
+            for merged, original_l in list(self.mergeMap[exp].items()):
+                print('{}: creating new syst {} from sources {}'.format(exp,merged,original_l))
                 signs_propagated = self.obj_d[exp].mergeSyst(merged,original_l)
                 self.noSignsOnImpacts[exp].append(merged)
         return
 
 
     def removeZeroImpacts(self):
-        for obj in self.obj_d.values():
+        for obj in list(self.obj_d.values()):
             for syst in obj.usedSyst:
                 if obj.results.impacts[syst] == 0:
                     obj.addExcludeSyst([syst])
@@ -124,19 +124,19 @@ class LHC_object:
         LHCsyst = ATLAS_only + CMS_only + self.commonSyst
         
         if self.merge_and_rename:
-            print
-            print '-> unique to ATLAS'
-            print ATLAS_only
-            print
-            print '-> unique to CMS'
-            print CMS_only
-            print
+            print()
+            print('-> unique to ATLAS')
+            print(ATLAS_only)
+            print()
+            print('-> unique to CMS')
+            print(CMS_only)
+            print()
 
         return LHCsyst
 
     def getLHCmeas(self):
         allMeas = []
-        for exp, obj in self.obj_d.items():
+        for exp, obj in list(self.obj_d.items()):
             for meas in obj.usedMeas:
                 allMeas.append('{}_{}'.format(meas,exp))
         return allMeas
@@ -156,7 +156,7 @@ class LHC_object:
                     corr = 1.
                 else:
                     if '_ATLAS' in meas1 and '_ATLAS' in meas2:
-                        if syst in self.obj_d['ATLAS'].matrix.keys():
+                        if syst in list(self.obj_d['ATLAS'].matrix.keys()):
                             corr = self.obj_d['ATLAS'].matrix[syst][meas1.replace('_ATLAS','')][meas2.replace('_ATLAS','')]
                             if syst in self.noSignsOnImpacts['ATLAS']:
                                 pass
@@ -166,14 +166,14 @@ class LHC_object:
                         else:
                             corr = 0.
                     elif '_CMS' in meas1 and '_CMS' in meas2:
-                        if syst in self.obj_d['CMS'].matrix.keys():
+                        if syst in list(self.obj_d['CMS'].matrix.keys()):
                             corr = self.obj_d['CMS'].matrix[syst][meas1.replace('_CMS','')][meas2.replace('_CMS','')]
                             if not syst in self.noSignsOnImpacts['CMS']:
                                 corr = abs(corr)
                         else:
                             corr = 0.
                     else:
-                        if syst in self.corrMap.keys():
+                        if syst in list(self.corrMap.keys()):
                             corr = self.corrMap[syst]
                         else:
                             corr = 0.
@@ -202,7 +202,7 @@ class LHC_object:
         for exp in self.experiments:
             f.write('\'{}\' \'Mtop\' {}'.format(exp+' comb',self.obj_d[exp].results.mt))
             for syst in syst_l:
-                if syst in self.obj_d[exp].results.impacts.keys():
+                if syst in list(self.obj_d[exp].results.impacts.keys()):
                     factor = 1.
                     if syst != 'Stat' and self.obj_d[exp].results.signedImpacts[syst] < 0:
                         factor = -1.
@@ -214,15 +214,15 @@ class LHC_object:
         f.write('\n')
 
         used = []
-        for syst in self.corrMap.keys():
+        for syst in list(self.corrMap.keys()):
             if not syst in syst_l and not syst in self.excludeSyst:
-                print 'ERROR: systematics {} (in correlation map) not found in LHC grid'.format(syst)
+                print('ERROR: systematics {} (in correlation map) not found in LHC grid'.format(syst))
                 sys.exit()
         for syst in syst_l:
             for i,meas1 in enumerate(self.experiments):
                 for j,meas2 in enumerate(self.experiments):
                     corr = 0.0
-                    if syst in self.corrMap.keys():
+                    if syst in list(self.corrMap.keys()):
                         corr = self.corrMap[syst]
                         if not syst in used:
                             used.append(syst)
@@ -234,9 +234,9 @@ class LHC_object:
                 f.write('\n')
             f.write('\n')
 
-        for syst in self.corrMap.keys():
+        for syst in list(self.corrMap.keys()):
             if not syst in used and not syst in self.excludeSyst:
-                print 'ERROR: systematic {} (in correlation map) not used'.format(syst)
+                print('ERROR: systematic {} (in correlation map) not used'.format(syst))
                 sys.exit()
 
         f.write('!\n')
@@ -266,7 +266,7 @@ class LHC_object:
             f.write('\'{}\' \'Mtop\' {}'.format(meas_exp.replace('_',' '), obj.value[meas_exp]))
 
             for syst in syst_l:
-                if syst in obj.matrix.keys() or syst == 'Stat':
+                if syst in list(obj.matrix.keys()) or syst == 'Stat':
                     f.write(' {}'.format(obj.uncert[meas_exp][syst]))
                 else:
                     f.write(' 0.0')
@@ -337,22 +337,22 @@ class LHC_object:
 
     def getToyResults(self):
         if not self.ATLAS_obj.toysThrown:
-            print 'ERROR: throw ATLAS toys first'
+            print('ERROR: throw ATLAS toys first')
             sys.exit()
         if not self.CMS_obj.toysThrown:
-            print 'ERROR: throw CMS toys first'
+            print('ERROR: throw CMS toys first')
             sys.exit()
         l_mt = []
         l_tot = []
         l_stat = []
         l_syst = []
         if self.ATLAS_obj.nToys != self.CMS_obj.nToys:
-            print 'ERROR: number of toys must be the same for ATLAS and CMS'
+            print('ERROR: number of toys must be the same for ATLAS and CMS')
             sys.exit()
         nToys = self.ATLAS_obj.nToys
         for nToy in range(0,nToys):
             if nToy % 10 == 0:
-                print 'toy n.', nToy
+                print('toy n.', nToy)
             toy_uncert_ATLAS = self.ATLAS_obj.getToyUncert(nToy,self.ATLAS_obj.systForToys)
             toy_uncert_CMS = self.CMS_obj.getToyUncert(nToy,self.CMS_obj.systForToys)
             tmpobj_ATLAS = self.ATLAS_obj.clone()
@@ -364,7 +364,7 @@ class LHC_object:
             l_tot.append(tmpobj_LHC.getBlueObject().results.tot)
             l_stat.append(tmpobj_LHC.getBlueObject().results.stat)
             l_syst.append(tmpobj_LHC.getBlueObject().results.syst)
-        print
+        print()
         
         return l_mt, l_tot, l_stat, l_syst
 
@@ -382,10 +382,10 @@ class LHC_object:
         usedMeas += [m for m in self.BLUE_obj.usedMeas if 'CMS' in m]
 
         if sorted(usedMeas) != sorted(self.BLUE_obj.usedMeas):
-            print 'ERROR in printCorrTable: re-ordering of input measurements did not work'
+            print('ERROR in printCorrTable: re-ordering of input measurements did not work')
             sys.exit()
     
-        for syst in self.corrMap.keys():
+        for syst in list(self.corrMap.keys()):
             self.printCorrTable(usedMeas,syst,tab_dir)
 
         self.printFullCorrTable(usedMeas,tab_dir)
@@ -403,7 +403,7 @@ class LHC_object:
         for syst in self.BLUE_obj.usedSyst:
             m += self.getCovariance(syst,usedMeas)
         u = np.diag(np.diag(m)**.5)
-        c = np.dot(np.linalg.inv(u),np.dot(m,np.linalg.inv(u)))
+        c = np.matmul(np.linalg.inv(u),np.matmul(m,np.linalg.inv(u)))
         o = open('{}/LHC_corr_full.tex'.format(tab_dir),'w')
 
         for i, meas in enumerate(usedMeas):
@@ -429,7 +429,7 @@ class LHC_object:
             for i,meas1 in enumerate(usedMeas):
                 for j,meas2 in enumerate(usedMeas):
                     corr[i][j] = self.BLUE_obj.p_matrix[syst][meas1][meas2]
-        m = np.dot(np.diag(u),np.dot(corr,np.diag(u)))
+        m = np.matmul(np.diag(u),np.matmul(corr,np.diag(u)))
         return m
 
     def printCorrTable(self,usedMeas,syst,tab_dir):

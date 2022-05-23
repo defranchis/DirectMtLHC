@@ -14,19 +14,19 @@ scan_dir_LHC = 'LHC_scan_workdir'
 def getToyResults(base_obj,l=[],plotToys=True,blind=False):
     l_mt, l_tot, l_stat, l_syst, d_weights, d_syst = base_obj.getToyResults(l)
     
-    print '\nvar\tmean\t\trms\tnom'
+    print('\nvar\tmean\t\trms\tnom')
     if not blind:
-        print 'mt\t{}\t\t{}\t{}'.format(round(np.array(l_mt).mean(),3),round(np.array(l_mt).std(),3),base_obj.results.mt)
+        print('mt\t{}\t\t{}\t{}'.format(round(np.array(l_mt).mean(),3),round(np.array(l_mt).std(),3),base_obj.results.mt))
     else:
-        print 'mt\t{}\t\t{}\t{}'.format(round(np.array(l_mt).mean()/base_obj.results.mt,5),round(np.array(l_mt).std(),3),base_obj.results.mt/base_obj.results.mt)
-    print 'tot\t{}\t\t{}\t{}'.format(round(np.array(l_tot).mean(),3),round(np.array(l_tot).std(),3),base_obj.results.tot)
-    print 'stat\t{}\t\t{}\t{}'.format(round(np.array(l_stat).mean(),3),round(np.array(l_stat).std(),3),base_obj.results.stat)
-    print 'syst\t{}\t\t{}\t{}'.format(round(np.array(l_syst).mean(),3),round(np.array(l_syst).std(),3),base_obj.results.syst)
-    print '\n-> weights\n'
-    print 'meas\t\tmean\trms\tnom'
-    for meas in d_weights.keys():
-        print '{}\t{}\t{}\t{}'.format(meas,round(np.array(d_weights[meas]).mean(),2),round(np.array(d_weights[meas]).std(),2),base_obj.results.weights[meas])
-    print
+        print('mt\t{}\t\t{}\t{}'.format(round(np.array(l_mt).mean()/base_obj.results.mt,5),round(np.array(l_mt).std(),3),base_obj.results.mt/base_obj.results.mt))
+    print('tot\t{}\t\t{}\t{}'.format(round(np.array(l_tot).mean(),3),round(np.array(l_tot).std(),3),base_obj.results.tot))
+    print('stat\t{}\t\t{}\t{}'.format(round(np.array(l_stat).mean(),3),round(np.array(l_stat).std(),3),base_obj.results.stat))
+    print('syst\t{}\t\t{}\t{}'.format(round(np.array(l_syst).mean(),3),round(np.array(l_syst).std(),3),base_obj.results.syst))
+    print('\n-> weights\n')
+    print('meas\t\tmean\trms\tnom')
+    for meas in list(d_weights.keys()):
+        print('{}\t{}\t{}\t{}'.format(meas,round(np.array(d_weights[meas]).mean(),2),round(np.array(d_weights[meas]).std(),2),base_obj.results.weights[meas]))
+    print()
     
     if len(l)==0 and plotToys and not blind:
         plotToyResults(l_mt, l_tot, l_stat, l_syst, d_weights, d_syst, base_obj)
@@ -35,15 +35,15 @@ def getToyResults(base_obj,l=[],plotToys=True,blind=False):
 def getToyResultsLHCobj(LHC_base_obj,blind=False):
     l_mt, l_tot, l_stat, l_syst = LHC_base_obj.getToyResults()
     
-    print '\nvar\tmean\t\trms\tnom'
+    print('\nvar\tmean\t\trms\tnom')
     if not blind:
-        print 'mt\t{}\t\t{}\t{}'.format(round(np.array(l_mt).mean(),3),round(np.array(l_mt).std(),3),LHC_base_obj.getBlueObject().results.mt)
+        print('mt\t{}\t\t{}\t{}'.format(round(np.array(l_mt).mean(),3),round(np.array(l_mt).std(),3),LHC_base_obj.getBlueObject().results.mt))
     else:
-        print 'mt\t{}\t\t{}\t{}'.format(round(np.array(l_mt).mean()/LHC_base_obj.getBlueObject().results.mt,5),round(np.array(l_mt).std(),3),LHC_base_obj.getBlueObject().results.mt/LHC_base_obj.getBlueObject().results.mt)
-    print 'tot\t{}\t\t{}\t{}'.format(round(np.array(l_tot).mean(),3),round(np.array(l_tot).std(),3),LHC_base_obj.getBlueObject().results.tot)
-    print 'stat\t{}\t\t{}\t{}'.format(round(np.array(l_stat).mean(),3),round(np.array(l_stat).std(),3),LHC_base_obj.getBlueObject().results.stat)
-    print 'syst\t{}\t\t{}\t{}'.format(round(np.array(l_syst).mean(),3),round(np.array(l_syst).std(),3),LHC_base_obj.getBlueObject().results.syst)
-    print
+        print('mt\t{}\t\t{}\t{}'.format(round(np.array(l_mt).mean()/LHC_base_obj.getBlueObject().results.mt,5),round(np.array(l_mt).std(),3),LHC_base_obj.getBlueObject().results.mt/LHC_base_obj.getBlueObject().results.mt))
+    print('tot\t{}\t\t{}\t{}'.format(round(np.array(l_tot).mean(),3),round(np.array(l_tot).std(),3),LHC_base_obj.getBlueObject().results.tot))
+    print('stat\t{}\t\t{}\t{}'.format(round(np.array(l_stat).mean(),3),round(np.array(l_stat).std(),3),LHC_base_obj.getBlueObject().results.stat))
+    print('syst\t{}\t\t{}\t{}'.format(round(np.array(l_syst).mean(),3),round(np.array(l_syst).std(),3),LHC_base_obj.getBlueObject().results.syst))
+    print()
     
     return
 
@@ -203,9 +203,9 @@ def excludeMeasOneByOne(base_obj):
     for i, meas in enumerate(base_obj.usedMeas):
         obj = base_obj.clone()
         obj.addExcludeMeas([meas])
-        print 'excluded:', obj.excludeMeas
+        print('excluded:', obj.excludeMeas)
         obj.simplePrint()
-        print
+        print()
         h.SetBinContent(i+1,obj.results.mt)
         h.SetBinError(i+1,obj.results.tot)
         h.GetXaxis().SetBinLabel(i+1,nameForCMSPlots(meas))
@@ -230,9 +230,9 @@ def excludeSystOneByOne(base_obj):
         if syst == 'Stat': continue
         obj = base_obj.clone()
         obj.addExcludeSyst([syst])
-        print 'excluded:', obj.excludeSyst
+        print('excluded:', obj.excludeSyst)
         obj.simplePrint()
-        print
+        print()
     return
 
 
@@ -335,7 +335,7 @@ def makeCorrelationScan(base_obj,syst_scan):
     h_tot = TGraph()
     h_stat = TGraph()
     h_syst = TGraph()
-    print '\n scanning systematics {} \n'.format(syst_scan)
+    print('\n scanning systematics {} \n'.format(syst_scan))
     for i,red_corr in enumerate(red_corrs):
         obj = base_obj.clone()
         obj.reduceCorrelations(red_corr,syst_scan)
@@ -405,7 +405,7 @@ def plotScanSummary(base_obj):
         tot_diff = TMath.MaxElement(tot.GetN(),tot.GetY()) - TMath.MinElement(tot.GetN(),tot.GetY())
         if mt_diff/base_obj.results.mt > 0.00004:
             mt_maxdiff[syst] = mt_diff
-            if len(mt_maxdiff.keys())==1:
+            if len(list(mt_maxdiff.keys()))==1:
                 mt_m = TMath.MinElement(mt.GetN(),mt.GetY())
                 mt_M = TMath.MaxElement(mt.GetN(),mt.GetY())
             else:
@@ -415,7 +415,7 @@ def plotScanSummary(base_obj):
                     mt_M = TMath.MaxElement(mt.GetN(),mt.GetY())
         if tot_diff/base_obj.results.tot > 0.006:
             tot_maxdiff[syst] = tot_diff
-            if len(tot_maxdiff.keys())==1:
+            if len(list(tot_maxdiff.keys()))==1:
                 tot_m = TMath.MinElement(tot.GetN(),tot.GetY())
                 tot_M = TMath.MaxElement(tot.GetN(),tot.GetY())
             else:
@@ -500,7 +500,7 @@ def makeCorrelationScanLHC(base_obj,syst_scan,brutal=False):
     h_stat = TGraph()
     h_syst = TGraph()
 
-    print '\n scanning systematics {} \n'.format(syst_scan)
+    print('\n scanning systematics {} \n'.format(syst_scan))
 
     for i,corr in enumerate(corrs):
         obj = base_obj.clone()
@@ -575,7 +575,7 @@ def makeCorrelationScansLHC(base_obj,brutal=False):
 
     f = open('{}/slides.tex'.format(scan_dir_LHC),'w')
 
-    for syst in base_obj.matrix.keys():
+    for syst in list(base_obj.matrix.keys()):
         makeCorrelationScanLHC(base_obj,syst,brutal)
         f.write('\\begin{{frame}}{{correlation scan for systematics {}}}\n'.format(syst))
         f.write('\\centering\\includegraphics[width=.49\\textwidth]{{{}/mt_{}.pdf}}\n'.format(scan_dir_LHC,syst))

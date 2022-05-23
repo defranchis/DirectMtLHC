@@ -17,18 +17,18 @@ def makeLHC_MCstat_file(obj_ATLAS,obj_CMS):
     for syst in systForToys:
         f.write('\t{}'.format(syst))
     f.write('\n')
-    for meas in obj_ATLAS.MCstat_d.keys():
+    for meas in list(obj_ATLAS.MCstat_d.keys()):
         f.write(meas)
         for syst in systForToys:
-            if syst in obj_ATLAS.MCstat_d[meas].keys():
+            if syst in list(obj_ATLAS.MCstat_d[meas].keys()):
                 f.write(' {}'.format(obj_ATLAS.MCstat_d[meas][syst]))
             else:
                 f.write(' 0')
         f.write('\n')
-    for meas in obj_CMS.MCstat_d.keys():
+    for meas in list(obj_CMS.MCstat_d.keys()):
         f.write(meas)
         for syst in systForToys:
-            if syst in obj_CMS.MCstat_d[meas].keys():
+            if syst in list(obj_CMS.MCstat_d[meas].keys()):
                 f.write(' {}'.format(obj_CMS.MCstat_d[meas][syst]))
             else:
                 f.write(' 0')
@@ -43,7 +43,7 @@ def main():
     parser.add_argument('--scanAllCorr',action='store_true', help='scan all correlations with simple assumptions for both methods')
     parser.add_argument('--flipSigns',action='store_true', help='flip all ambiguous signs in LHC correlations')
     parser.add_argument('--unblind',action='store_true', help='do not blind the LHC combination')
-    parser.add_argument('--nToys',action='store',type=int, help='number of toys for MC stat')
+    parser.add_argument('--nToys',action='store',type=int, help='number of toys for MC stat', default=0)
     parser.add_argument('--subCombinations',action='store_true', help='perform sub-combinations')
 
     args = parser.parse_args()
@@ -61,7 +61,7 @@ def main():
 
     LHC_full_unblind.printCorrTables()
 
-    print 'CMS combination \n'
+    print('CMS combination \n')
     LHC_full_unblind.obj_d['CMS'].simplePrint()
     LHC_full_unblind.obj_d['CMS'].printImpactsSorted()
 
@@ -81,12 +81,12 @@ def main():
         LHC_sep_unblind.printResults()
         LHC_sep_unblind.printImpactsSorted()
 
-    print
-    print '|separate / full -1 |'
-    print abs(LHC_sep_unblind.getBlueObject().results.mt/LHC_full_unblind.getBlueObject().results.mt -1)*100, '%\n'
-    print
-    print '|full - separate|'
-    print abs(LHC_sep_unblind.getBlueObject().results.mt - LHC_full_unblind.getBlueObject().results.mt), 'GeV\n'
+    print()
+    print('|separate / full -1 |')
+    print(abs(LHC_sep_unblind.getBlueObject().results.mt/LHC_full_unblind.getBlueObject().results.mt -1)*100, '%\n')
+    print()
+    print('|full - separate|')
+    print(abs(LHC_sep_unblind.getBlueObject().results.mt - LHC_full_unblind.getBlueObject().results.mt), 'GeV\n')
 
 
     LHC_full_unblind.BLUE_obj.printWeights(prefix='LHC_A')

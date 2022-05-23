@@ -233,18 +233,18 @@ def mergeCorrelations(systnames,measurements,uncert,matrix):
     test_m, test_u = propagateNegativeCorrelations(copy.deepcopy(matrix),systnames,measurements,copy.deepcopy(uncert))
 
     if test_u != orig_u:
-        print 'WARNING: something inconsistent in input uncertainties. Please check'
+        print('WARNING: something inconsistent in input uncertainties. Please check')
         for meas in measurements:
             for syst in systnames:
                 if test_u[meas][syst] != orig_u[meas][syst]:
-                    print meas, syst, test_u[meas][syst], orig_u[meas][syst]
+                    print(meas, syst, test_u[meas][syst], orig_u[meas][syst])
 
     if test_m != orig_m:
         for syst in systnames:
             if syst == 'Stat': continue
             if not syst in eligible_s: continue
             if test_m[syst] != orig_m[syst]:
-                print 'ERROR: correlations for systematic {} inconsistent'.format(syst)
+                print('ERROR: correlations for systematic {} inconsistent'.format(syst))
 
     return ready_s, uncert, matrix
 
@@ -287,14 +287,14 @@ def checkFullMatrix(matrix,systnames,measurements,uncert):
         m_tot += m_syst
 
     if isInvertible(m_tot):
-        print '\ngood! full matrix is invertible'
+        print('\ngood! full matrix is invertible')
     else:
-        print '\nERROR! full matrix is not invertible\n'
+        print('\nERROR! full matrix is not invertible\n')
         return
     if isPositiveDefinite(m_tot):
-        print 'good! full matrix is positive definite\n'
+        print('good! full matrix is positive definite\n')
     else:
-        print 'ERROR: full matrix is not positive definite\n'
+        print('ERROR: full matrix is not positive definite\n')
 
     return m_tot
 
@@ -333,14 +333,14 @@ def checkExternalCorrelations(outdir):
         m[j,i] = corr
         
     
-    print '\n-> final checks on parameter correlation matrix\n'
-    print 'determinant =', np.linalg.det(m)
-    print 'is matrix invertible:', isInvertible(m)
-    print 'is matrix positive definite:', isPositiveDefinite(m)
-    print 
+    print('\n-> final checks on parameter correlation matrix\n')
+    print('determinant =', np.linalg.det(m))
+    print('is matrix invertible:', isInvertible(m))
+    print('is matrix positive definite:', isPositiveDefinite(m))
+    print() 
 
     if not isInvertible(m) or not isPositiveDefinite(m):
-        print 'matrix is not healthy, performing further checks...\n'
+        print('matrix is not healthy, performing further checks...\n')
         return detailedMatrixCheck(m,paras)
 
     return
@@ -355,7 +355,7 @@ def checkMatrixSingleSource(m,source,paras):
                     m[j,i] = 0
     det = np.linalg.det(m)
     if det <= 0:
-        print '{}\t{}\t{}\t{}'.format(source, isInvertible(m), isPositiveDefinite(m), det)
+        print('{}\t{}\t{}\t{}'.format(source, isInvertible(m), isPositiveDefinite(m), det))
 
     return isPositiveDefinite(m)
 
@@ -376,7 +376,7 @@ def checkSourceWithoutMeasurement(m,source,meas,paras):
 
     det = np.linalg.det(m)
     if det > 0:
-        print '{}\t{}\t{}\t{}\t{}'.format(source, meas, isInvertible(m), isPositiveDefinite(m), det)
+        print('{}\t{}\t{}\t{}\t{}'.format(source, meas, isInvertible(m), isPositiveDefinite(m), det))
 
     return isPositiveDefinite(m)
 
@@ -393,23 +393,23 @@ def detailedMatrixCheck(m,paras):
         if not meas in measurements:
             measurements.append(meas)
         
-    print '\n-> problematic sources:'
-    print '\nsource\tinvertible\tpos. def\tdet\n'
+    print('\n-> problematic sources:')
+    print('\nsource\tinvertible\tpos. def\tdet\n')
     
     failed = []
     for source in sources:
         success = checkMatrixSingleSource(copy.deepcopy(m),source,paras)
         if not success:
             failed.append(source)
-    print
+    print()
 
-    print '\n-> trying excluding some inputs:'
-    print '\nsource\texcluded\tinvertible\tpos. def\tdet\n'
+    print('\n-> trying excluding some inputs:')
+    print('\nsource\texcluded\tinvertible\tpos. def\tdet\n')
     
     for source in failed:
         for meas in measurements:
             checkSourceWithoutMeasurement(copy.deepcopy(m),source,meas,paras)
-    print
+    print()
     return failed
 
 def getSingleCorrelation(matrix,syst,measurements,trick=True):
@@ -433,13 +433,13 @@ def getSingleCovariance(matrix,syst,measurements,uncert):
     return m
 
 def printSingleCorrelation(matrix,syst,measurements,trick=True):
-    print '->',syst
-    print measurements
-    print
+    print('->',syst)
+    print(measurements)
+    print()
     m = getSingleCorrelation(matrix,syst,measurements,trick)
-    print 'det = ',np.linalg.det(m)
-    print m
-    print
+    print('det = ',np.linalg.det(m))
+    print(m)
+    print()
 
 
 def printCombinedCorrelation(matrix,sources,measurements,uncert):
@@ -452,14 +452,14 @@ def printCombinedCorrelation(matrix,sources,measurements,uncert):
             m[i,j] = m[i,j]/((m[i,i]*m[j,j])**.5)
     for i in range(0,len(measurements)):
         m[i,i] = 1
-    print 'det = ', np.linalg.det(m)
-    print isPositiveDefinite(m)
-    print m
+    print('det = ', np.linalg.det(m))
+    print(isPositiveDefinite(m))
+    print(m)
     return
 
 def printCombinedCorrelations(matrix,tomerge,measurements,uncert):
-    for key in tomerge.keys():
-        print key
+    for key in list(tomerge.keys()):
+        print(key)
         printCombinedCorrelation(matrix,tomerge[key],measurements,uncert)
-        print
+        print()
     return

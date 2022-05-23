@@ -16,12 +16,12 @@ def makeAllCorrelationScansLHC(full,sep,blind=False):
 
     if full.blind or sep.blind:
         if not blind:
-            print 'ERROR: unblinded scan requested but objects are blinded'
+            print('ERROR: unblinded scan requested but objects are blinded')
             sys.exit()
         else:
-            print '*******'
-            print 'WARNING: one or more input objects are blind - mt scan will be meaningless'
-            print '*******'
+            print('*******')
+            print('WARNING: one or more input objects are blind - mt scan will be meaningless')
+            print('*******')
 
     mt_smear = 0
     rand_offset_small = 0
@@ -33,7 +33,7 @@ def makeAllCorrelationScansLHC(full,sep,blind=False):
     LHC_sep = sep.clone()
     orig_corrMap = copy.deepcopy(LHC_full.corrMap)
     if LHC_sep.corrMap != orig_corrMap:
-        print 'ERROR: correlation maps should be the same for both methods'
+        print('ERROR: correlation maps should be the same for both methods')
         sys.exit()
     for syst in LHC_full.LHCsyst:
         if syst == 'Stat': continue
@@ -41,7 +41,7 @@ def makeAllCorrelationScansLHC(full,sep,blind=False):
     return
 
 def makeCorrelationScan(LHC_full,LHC_sep,corrMap,syst,mt_smear=0,rand_offset_small=0):
-    print 'scanning', syst
+    print('scanning', syst)
 
     obj_d = {'full' : LHC_full, 'separate' : LHC_sep}
 
@@ -56,7 +56,7 @@ def makeCorrelationScan(LHC_full,LHC_sep,corrMap,syst,mt_smear=0,rand_offset_sma
     corrs = [round(c,3) for c in corrs]
 
     scan_d = dict()
-    for meth, obj in obj_d.items():
+    for meth, obj in list(obj_d.items()):
         result_l = scanOne(obj,orig_corrMap,syst,corrs)
         scan_d[meth] = result_l
 
@@ -81,7 +81,7 @@ def plotScanResults(corrs,scan_d,syst,variable,mt_smear=0,rand_offset_small=0):
     leg = TLegend(.15,.15,.4,.3)
     leg.SetBorderSize(0)
     gd = dict()
-    for meth, scan in scan_d.items():
+    for meth, scan in list(scan_d.items()):
         g = TGraph()
         g.SetName(meth)
         for i, corr in enumerate(corrs):
@@ -90,7 +90,7 @@ def plotScanResults(corrs,scan_d,syst,variable,mt_smear=0,rand_offset_small=0):
             elif variable == 'mt':
                 g.SetPoint(i,corr,scan[i].mt+mt_smear)
             else:
-                print 'ERROR: variable {} not supported'.format(variable)
+                print('ERROR: variable {} not supported'.format(variable))
                 sys.exit()
         if meth == 'full':
             g.SetLineColor(ROOT.kBlue)
@@ -118,19 +118,19 @@ def plotScanResults(corrs,scan_d,syst,variable,mt_smear=0,rand_offset_small=0):
 def flipAmbiguousSigns(full,sep):
 
     if full.blind or sep.blind:
-        print '*******'
-        print 'WARNING: one or more input objects are blind - mt results will be meaningless'
-        print '*******'
+        print('*******')
+        print('WARNING: one or more input objects are blind - mt results will be meaningless')
+        print('*******')
 
     LHC_full = full.clone()
     LHC_sep = sep.clone()
     orig_corrMap = copy.deepcopy(LHC_full.corrMap)
 
     if LHC_sep.corrMap != orig_corrMap:
-        print 'ERROR: correlation maps should be the same for both methods'
+        print('ERROR: correlation maps should be the same for both methods')
         sys.exit()
     if LHC_full.noSignsOnImpacts != LHC_sep.noSignsOnImpacts:
-        print 'ERROR: list of ambiguous signs different in the two combinations'
+        print('ERROR: list of ambiguous signs different in the two combinations')
         sys.exit()
     
     ambiguous_l = LHC_full.noSignsOnImpacts['ATLAS']
@@ -141,7 +141,7 @@ def flipAmbiguousSigns(full,sep):
     flipAllSignsLHC(LHC_full,LHC_sep,ambiguous_l,orig_corrMap)
     for syst in ambiguous_l:
         flipSignLHC(LHC_full,LHC_sep,syst,orig_corrMap)
-    print
+    print()
 
     return
 
@@ -154,23 +154,23 @@ def flipAllSignsLHC(LHC_full,LHC_sep,ambiguous_l,orig_corrMap):
     obj_d = {'full': full, 'separate': sep}
     for syst in ambiguous_l:
         corrMap[syst] *= -1
-    print
-    print
-    print '*sign flip for all ambiguous systematics'
+    print()
+    print()
+    print('*sign flip for all ambiguous systematics')
 
-    for meth, obj in obj_d.items():
-        print
-        print '-> method =', meth
-        print 'uncertainty original signs =', obj.getBlueObject().results.tot, 'GeV'
+    for meth, obj in list(obj_d.items()):
+        print()
+        print('-> method =', meth)
+        print('uncertainty original signs =', obj.getBlueObject().results.tot, 'GeV')
         mt_orig = obj.getBlueObject().results.mt
         obj.setNewLHCcorrMap(corrMap)
-        print 'uncertainty flipped signs =', obj.getBlueObject().results.tot, 'GeV'
-        print 'mt(flip) - mt(original) =', round(obj.getBlueObject().results.mt-mt_orig,3) , 'GeV'
+        print('uncertainty flipped signs =', obj.getBlueObject().results.tot, 'GeV')
+        print('mt(flip) - mt(original) =', round(obj.getBlueObject().results.mt-mt_orig,3) , 'GeV')
 
 def flipSignLHC(LHC_full,LHC_sep,syst,orig_corrMap):
 
-    if not syst in orig_corrMap.keys():
-        print 'WARNING: systematics {} (for sign flip) not in correlation map. Nothing done'.format(syst)
+    if not syst in list(orig_corrMap.keys()):
+        print('WARNING: systematics {} (for sign flip) not in correlation map. Nothing done'.format(syst))
         return
 
     corrMap = copy.deepcopy(orig_corrMap)
@@ -180,18 +180,18 @@ def flipSignLHC(LHC_full,LHC_sep,syst,orig_corrMap):
     obj_d = {'full': full, 'separate': sep}
     corrMap[syst] *= -1
     
-    print
-    print
-    print '*sign flip for systematics {}*'.format(syst)
+    print()
+    print()
+    print('*sign flip for systematics {}*'.format(syst))
 
     
-    for meth, obj in obj_d.items():
-        print
-        print '-> method =', meth
-        print 'uncertainty original signs =', obj.getBlueObject().results.tot, 'GeV'
+    for meth, obj in list(obj_d.items()):
+        print()
+        print('-> method =', meth)
+        print('uncertainty original signs =', obj.getBlueObject().results.tot, 'GeV')
         mt_orig = obj.getBlueObject().results.mt
         obj.setNewLHCcorrMap(corrMap)
-        print 'uncertainty flipped signs =', obj.getBlueObject().results.tot, 'GeV'
-        print 'mt(flip) - mt(original) =', round(obj.getBlueObject().results.mt-mt_orig,3) , 'GeV'
+        print('uncertainty flipped signs =', obj.getBlueObject().results.tot, 'GeV')
+        print('mt(flip) - mt(original) =', round(obj.getBlueObject().results.mt-mt_orig,3) , 'GeV')
 
     return

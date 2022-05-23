@@ -68,10 +68,10 @@ class BLUE_object:
     def __init__(self,inputfile = None, excludeMeas = [], excludeSyst = [], ATLAS = False, LHC = False, blind = False, mergeImpacts = {}):
 
         if inputfile is None:
-            print 'ERROR: please provide input file'
+            print('ERROR: please provide input file')
             sys.exit()
         if ATLAS and LHC:
-            print 'ERROR! either ATLAS or LHC combination'
+            print('ERROR! either ATLAS or LHC combination')
             sys.exit()
             
         self.inputfile = inputfile
@@ -116,11 +116,11 @@ class BLUE_object:
 
         for excl in self.excludeMeas:
             if not excl in self.measurements:
-                print 'ERROR! measurement {} (in exclude list) not found in input file'.format(excl)
+                print('ERROR! measurement {} (in exclude list) not found in input file'.format(excl))
                 sys.exit()
         for excl in self.excludeSyst:
             if not excl in self.systnames:
-                print 'ERROR! systematics {} (in exclude list) not found in input file'.format(excl)
+                print('ERROR! systematics {} (in exclude list) not found in input file'.format(excl))
                 sys.exit()
 
         m = [meas for meas in self.measurements if not meas in self.excludeMeas]
@@ -155,7 +155,7 @@ class BLUE_object:
                 central = float(uncert[0])
                 uncert = uncert[1:]
                 if len(uncert) != len(self.systnames):
-                    print 'ERROR! {} uncertainties provided with {} systnames'.format(len(uncert),len(self.systnames))
+                    print('ERROR! {} uncertainties provided with {} systnames'.format(len(uncert),len(self.systnames)))
                     sys.exit()
                 for i, systname in enumerate(self.systnames):
                     uncertainties[systname] = float(uncert[i])
@@ -178,7 +178,7 @@ class BLUE_object:
             matrix_dict[systname] = self.getCorrelationMatrixSyst(systname)
 
         if not self.checkAllMatrixDict(matrix_dict):
-            print 'ERROR! matrix dictionary is unphysical'
+            print('ERROR! matrix dictionary is unphysical')
             sys.exit()
         return matrix_dict
 
@@ -190,24 +190,24 @@ class BLUE_object:
                 found = True
                 break
         if not found:
-            print 'ERROR! matrix for syst:', systname, 'not found'
+            print('ERROR! matrix for syst:', systname, 'not found')
             sys.exit()
         if len(matrix)!= len(self.measurements):
-            print 'logic ERROR', systname
+            print('logic ERROR', systname)
             sys.exit()
         if matrix[0].split()[-1].replace('\'','') != systname:
-            print 'ERROR! Wrong format in correlation matrix', systname
+            print('ERROR! Wrong format in correlation matrix', systname)
             sys.exit()
         for i, m_line in enumerate(matrix):
             if not '1.0' in m_line:
-                print 'ERROR! Line missing in correlation matrix for syst:', systname
+                print('ERROR! Line missing in correlation matrix for syst:', systname)
                 sys.exit()
             matrix[i] = m_line.split()
             if i==0 : matrix[i] = matrix[i][0:-1]
 
 
         if not isSymmetricMatrix(matrix):
-            print 'ERROR! matrix not symmetric for syst:', systname
+            print('ERROR! matrix not symmetric for syst:', systname)
             sys.exit()
         all_corr_dict = dict()
         for i, meas_i in enumerate(self.measurements):
@@ -271,7 +271,7 @@ class BLUE_object:
 
     def checkMatrices(self):
         if not (self.checkFullMatrix(self.matrix, self.uncert) == self.checkFullMatrix(self.p_matrix,self.p_uncert)).all():
-            print 'ERROR! something went wrong in sign propagation'
+            print('ERROR! something went wrong in sign propagation')
             sys.exit()
         return
 
@@ -287,7 +287,7 @@ class BLUE_object:
             m_tot += m_syst
 
         if not isPositiveDefinite(m_tot):
-            print 'ERROR: full matrix is not positive definite\n'
+            print('ERROR: full matrix is not positive definite\n')
             sys.exit()
 
         return m_tot
@@ -306,34 +306,34 @@ class BLUE_object:
         return m
 
     def printResults(self):
-        print '\n-> combination results\n'
+        print('\n-> combination results\n')
         if len(self.excludeMeas)>0:
-            print 'excluded measurements:', self.excludeMeas
-            print
+            print('excluded measurements:', self.excludeMeas)
+            print()
         if len(self.excludeSyst)>0:
-            print 'excluded systematics:', self.excludeSyst
-            print
+            print('excluded systematics:', self.excludeSyst)
+            print()
         self.simplePrint()
-        print
-        if len(self.results.signedImpacts.keys())>0:
-            print self.results.signedImpacts
+        print()
+        if len(list(self.results.signedImpacts.keys()))>0:
+            print(self.results.signedImpacts)
         else:
-            print self.results.impacts
-        print
-        print self.results.weights
-        print
+            print(self.results.impacts)
+        print()
+        print(self.results.weights)
+        print()
 
     def simplePrint(self):
-        print 'mt\t\ttot\tstat\tsyst\t[GeV]'
-        print '{:.3f}\t\t{:.3f}\t{:.3f}\t{:.3f}'.format(self.results.mt,self.results.tot,self.results.stat,self.results.syst)
+        print('mt\t\ttot\tstat\tsyst\t[GeV]')
+        print('{:.3f}\t\t{:.3f}\t{:.3f}\t{:.3f}'.format(self.results.mt,self.results.tot,self.results.stat,self.results.syst))
     
     def printOutput(self):
-        print self.log
+        print(self.log)
 
     
     def reduceCorrelations(self,red_corr,syst_scan='ALL'):
         if syst_scan != 'ALL' and not syst_scan in self.systnames:
-            print 'ERROR: systematics {} (to scan) not in input file '
+            print('ERROR: systematics {} (to scan) not in input file ')
             sys.exit()
         for syst in self.systnames:
             if syst == 'Stat': continue
@@ -356,7 +356,7 @@ class BLUE_object:
 
     def increaseCorrelations(self,incr_corr,syst_scan='ALL'):
         if syst_scan != 'ALL' and not syst_scan in self.systnames:
-            print 'ERROR: systematics {} (to scan) not in input file '
+            print('ERROR: systematics {} (to scan) not in input file ')
             sys.exit()
         for syst in self.systnames:
             if syst == 'Stat': continue
@@ -371,7 +371,7 @@ class BLUE_object:
     def addExcludeMeas(self,l):
         for meas in l:
             if not meas in self.measurements:
-                print 'ERROR! measurement {} (to be added to exclude list) not found in input file'.format(meas)
+                print('ERROR! measurement {} (to be added to exclude list) not found in input file'.format(meas))
                 sys.exit()
             self.excludeMeas.append(meas)
         self.update()
@@ -380,7 +380,7 @@ class BLUE_object:
     def addExcludeSyst(self,l):
         for syst in l:
             if not syst in self.systnames:
-                print 'ERROR! systematics {} (to be added to exclude list) not found in input file'.format(syst)
+                print('ERROR! systematics {} (to be added to exclude list) not found in input file'.format(syst))
                 sys.exit()
             self.excludeSyst.append(syst)
         self.update()
@@ -392,10 +392,10 @@ class BLUE_object:
         self.systForToys = toy_lines[0].split()
         for s in self.systForToys:
             if not s in self.systnames:
-                print 'ERROR: systematic {} in file {} not found in input file'.format(s,fn)
+                print('ERROR: systematic {} in file {} not found in input file'.format(s,fn))
                 sys.exit()
             if not s in self.usedSyst:
-                print 'logic Error: systematic {} (used for toys) excluded from combination'.format(s)
+                print('logic Error: systematic {} (used for toys) excluded from combination'.format(s))
                 sys.exit()
 
         self.MCstat_d = {}
@@ -404,10 +404,10 @@ class BLUE_object:
             l = line.split()
             thisMeas = l[0]
             if not thisMeas in self.measurements:
-                print 'ERROR: measurement {} in file {} not found in input file'.format(thisMeas,fn)
+                print('ERROR: measurement {} in file {} not found in input file'.format(thisMeas,fn))
                 sys.exit()
             if not thisMeas in self.usedMeas:
-                print 'WARNING: measurement {} (used for toys) excluded from combination'.format(thisMeas)
+                print('WARNING: measurement {} (used for toys) excluded from combination'.format(thisMeas))
 
             MCstat_dd = {}
             for j,ll in enumerate(l):
@@ -417,7 +417,7 @@ class BLUE_object:
             
         for syst in self.systForToys:
             allzeros = True
-            for meas in self.MCstat_d.keys():
+            for meas in list(self.MCstat_d.keys()):
                 if self.MCstat_d[meas][syst] > 0:
                     allzeros = False
                     break
@@ -430,25 +430,25 @@ class BLUE_object:
         return
         
     def printToysInfo(self):            
-        for meas in self.MCstat_d.keys():
-            print '\n-> ', meas, '\n'
-            print 'syst\tnom\tMCstat'
+        for meas in list(self.MCstat_d.keys()):
+            print('\n-> ', meas, '\n')
+            print('syst\tnom\tMCstat')
             for syst in self.systForToys:
-                print syst,'\t', self.uncert[meas][syst],'\t', self.MCstat_d[meas][syst]
-        print'\n'
+                print(syst,'\t', self.uncert[meas][syst],'\t', self.MCstat_d[meas][syst])
+        print('\n')
         return
 
     def throwToys(self,nToys):
         if not self.toysInitialised:
-            print 'ERROR: toys must be initialised first\n'
+            print('ERROR: toys must be initialised first\n')
             sys.exit()
         self.nToys = nToys
         if self.toysThrown:
-            print 'WARNING: throwing new toys with nToys = {}\n'.format(nToys)
+            print('WARNING: throwing new toys with nToys = {}\n'.format(nToys))
         else:
-            print 'INFO: throwing toys with nToys = {}\n'.format(nToys)
+            print('INFO: throwing toys with nToys = {}\n'.format(nToys))
         self.toy_d = {}
-        for meas in self.MCstat_d.keys():
+        for meas in list(self.MCstat_d.keys()):
             toy_dd = {}
             for syst in self.systForToys:
                 if self.MCstat_d[meas][syst] > 0:
@@ -462,20 +462,20 @@ class BLUE_object:
 
     def getToyResults(self,l=[]):
         if not self.toysThrown:
-            print 'ERROR: throw toys first'
+            print('ERROR: throw toys first')
             sys.exit()
         systForToys = self.systForToys
-        print '**********'
+        print('**********')
         if len(l) > 0:
             systForToys = l
             for syst in systForToys:
                 if not syst in self.systForToys:
-                    print 'ERROR: systematics {} (requested for toys) not in toy input file'.format(syst)
+                    print('ERROR: systematics {} (requested for toys) not in toy input file'.format(syst))
                     sys.exit()
-            print 'toys restricted to systematics: {}'.format(systForToys)
+            print('toys restricted to systematics: {}'.format(systForToys))
         else:
-            print 'toys for all available systematics: {}'.format(systForToys)
-        print '**********'
+            print('toys for all available systematics: {}'.format(systForToys))
+        print('**********')
         l_mt = []
         l_tot = []
         l_stat = []
@@ -495,15 +495,15 @@ class BLUE_object:
             l_tot.append(tmpobj.results.tot)
             l_stat.append(tmpobj.results.stat)
             l_syst.append(tmpobj.results.syst)
-            for syst in tmpobj.results.impacts.keys():
+            for syst in list(tmpobj.results.impacts.keys()):
                 d_syst[syst].append(tmpobj.results.impacts[syst])
-            for meas in tmpobj.results.weights.keys():
+            for meas in list(tmpobj.results.weights.keys()):
                 d_weights[meas].append(tmpobj.results.weights[meas])
         return l_mt, l_tot, l_stat, l_syst, d_weights, d_syst
 
     def getToyUncert(self,nToy,systForToys):
         toy_uncert = copy.deepcopy(self.uncert)
-        for meas in self.MCstat_d.keys():
+        for meas in list(self.MCstat_d.keys()):
             for syst in systForToys:
                 toy_uncert[meas][syst] = self.toy_d[meas][syst][nToy]
         return toy_uncert
@@ -575,16 +575,16 @@ class BLUE_object:
                         goodMatrix=False
 
         if not goodMatrix:
-            print 'ERROR! matrix dictionary is unphysical'
+            print('ERROR! matrix dictionary is unphysical')
             sys.exit()
 
         return systnames, measurements,all_central,all_uncertainties,all_corr_dict
 
     def printImpactsSorted(self):
         import systNameDict as snd
-        for k, v in sorted(self.results.mergedImpacts.items(), key=itemgetter(1), reverse = True):
-            print '{:>25}\t{:.2f}'.format(snd.systNameDict[k],v).replace('0.00','< 0.01')
-        print
+        for k, v in sorted(list(self.results.mergedImpacts.items()), key=itemgetter(1), reverse = True):
+            print('{:>25}\t{:.2f}'.format(snd.systNameDict[k],v).replace('0.00','< 0.01'))
+        print()
 
     def deriveSignedImpact(self,syst):
 
@@ -605,13 +605,13 @@ class BLUE_object:
 
 
     def deriveSignedImpacts(self):
-        for syst in self.results.impacts.keys():
+        for syst in list(self.results.impacts.keys()):
             if syst == 'Stat' or self.results.impacts[syst] == 0:
                 self.results.signedImpacts[syst] = self.results.impacts[syst]
                 continue
             up, down = self.deriveSignedImpact(syst)
             if up*down > 0:
-                print '\nWARNING: sign of impact of {} not defined\n'.format(syst)
+                print('\nWARNING: sign of impact of {} not defined\n'.format(syst))
             elif up*down == 0:
                 self.results.signedImpacts[syst] = 0
             else:
@@ -637,7 +637,7 @@ class BLUE_object:
 
     def renameSyst(self,old,new):
         if not old in self.systnames:
-            print 'ERROR: systematics {} not found: cannot be renamed'.format(old)
+            print('ERROR: systematics {} not found: cannot be renamed'.format(old))
             sys.exit()
         self.systnames.remove(old)
         self.systnames.append(new)
@@ -654,7 +654,7 @@ class BLUE_object:
     def mergeSystWithSigns(self,merged,original_l): 
         for original in original_l:
             if not original in self.usedSyst:
-                print 'ERROR: systematics {} not in input file or not in use'.format(original)
+                print('ERROR: systematics {} not in input file or not in use'.format(original))
                 sys.exit()
         m_tot = None
         for syst in original_l:
@@ -725,7 +725,7 @@ class BLUE_object:
     def mergeSyst(self,merged,original_l):
         for original in original_l:
             if not original in self.usedSyst:
-                print 'ERROR: systematics {} not in input file or not in use'.format(original)
+                print('ERROR: systematics {} not in input file or not in use'.format(original))
                 sys.exit()
         m_tot = None
         for syst in original_l:
@@ -767,7 +767,7 @@ class BLUE_object:
         # print syst, isPositiveDefinite(m)
         # if not isPositiveDefinite(m):
         #     print 'det =', np.linalg.det(m), '\n'
-        print syst, isInvertible(m), isNonNegativeDefinite(m)
+        print(syst, isInvertible(m), isNonNegativeDefinite(m))
         return
         
     def getSystCorrMatrix(self,syst):
@@ -805,21 +805,21 @@ class BLUE_object:
 
     def prepareTable(self):
         systsToMergeForTable = []
-        for l in self.mergeImpacts.values():
+        for l in list(self.mergeImpacts.values()):
             systsToMergeForTable.extend(l)
         for syst in systsToMergeForTable:
             if not syst in self.usedSyst:
-                print 'ERROR: systematics {} (to be merged) not found'
+                print('ERROR: systematics {} (to be merged) not found')
                 sys.exit()
 
         if len(systsToMergeForTable) != len(set(systsToMergeForTable)):
-            print 'ERROR: same systematics added twice in merge table'
+            print('ERROR: same systematics added twice in merge table')
             sys.exit()
 
-        for syst in self.results.impacts.keys():
+        for syst in list(self.results.impacts.keys()):
             if not syst in systsToMergeForTable:
                 self.results.mergedImpacts[syst] = self.results.impacts[syst]
-        for syst in self.mergeImpacts.keys():
+        for syst in list(self.mergeImpacts.keys()):
             self.results.mergedImpacts[syst] = 0
             for subsyst in self.mergeImpacts[syst]:
                 self.results.mergedImpacts[syst] += self.results.impacts[subsyst]**2
@@ -878,7 +878,7 @@ class BLUE_object:
 
     def doSubCombination(self,obsDict,printResults=False):
 
-        nObs = len(obsDict.keys())
+        nObs = len(list(obsDict.keys()))
 
         vecObs = rt.vector('Int_t')()
         for i,meas in enumerate(self.usedMeas):
@@ -897,7 +897,7 @@ class BLUE_object:
         myBlue.FillNamEst(vecNam[0])
         myBlue.FillNamUnc(vecSys[0])
 
-        vecObsNam = rt.vector('TString')(obsDict.keys())
+        vecObsNam = rt.vector('TString')(list(obsDict.keys()))
         myBlue.FillNamObs(vecObsNam[0])
         
         for iu, syst in enumerate(self.usedSyst):

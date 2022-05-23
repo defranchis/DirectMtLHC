@@ -12,7 +12,7 @@ def main():
     parser.add_argument('-f',action='store',type=str, default=default_file, help='input file')
     parser.add_argument('--excludeMeas',action='store', help='provide list of measurements to be excluded. Example: --exclude \'meas 1, meas 2\'')
     parser.add_argument('--excludeSyst',action='store', help='provide list of systematics to be excluded. Example: --exclude \'syst 1, syst 2\'')
-    parser.add_argument('--nToys',action='store',type=int, help='number of toys for MC stat')
+    parser.add_argument('--nToys',action='store',type=int, help='number of toys for MC stat', default=0)
     parser.add_argument('--toysIndividualSyst',action='store_true', help='also run toys for each individual (relevant) systematic')
     parser.add_argument('--scanCorrAll',action='store_true', help='scan all correlations with simple assumptions')
     parser.add_argument('--excludeMeasOneByOne',action='store_true', help='exclude measurements one-by-one')
@@ -26,7 +26,7 @@ def main():
     args = parser.parse_args()
 
     if args.f == default_file:
-        print('\n WARNING: using default file "{}"'.format(default_file))
+        print(('\n WARNING: using default file "{}"'.format(default_file)))
 
     excludeMeas = []
     if not args.excludeMeas is None:
@@ -43,7 +43,7 @@ def main():
         base_obj.removeSigns()
 
     if args.deriveImpactSigns:
-        print '\nestimating signs of impacts, this will take a short while...\n'
+        print('\nestimating signs of impacts, this will take a short while...\n')
         base_obj.deriveSignedImpacts()
 
     base_obj.printResults()
