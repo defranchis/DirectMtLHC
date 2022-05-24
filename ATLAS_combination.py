@@ -2,7 +2,9 @@ from BLUE_object import BLUE_object
 from combTools import *
 import argparse
 
-infile = 'inputs/ATLASallinputs_2022_05_05.txt'
+import default_files
+
+infile = default_files.default_file_ATLAS
 MC_file = 'MCstat_ATLAS.txt'
 
 def makeATLAS_MCstat_file(obj):

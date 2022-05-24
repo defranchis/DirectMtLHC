@@ -3,7 +3,9 @@ import argparse
 from BLUE_object import *
 from combTools import *
 
-default_file = 'inputs/CMS_negCorr_CMSGrid_V5_Dec.txt'
+import default_files
+
+default_file = default_files.default_file_CMS
 
 def main():
 
