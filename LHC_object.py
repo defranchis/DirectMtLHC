@@ -393,10 +393,13 @@ class LHC_object:
         return
 
     def measToTex(self,meas):
-        if not 'CMS' in meas:
-            return 'ATLAS\_'+meas
-        else:
-            return meas.replace('_','\_')
+        if 'dil' in meas or 'MT2' in meas: return '$ll$'
+        elif 'lj' in meas: return '$lj$'
+        elif 'allhad' in meas or 'aj' in meas: return '$aj$'
+        elif 'sto' in meas: return '$t$'
+        elif 'SVX' in meas: return '$vtx$'
+        elif 'jps' in meas: return '$J/\\psi$'
+        else: return 'ERROR'
         
     def printFullCorrTable(self,usedMeas,tab_dir):
         m = np.zeros((len(usedMeas),len(usedMeas)))
