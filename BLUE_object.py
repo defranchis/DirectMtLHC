@@ -730,7 +730,7 @@ class BLUE_object:
         m_tot = None
         for syst in original_l:
             m_syst = self.getSystMatrix(syst,self.matrix[syst],self.uncert)
-            if m_tot == None: m_tot = m_syst
+            if m_tot is None: m_tot = m_syst
             else: m_tot += m_syst
 
         
