@@ -26,7 +26,7 @@ def main():
 
     parser = argparse.ArgumentParser(description='specify options')
 
-    parser.add_argument('--nToys',action='store',type=int, help='number of toys for MC stat')
+    parser.add_argument('--nToys',action='store',type=int, help='number of toys for MC stat', default=0)
     parser.add_argument('--toysIndividualSyst',action='store_true', help='also run toys for each individual (relevant) systematic')
 
     args = parser.parse_args()
