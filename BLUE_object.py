@@ -174,7 +174,6 @@ class BLUE_object:
     def getFullCorrelationMatrix(self):
         matrix_dict = dict()
         for systname in self.systnames:
-            if systname == 'Stat': continue
             matrix_dict[systname] = self.getCorrelationMatrixSyst(systname)
 
         if not self.checkAllMatrixDict(matrix_dict):
@@ -221,7 +220,6 @@ class BLUE_object:
 
     def checkAllMatrixDict(self,matrix):
         for systname in self.systnames:
-            if systname == 'Stat': continue
             if not self.checkMatrixDict(matrix,systname):
                 return False
         return True
@@ -245,8 +243,6 @@ class BLUE_object:
                     break
 
         for syst in affectedSyst:
-            if syst == 'Stat': 
-                continue
             for meas1 in self.measurements:
                 for meas2 in self.measurements:
                     if matrix[syst][meas1][meas2] == 0:
@@ -277,12 +273,9 @@ class BLUE_object:
 
     def checkFullMatrix(self,matrix,uncert):
 
-        m_stat = self.getStatMatrix(matrix,uncert)
-        m_tot = m_stat
+        m_tot = np.zeros((len(self.measurements),len(self.measurements)))
 
         for syst in self.systnames:
-            if syst == 'Stat':
-                continue
             m_syst = self.getSystMatrix(syst,matrix[syst],uncert)
             m_tot += m_syst
 
@@ -293,16 +286,10 @@ class BLUE_object:
         return m_tot
 
     def getSystMatrix(self,syst,matrix,uncert):
-        m = np.zeros((len(self.measurements),len(self.measurements)))
+        m = np.empty((len(self.measurements),len(self.measurements)))
         for i,meas1 in enumerate(self.measurements):
             for j,meas2 in enumerate(self.measurements):
                 m[i,j] = matrix[meas1][meas2]*uncert[meas1][syst]*uncert[meas2][syst]
-        return m
-
-    def getStatMatrix(self,matrix,uncert):
-        m =  np.zeros((len(self.measurements),len(self.measurements)))
-        for i,meas in enumerate(self.measurements):
-            m[i,i] = uncert[meas]['Stat']*uncert[meas]['Stat']
         return m
 
     def printResults(self):
@@ -551,7 +538,6 @@ class BLUE_object:
 
         all_corr_dict = dict()
         for s, syst in enumerate(systnames):
-            if syst=='Stat': continue
             i_corr_dict = dict()
             for i, meas_i in enumerate(measurements):
                 j_corr_dict = dict()
@@ -566,7 +552,6 @@ class BLUE_object:
 
         goodMatrix = True
         for syst in systnames:
-            if syst=='Stat': continue
             for i in measurements:
                 if all_corr_dict[syst][i][i]!=1:
                     goodMatrix=False
@@ -758,7 +743,6 @@ class BLUE_object:
 
     def checkAllSystMatrices(self):
         for syst in self.usedSyst:
-            if syst == 'Stat': continue
             self.checkSystMatrix(syst)
         return
 
@@ -783,8 +767,6 @@ class BLUE_object:
         return np.array(l)
         
     def getSystCorrMatrixForBlue(self,syst):
-        if syst == 'Stat':
-            return np.diag(np.ones(len(self.usedMeas)))
         m_dict = self.p_matrix[syst]
         m = np.empty([len(self.usedMeas),len(self.usedMeas)])
         for i,m1 in enumerate(self.usedMeas):

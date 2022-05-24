@@ -274,21 +274,7 @@ class LHC_object:
         f.write('\n')
 
 
-        for i,meas1 in enumerate(self.LHCmeas):
-            for j,meas2 in enumerate(self.LHCmeas):
-                corr = 0.0
-                if i==j:
-                    corr = 1.0
-                f.write('{} '.format(corr))
-            if i == 0:
-                f.write('\'Stat\'')
-            f.write('\n')
-        f.write('\n')
-
-
         for syst in syst_l:
-            if syst == 'Stat': 
-                continue
             for i,meas1 in enumerate(self.LHCmeas):
                 for meas2 in self.LHCmeas:
                     f.write('{} '.format(self.LHCmatrix[syst][meas1][meas2]))
@@ -428,10 +414,9 @@ class LHC_object:
             usedMeas = self.BLUE_obj.usedMeas
         u = np.array([self.BLUE_obj.p_uncert[meas][syst] for meas in usedMeas])
         corr = np.diag(np.ones(len(usedMeas)))
-        if syst != 'Stat':
-            for i,meas1 in enumerate(usedMeas):
-                for j,meas2 in enumerate(usedMeas):
-                    corr[i][j] = self.BLUE_obj.p_matrix[syst][meas1][meas2]
+        for i,meas1 in enumerate(usedMeas):
+            for j,meas2 in enumerate(usedMeas):
+                corr[i][j] = self.BLUE_obj.p_matrix[syst][meas1][meas2]
         m = np.matmul(np.diag(u),np.matmul(corr,np.diag(u)))
         return m
 
