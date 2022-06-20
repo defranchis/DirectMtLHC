@@ -12,6 +12,15 @@ tab_dir = 'results_tables'
 
 # tocheck = ['MCGEN', 'CR', 'METH', 'RAD', 'AtlFastFull', 'TRIG', 'JES3', 'UE', 'JES8', 'HADR']
 
+def measToTex(meas):
+    if 'dil' in meas or 'MT2' in meas: return '$ll$'
+    elif 'lj' in meas: return '$lj$'
+    elif 'allhad' in meas or 'aj' in meas: return '$aj$'
+    elif 'sto' in meas: return '$t$'
+    elif 'SVX' in meas: return '$vtx$'
+    elif 'jps' in meas: return '$J/\\psi$'
+    else: return 'ERROR'
+
 
 def isSymmetricMatrix(matrix):
     if len(matrix[0]) != len(matrix[:][0]) : return False
@@ -925,4 +934,42 @@ class BLUE_object:
         o.write('\\hline\n')
         for meas in self.usedMeas:
             o.write('{} & {:.2f} \\\\\n'.format(meas,self.results.weights[meas]))
+        return
+
+    def getCovariance(self,syst):
+        u = np.array([self.p_uncert[meas][syst] for meas in self.usedMeas])
+        corr = np.diag(np.ones(len(self.usedMeas)))
+        for i,meas1 in enumerate(self.usedMeas):
+            for j,meas2 in enumerate(self.usedMeas):
+                corr[i][j] = self.p_matrix[syst][meas1][meas2]
+        m = np.matmul(np.diag(u),np.matmul(corr,np.diag(u)))
+        return m
+
+
+    def printFullCorrTable(self,exp):
+
+        td = 'corr_tables'
+
+        if not os.path.exists(td):
+            os.makedirs(td)
+
+        m = np.zeros((len(self.usedMeas),len(self.usedMeas)))
+        for syst in self.usedSyst:
+            m += self.getCovariance(syst)
+        u = np.diag(np.diag(m)**.5)
+        c = np.matmul(np.linalg.inv(u),np.matmul(m,np.linalg.inv(u)))
+        o = open('{}/{}_corr_full.tex'.format(td,exp),'w')
+
+        for i, meas in enumerate(self.usedMeas):
+            if i==0:
+                o.write('\t& {} '.format(measToTex(meas)))
+            else:
+                o.write('& {} '.format(measToTex(meas)))
+        o.write('\\\\\n')
+        for i,meas1 in enumerate(self.usedMeas):
+            o.write(measToTex(meas1)+' ')
+            for j,meas2 in enumerate(self.usedMeas):
+                o.write('& {:.2f} '.format(c[i][j]))
+            o.write('\\\\\n')
+
         return

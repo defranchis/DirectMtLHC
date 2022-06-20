@@ -1,4 +1,4 @@
-from BLUE_object import BLUE_object
+from BLUE_object import BLUE_object, measToTex
 import copy
 import sys,os
 import numpy as np
@@ -11,6 +11,7 @@ renameMap_default = {'ATLAS':{} ,'CMS': {'CMSFL1':'JESFLV'}}
 noSignsOnImpacts = {'ATLAS':['JESFLV', 'BKMC', 'BTAG', 'PDF'], 'CMS': []}
 
 tab_dir = 'corr_tables'
+
 
 class LHC_object:
 
@@ -377,15 +378,6 @@ class LHC_object:
         self.printFullCorrTable(usedMeas,tab_dir)
 
         return
-
-    def measToTex(self,meas):
-        if 'dil' in meas or 'MT2' in meas: return '$ll$'
-        elif 'lj' in meas: return '$lj$'
-        elif 'allhad' in meas or 'aj' in meas: return '$aj$'
-        elif 'sto' in meas: return '$t$'
-        elif 'SVX' in meas: return '$vtx$'
-        elif 'jps' in meas: return '$J/\\psi$'
-        else: return 'ERROR'
         
     def printFullCorrTable(self,usedMeas,tab_dir):
         m = np.zeros((len(usedMeas),len(usedMeas)))
@@ -397,12 +389,12 @@ class LHC_object:
 
         for i, meas in enumerate(usedMeas):
             if i==0:
-                o.write('\t& {} '.format(self.measToTex(meas)))
+                o.write('\t& {} '.format(measToTex(meas)))
             else:
-                o.write('& {} '.format(self.measToTex(meas)))
+                o.write('& {} '.format(measToTex(meas)))
         o.write('\\\\\n')
         for i,meas1 in enumerate(usedMeas):
-            o.write(self.measToTex(meas1)+' ')
+            o.write(measToTex(meas1)+' ')
             for j,meas2 in enumerate(usedMeas):
                 o.write('& {:.2f} '.format(c[i][j]))
             o.write('\\\\\n')
@@ -427,12 +419,12 @@ class LHC_object:
 
         for i, meas in enumerate(usedMeas):
             if i==0:
-                o.write('\t& {} '.format(self.measToTex(meas)))
+                o.write('\t& {} '.format(measToTex(meas)))
             else:
-                o.write('& {} '.format(self.measToTex(meas)))
+                o.write('& {} '.format(measToTex(meas)))
         o.write('\\\\\n')
         for meas1 in usedMeas:
-            o.write(self.measToTex(meas1)+' ')
+            o.write(measToTex(meas1)+' ')
             for meas2 in usedMeas:
                 o.write('& {:.2f} '.format(m[meas1][meas2]))
             o.write('\\\\\n')

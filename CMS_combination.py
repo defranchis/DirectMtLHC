@@ -24,7 +24,6 @@ def main():
     parser.add_argument('--subCombinations',action='store_true', help='perform sub-combinations')
     parser.add_argument('--printPulls',action='store_true', help='print pulls')
 
-
     args = parser.parse_args()
 
     if args.f == default_file:
@@ -41,6 +40,7 @@ def main():
         excludeSyst = [removeUselessCharachters(e) for e in excludeSyst]
 
     base_obj = BLUE_object(args.f,excludeMeas,excludeSyst)
+    base_obj.printFullCorrTable('CMS')
     if args.noSigns:
         base_obj.removeSigns()
 
