@@ -973,3 +973,23 @@ class BLUE_object:
             o.write('\\\\\n')
 
         return
+
+    def doCombinationWeightsAbove(self,wmin,printout=False):
+        if wmin<0:
+            print('ERROR: in doCombinationWeightsAbove: minimum weight must be positive')
+            sys.exit()
+        meas_list = []
+        for meas, weight in self.results.weights.items():
+            if abs(weight)>wmin:
+                meas_list.append(meas)
+        exclude_list = [m for m in self.usedMeas if not m in meas_list]
+
+        obj = self.clone()
+        obj.addExcludeMeas(exclude_list)
+        if printout:
+            print('\n**********')
+            print('result including only entries with weights above {} %'.format(wmin*100))
+            print('**********')
+            obj.simplePrint()
+
+        return obj.results

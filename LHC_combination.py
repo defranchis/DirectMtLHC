@@ -47,6 +47,7 @@ def main():
     parser.add_argument('--unblind',action='store_true', help='do not blind the LHC combination')
     parser.add_argument('--nToys',action='store',type=int, help='number of toys for MC stat', default=0)
     parser.add_argument('--subCombinations',action='store_true', help='perform sub-combinations')
+    parser.add_argument('--onlyWeightsAbove',action='store',type=float, help='re-perform combination with ony weights above given value')
 
     args = parser.parse_args()
 
@@ -133,6 +134,15 @@ def main():
         ATLAS = [meas for meas in LHC_sep_unblind.BLUE_obj.usedMeas if not meas in CMS]
         obsDict = {'ATLAS':ATLAS, 'CMS':CMS}
         LHC_sep_unblind.BLUE_obj.doSubCombination(obsDict=obsDict,printResults=True)
+
+    if not args.onlyWeightsAbove is None:
+
+        r = LHC_full_unblind.BLUE_obj.doCombinationWeightsAbove(wmin=args.onlyWeightsAbove,printout = args.unblind)
+
+        print ('only measurements with weight above {}%'.format(args.onlyWeightsAbove*100))
+        print ('n. used meas = {}'.format(len(r.weights.keys())))
+        print ('mt - mt_orig = {:.2f} GeV'.format(r.mt-LHC_sep_unblind.BLUE_obj.results.mt))
+        print ('tot uncert = {:.2f} GeV\n'.format(r.tot))
 
     return
 
