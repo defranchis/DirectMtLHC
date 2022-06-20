@@ -610,3 +610,71 @@ def nameForCMSPlots(name):
     elif 'CMS12' in name:
         name += ' 8TeV'
     return name.replace('CMS11_','').replace('CMS12_','')
+
+
+def measToTex(meas):
+    if 'dil' in meas or 'MT2' in meas: return '$ll$'
+    elif 'lj' in meas: return '$lj$'
+    elif 'allhad' in meas or 'aj' in meas: return '$aj$'
+    elif 'sto' in meas: return '$t$'
+    elif 'SVX' in meas: return '$vtx$'
+    elif 'jps' in meas: return '$J/\\psi$'
+    else: return 'ERROR'
+
+def measToROOT(meas):
+    name = 'CMS ' if 'CMS' in meas else 'ATLAS '
+    if 'dil' in meas or 'MT2' in meas: name+='ll '
+    elif 'lj' in meas: name+='lj '
+    elif 'allhad' in meas or 'aj' in meas: name+='aj '
+    elif 'sto' in meas: name+='t '
+    elif 'SVX' in meas: name+='vtx '
+    elif 'jps' in meas: name+='J/#Psi '
+    else: return 'ERROR'
+    if 'CMS' in name:
+        if '11' in meas:
+            return name+'7 TeV'
+        else:
+            return name+'8 TeV'
+    else:
+        if '7' in meas:
+            return name+'7 TeV'
+        else:
+            return name+'8 TeV'
+
+
+def removeUselessCharachters(name):
+    name = name.replace(' ','_')
+    if name.endswith('_'):
+        name = name[:-1]
+    if name.endswith('_'):
+        name = removeUselessCharachters(name)
+    if name.startswith('_'):
+        name = name[1:]
+    if name.startswith('_'):
+        name = removeUselessCharachters(name)
+    return name
+
+def isSymmetricMatrix(matrix):
+    if len(matrix[0]) != len(matrix[:][0]) : return False
+    for i in range(0,len(matrix[0])):
+        for j in range(0,len(matrix[0])):
+            if matrix[i][j] != matrix[j][i]: return False
+    return True
+
+def isPositiveDefinite(m):
+    if not isInvertible(m):
+        return False
+    w,v = np.linalg.eig(m)
+    return (w > 0).all()
+
+def isNonNegativeDefinite(m):
+    if not isInvertible(m):
+        return False
+    w,v = np.linalg.eig(m)
+    return (w >= 0).all()
+
+def isInvertible(m):
+    if np.isfinite(np.linalg.cond(m)):
+        return True
+    else:
+        return False

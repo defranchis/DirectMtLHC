@@ -1,4 +1,5 @@
-from BLUE_object import BLUE_object, measToTex
+from BLUE_object import BLUE_object
+from combTools import measToTex, measToROOT
 import copy
 import sys,os
 import numpy as np
@@ -355,7 +356,7 @@ class LHC_object:
         
         return l_mt, l_tot, l_stat, l_syst
 
-    def printCorrTables(self):
+    def printCorrTables(self,draw=False):
         if self.separateCombinations:
             print ('WARNING: LHC correlation tables are trivial')
             sys.exit()
@@ -375,10 +376,28 @@ class LHC_object:
         for syst in list(self.corrMap.keys()):
             self.printCorrTable(usedMeas,syst,tab_dir)
 
-        self.printFullCorrTable(usedMeas,tab_dir)
+        corr = self.printFullCorrTable(usedMeas,tab_dir)
+
+        if draw:
+            from ROOT import TH2D, TCanvas, gStyle
+            gStyle.SetPaintTextFormat("0.2f")
+            h = TH2D('h','h',len(usedMeas),-.5,-.5+len(usedMeas),len(usedMeas),-.5,-.5+len(usedMeas))
+            for i in range(0,len(usedMeas)):
+                h.GetXaxis().SetBinLabel(i+1,measToROOT(usedMeas[i]))
+                h.GetYaxis().SetBinLabel(i+1,measToROOT(usedMeas[len(usedMeas)-i-1]))
+                for j in range(0,len(usedMeas)):
+                    h.SetBinContent(i+1,j+1,corr[i][len(usedMeas)-j-1])
+            c = TCanvas()
+            c.SetLeftMargin(0.15)
+            c.SetRightMargin(0.12)
+            c.SetBottomMargin(0.1)
+            c.SetTopMargin(0.1)
+            h.Draw('COLZ TEXT')
+            c.SaveAs('{}/LHC_corr_plot.png'.format(tab_dir))
+            c.SaveAs('{}/LHC_corr_plot.pdf'.format(tab_dir))
 
         return
-        
+
     def printFullCorrTable(self,usedMeas,tab_dir):
         m = np.zeros((len(usedMeas),len(usedMeas)))
         for syst in self.BLUE_obj.usedSyst:
@@ -399,7 +418,7 @@ class LHC_object:
                 o.write('& {:.2f} '.format(c[i][j]))
             o.write('\\\\\n')
 
-        return
+        return c
 
     def getCovariance(self,syst,usedMeas=[]):
         if len(usedMeas) == 0:
