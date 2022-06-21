@@ -4,6 +4,10 @@ import copy
 import sys,os
 import numpy as np
 
+import ROOT as rt
+from ROOT import TH2D, TCanvas, gStyle, TGraphErrors, TLatex
+
+
 # corrMap_default = {'JES3': 0.5, 'JESFLV': 0.5, 'RAD': 0.5, 'MCGEN': 0.5, 'BKMC': 1.0, 'PDF': 1.0 , 'BTAG': 0.5, 'UE': 1.0, 'PU': 1.0, 'CR': 1.0}
 corrMap_default = {'JES3': 0.5, 'JESFLV': 0.5, 'RAD': 0.5, 'MCGEN': 0.5, 'BKMC': .85, 'PDF': .85 , 'BTAG': 0.5, 'UE': .85, 'CR': .85}
 mergeMap_default = {'ATLAS':{}, 'CMS': {'RAD': ['Q','JPS'],'HADR':['SLEPB','BFRAG']}}
@@ -12,7 +16,7 @@ renameMap_default = {'ATLAS':{} ,'CMS': {'CMSFL1':'JESFLV'}}
 noSignsOnImpacts = {'ATLAS':['JESFLV', 'BKMC', 'BTAG', 'PDF'], 'CMS': []}
 
 tab_dir = 'corr_tables'
-
+plot_dir = 'result_plots'
 
 class LHC_object:
 
@@ -376,7 +380,6 @@ class LHC_object:
         corr = self.printFullCorrTable(usedMeas,tab_dir)
 
         if draw:
-            from ROOT import TH2D, TCanvas, gStyle
             gStyle.SetPaintTextFormat("0.2f")
             h = TH2D('h','h',len(usedMeas),-.5,-.5+len(usedMeas),len(usedMeas),-.5,-.5+len(usedMeas))
             for i in range(0,len(usedMeas)):
@@ -464,5 +467,116 @@ class LHC_object:
             sys.exit()
 
         self.usedMeas_sorted = usedMeas
+
+        return
+
+    def getTotalUncertainty(self,meas):
+        d = self.BLUE_obj.uncert[meas]
+        tot = 0
+        for syst in d.keys():
+            tot += d[syst]**2
+        return tot**.5
+
+    def makeSummaryPlot(self,blind=True):
+
+        tge_stat = TGraphErrors()
+        tge_tot = TGraphErrors()
+
+        y_positions = dict()
+        tot_points = len(self.usedMeas_sorted) + len(self.experiments) + 1
+        offset = 0
+        for i,meas in enumerate(self.usedMeas_sorted):
+            mass, stat, tot = self.BLUE_obj.value[meas], self.BLUE_obj.uncert[meas]['Stat'], self.getTotalUncertainty(meas)
+            if 'CMS' in meas and offset ==0:
+                offset = 2
+            y_pos = tot_points - i - offset
+            print (meas, y_pos)
+            y_positions[meas] = y_pos
+            tge_tot.SetPoint(i,mass,y_pos)
+            tge_tot.SetPointError(i,tot,0)
+            tge_stat.SetPoint(i,mass,y_pos)
+            tge_stat.SetPointError(i,stat,0)
+            
+
+        c = TCanvas()
+        y_min = 168
+        h = c.DrawFrame(y_min,-3,177,tot_points+2)
+        h.GetYaxis().SetLabelSize(0)
+        h.GetYaxis().SetTickLength(0)
+        h.GetXaxis().SetTitle('m_{t} [GeV]')
+        c.Update()
+        tge_tot.SetMarkerStyle(8)
+        tge_tot.Draw('p same')
+        tge_stat.Draw('p same')
+
+        latexLabel1 = TLatex()
+        latexLabel1.SetTextSize(0.035)
+
+        offset_tex = .2
+
+        for meas in self.usedMeas_sorted:
+            latexLabel1.DrawLatex(y_min+offset_tex/2.,y_positions[meas]-offset_tex,measToROOT(meas))
+
+        tge_stat_comb = TGraphErrors()
+        tge_tot_comb = TGraphErrors()
+        
+        y_ATLAS = tot_points-len(self.ATLAS_obj.usedMeas)
+        tge_stat_comb.SetPoint(0,self.ATLAS_obj.results.mt,y_ATLAS)
+        tge_stat_comb.SetPointError(0,self.ATLAS_obj.results.stat,0)
+        tge_tot_comb.SetPoint(0,self.ATLAS_obj.results.mt,y_ATLAS)
+        tge_tot_comb.SetPointError(0,self.ATLAS_obj.results.tot,0)
+
+        y_CMS = y_ATLAS - len(self.CMS_obj.usedMeas) - offset
+        tge_stat_comb.SetPoint(1,self.CMS_obj.results.mt,y_CMS)
+        tge_stat_comb.SetPointError(1,self.CMS_obj.results.stat,0)
+        tge_tot_comb.SetPoint(1,self.CMS_obj.results.mt,y_CMS)
+        tge_tot_comb.SetPointError(1,self.CMS_obj.results.tot,0)
+
+
+        tge_stat_comb_LHC = TGraphErrors()
+        tge_tot_comb_LHC = TGraphErrors()
+
+        y_LHC = -1
+        if blind:
+            mt = 172.5
+        else:
+            mt = self.BLUE_obj.results.mt
+        tge_stat_comb_LHC.SetPoint(2,mt,y_LHC)
+        tge_stat_comb_LHC.SetPointError(2,self.BLUE_obj.results.stat,0)
+        tge_tot_comb_LHC.SetPoint(2,mt,y_LHC)
+        tge_tot_comb_LHC.SetPointError(2,self.BLUE_obj.results.tot,0)
+
+
+        tge_stat_comb.SetMarkerColor(rt.kRed)
+        tge_stat_comb.SetLineColor(rt.kRed)
+        tge_tot_comb.SetMarkerColor(rt.kRed)
+        tge_tot_comb.SetLineColor(rt.kRed)
+        tge_tot_comb.SetMarkerStyle(8)
+        tge_stat_comb.Draw('p same')
+        tge_tot_comb.Draw('p same')
+
+        tge_stat_comb_LHC.SetMarkerColor(rt.kBlue)
+        tge_stat_comb_LHC.SetLineColor(rt.kBlue)
+        tge_tot_comb_LHC.SetMarkerColor(rt.kBlue)
+        tge_tot_comb_LHC.SetLineColor(rt.kBlue)
+        tge_tot_comb_LHC.SetMarkerStyle(8)
+        tge_stat_comb_LHC.Draw('p same')
+        tge_tot_comb_LHC.Draw('p same')
+
+        latexLabel1.DrawLatex(y_min+offset_tex/2.,y_ATLAS-offset_tex,'#color[2]{ATLAS combination}')
+        latexLabel1.DrawLatex(y_min+offset_tex/2.,y_CMS-offset_tex,'#color[2]{CMS combination}')
+        if blind:
+            latexLabel1.DrawLatex(y_min+offset_tex/2.,y_LHC-offset_tex,'#color[4]{LHC combination (dummy)}')
+        else:
+            latexLabel1.DrawLatex(y_min+offset_tex/2.,y_LHC-offset_tex,'#color[4]{LHC combination}')
+
+
+        if not os.path.exists(plot_dir):
+            os.makedirs(plot_dir)
+
+        c.SaveAs('{}/summary_plot.png'.format(plot_dir))
+        c.SaveAs('{}/summary_plot.pdf'.format(plot_dir))
+        
+                
 
         return
