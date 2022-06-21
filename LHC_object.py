@@ -79,6 +79,9 @@ class LHC_object:
         self.writeBLUEinputCMS(separateCombinations=self.separateCombinations)
         self.BLUE_obj = BLUE_object(self.LHC_file,LHC=True,blind=self.blind,mergeImpacts=self.mergeImpacts)
         # self.BLUE_obj.checkAllSystMatrices()
+        if not self.separateCombinations:
+            self.sortUsedMeas()
+
 
     def clone(self):
         return copy.deepcopy(self)
@@ -357,6 +360,7 @@ class LHC_object:
         return l_mt, l_tot, l_stat, l_syst
 
     def printCorrTables(self,draw=False):
+
         if self.separateCombinations:
             print ('WARNING: LHC correlation tables are trivial')
             sys.exit()
@@ -364,14 +368,7 @@ class LHC_object:
         if not os.path.exists(tab_dir):
             os.makedirs(tab_dir)
 
-        usedMeas = [m for m in self.BLUE_obj.usedMeas if 'dil7' in m and not 'CMS' in m]
-        usedMeas += [m for m in self.BLUE_obj.usedMeas if '7' in m and not 'CMS' in m and not m in usedMeas]
-        usedMeas += [m for m in self.BLUE_obj.usedMeas if '8' in m and not 'CMS' in m]
-        usedMeas += [m for m in self.BLUE_obj.usedMeas if 'CMS' in m]
-
-        if sorted(usedMeas) != sorted(self.BLUE_obj.usedMeas):
-            print('ERROR in printCorrTable: re-ordering of input measurements did not work')
-            sys.exit()
+        usedMeas = self.usedMeas_sorted
     
         for syst in list(self.corrMap.keys()):
             self.printCorrTable(usedMeas,syst,tab_dir)
@@ -449,4 +446,23 @@ class LHC_object:
             o.write('\\\\\n')
 
             
+        return
+
+    def sortUsedMeas(self):
+        
+        if self.separateCombinations:
+            print('\nfunction sortUsedMeas is meant to be used for full combination only. Exiting...\n')
+            sys.exit()
+        
+        usedMeas = [m for m in self.BLUE_obj.usedMeas if 'dil7' in m and not 'CMS' in m]
+        usedMeas += [m for m in self.BLUE_obj.usedMeas if '7' in m and not 'CMS' in m and not m in usedMeas]
+        usedMeas += [m for m in self.BLUE_obj.usedMeas if '8' in m and not 'CMS' in m]
+        usedMeas += [m for m in self.BLUE_obj.usedMeas if 'CMS' in m]
+
+        if sorted(usedMeas) != sorted(self.BLUE_obj.usedMeas):
+            print('ERROR in printCorrTable: re-ordering of input measurements did not work')
+            sys.exit()
+
+        self.usedMeas_sorted = usedMeas
+
         return
