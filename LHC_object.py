@@ -490,7 +490,6 @@ class LHC_object:
             if 'CMS' in meas and offset ==0:
                 offset = 2
             y_pos = tot_points - i - offset
-            print (meas, y_pos)
             y_positions[meas] = y_pos
             tge_tot.SetPoint(i,mass,y_pos)
             tge_tot.SetPointError(i,tot,0)
