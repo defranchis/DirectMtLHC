@@ -7,6 +7,7 @@ import numpy as np
 import ROOT as rt
 from ROOT import TH2D, TCanvas, gStyle, TGraphErrors, TLatex
 
+from array import *
 
 # corrMap_default = {'JES3': 0.5, 'JESFLV': 0.5, 'RAD': 0.5, 'MCGEN': 0.5, 'BKMC': 1.0, 'PDF': 1.0 , 'BTAG': 0.5, 'UE': 1.0, 'PU': 1.0, 'CR': 1.0}
 corrMap_default = {'JES3': 0.5, 'JESFLV': 0.5, 'RAD': 0.5, 'MCGEN': 0.5, 'BKMC': .85, 'PDF': .85 , 'BTAG': 0.5, 'UE': .85, 'CR': .85}
@@ -380,8 +381,32 @@ class LHC_object:
         corr = self.printFullCorrTable(usedMeas,tab_dir)
 
         if draw:
+
+            stops = array('d', [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0])
+            red   = array('d')
+            green = array('d')
+            blue  = array('d')
+            colors = [[103,0,31],
+                      [178,24,43],
+                      [214,96,77],
+                      [244,165,130],
+                      [253,219,199],
+                      [247,247,247],
+                      [209,229,240],
+                      [146,197,222],
+                      [67,147,195],
+                      [33,102,172],
+                      [5,48,97]]
+            for color in colors:
+                red.append(color[0]/255.)
+                green.append(color[1]/255.)
+                blue.append(color[2]/255.)
+            rt.TColor.CreateGradientColorTable(11, stops, red[::-1], green[::-1], blue[::-1], 30)
+
             gStyle.SetPaintTextFormat("0.2f")
             h = TH2D('h','h',len(usedMeas),-.5,-.5+len(usedMeas),len(usedMeas),-.5,-.5+len(usedMeas))
+            h.GetXaxis().SetTickLength(0)
+            h.GetYaxis().SetTickLength(0)
             for i in range(0,len(usedMeas)):
                 h.GetXaxis().SetBinLabel(i+1,measToROOT(usedMeas[i]))
                 h.GetYaxis().SetBinLabel(i+1,measToROOT(usedMeas[len(usedMeas)-i-1]))
