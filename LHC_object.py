@@ -412,6 +412,7 @@ class LHC_object:
                 h.GetYaxis().SetBinLabel(i+1,measToROOT(usedMeas[len(usedMeas)-i-1]))
                 for j in range(0,len(usedMeas)):
                     h.SetBinContent(i+1,j+1,corr[i][len(usedMeas)-j-1])
+            h.GetZaxis().SetRangeUser(-1,1)
             c = TCanvas()
             c.SetLeftMargin(0.15)
             c.SetRightMargin(0.12)
