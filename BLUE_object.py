@@ -61,6 +61,7 @@ class BLUE_object:
 
         self.usedMeas, self.usedSyst = self.getUsedMeasSyst()
         self.nMeas_orig = len(self.measurements)
+        self.checkAllSystMatrices()
         self.runBLUEcombination()
         self.toysInitialised = False
         self.toysThrown = False
@@ -69,6 +70,7 @@ class BLUE_object:
     def update(self):
         self.p_matrix, self.p_uncert, self.uncertWithSign = self.propagateNegativeCorrelations()
         self.usedMeas, self.usedSyst = self.getUsedMeasSyst()
+        self.checkAllSystMatrices()
         self.runBLUEcombination()
 
     def clone(self):
@@ -710,10 +712,9 @@ class BLUE_object:
 
     def checkSystMatrix(self,syst):
         m = self.getSystCorrMatrix(syst)
-        # print syst, isPositiveDefinite(m)
-        # if not isPositiveDefinite(m):
-        #     print 'det =', np.linalg.det(m), '\n'
-        print(syst, isInvertible(m), isNonNegativeDefinite(m))
+        if not isSymmetricMatrix(m):
+            print('ERROR: correlation matrix for {} non symmetric'.format(syst))
+            sys.exit()
         return
         
     def getSystCorrMatrix(self,syst):
@@ -734,6 +735,9 @@ class BLUE_object:
         for i,m1 in enumerate(self.usedMeas):
             for j,m2 in enumerate(self.usedMeas):
                 m[i][j] = m_dict[m1][m2]
+        if not isSymmetricMatrix(m):
+            print('ERROR: correlation matrix for {} non symmetric'.format(syst))
+            sys.exit()
         return m
 
     def getTotalUncertainty(self):
