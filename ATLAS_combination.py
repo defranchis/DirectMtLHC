@@ -35,6 +35,7 @@ def main():
 
     base_obj = BLUE_object(infile,ATLAS=True)
     base_obj.printResults()
+    base_obj.printImpactsSorted()
 
     if args.nToys > 0:
         makeATLAS_MCstat_file(base_obj)
