@@ -2,7 +2,7 @@
 from BLUE_object import BLUE_object
 from LHC_object import LHC_object
 from LHC_tools import makeAllCorrelationScansLHC, flipAmbiguousSigns
-from combTools import getToyResults, getToyResultsLHCobj
+from combTools import getToyResults, getToyResultsLHCobj, excludeMeasOneByOne
 import argparse, sys, copy
 
 import default_files
@@ -48,6 +48,7 @@ def main():
     parser.add_argument('--nToys',action='store',type=int, help='number of toys for MC stat', default=0)
     parser.add_argument('--subCombinations',action='store_true', help='perform sub-combinations')
     parser.add_argument('--onlyWeightsAbove',action='store',type=float, help='re-perform combination with ony weights above given value')
+    parser.add_argument('--excludeMeasOneByOne',action='store_true', help='exclude measurements one-by-one')
 
     args = parser.parse_args()
 
@@ -144,6 +145,10 @@ def main():
         print ('n. used meas = {}'.format(len(r.weights.keys())))
         print ('mt - mt_orig = {:.2f} GeV'.format(r.mt-LHC_sep_unblind.BLUE_obj.results.mt))
         print ('tot uncert = {:.2f} GeV\n'.format(r.tot))
+
+    if args.excludeMeasOneByOne:
+        excludeMeasOneByOne(LHC_full_unblind.BLUE_obj,blind=not args.unblind)
+
 
     return
 

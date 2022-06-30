@@ -198,30 +198,43 @@ def plotToyResults(l_mt, l_tot, l_stat, l_syst, d_weights, d_syst, base_obj):
 
     return
 
-def excludeMeasOneByOne(base_obj):
+def excludeMeasOneByOne(base_obj,blind=False):
     h = TH1F('h','excluding measurements one-by-one; excluded measurement; combined mt [GeV]',len(base_obj.usedMeas), -0.5, -.5+len(base_obj.usedMeas))
+    if blind:
+        h.GetYaxis().SetTitle('combined mt - nominal mt [GeV]')
     for i, meas in enumerate(base_obj.usedMeas):
         obj = base_obj.clone()
         obj.addExcludeMeas([meas])
         print('excluded:', obj.excludeMeas)
-        obj.simplePrint()
+        if not blind:
+            obj.simplePrint()
         print()
-        h.SetBinContent(i+1,obj.results.mt)
+        central = obj.results.mt
+        if blind:
+            central -= base_obj.results.mt
+        h.SetBinContent(i+1,central)
         h.SetBinError(i+1,obj.results.tot)
-        h.GetXaxis().SetBinLabel(i+1,nameForCMSPlots(meas))
+        h.GetXaxis().SetBinLabel(i+1,measToROOT(meas))
 
     if not os.path.exists('plots'):
         os.makedirs('plots')
 
     ROOT.gStyle.SetOptStat(0000)
-    l=ROOT.TLine(0,base_obj.results.mt,len(base_obj.usedMeas)-1,base_obj.results.mt)
+    central = base_obj.results.mt if not blind else 0
+    l=ROOT.TLine(0,central,len(base_obj.usedMeas)-1,central)
     l.SetLineColor(ROOT.kGreen+1)
     l.SetLineWidth(2)
     c = TCanvas()
     h.Draw('E1')
     l.Draw('same')
-    c.SaveAs('plots/exclude.png')
-    c.SaveAs('plots/exclude.pdf')
+    if base_obj.LHC: suffix = 'LHC'
+    elif base_obj.ATLAS: suffix = 'ATLAS'
+    elif base_obj.CMS: suffix = 'CMS'
+    c.SetBottomMargin(0.13)
+    h.GetXaxis().SetTitleOffset(1.5)
+    c.SaveAs('plots/excludeOneByOne_{}.png'.format(suffix))
+    c.SaveAs('plots/excludeOneByOne_{}.pdf'.format(suffix))
+
     
     return
 
