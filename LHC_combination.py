@@ -2,7 +2,7 @@
 from BLUE_object import BLUE_object
 from LHC_object import LHC_object
 from LHC_tools import makeAllCorrelationScansLHC, flipAmbiguousSigns
-from combTools import getToyResults, getToyResultsLHCobj, excludeMeasOneByOne
+from combTools import getToyResults, getToyResultsLHCobj, excludeMeasOneByOne, makeCorrelationScans, plotScanSummary
 import argparse, sys, copy
 
 import default_files
@@ -104,6 +104,9 @@ def main():
 
     if args.scanAllCorr:
         makeAllCorrelationScansLHC(LHC_full_unblind,LHC_sep_unblind,blind=not args.unblind)
+        makeCorrelationScans(LHC_full_unblind.BLUE_obj,blind=not args.unblind)
+        plotScanSummary(LHC_full_unblind.BLUE_obj,blind=not args.unblind)
+
     if args.flipSigns:
         flipAmbiguousSigns(LHC_full_unblind,LHC_sep_unblind)
 
@@ -136,6 +139,7 @@ def main():
         ATLAS = [meas for meas in LHC_sep_unblind.BLUE_obj.usedMeas if not meas in CMS]
         obsDict = {'ATLAS':ATLAS, 'CMS':CMS}
         LHC_sep_unblind.BLUE_obj.doSubCombination(obsDict=obsDict,printResults=True)
+
 
     if not args.onlyWeightsAbove is None:
 
