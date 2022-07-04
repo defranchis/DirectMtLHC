@@ -140,6 +140,16 @@ def main():
         obsDict = {'ATLAS':ATLAS, 'CMS':CMS}
         LHC_sep_unblind.BLUE_obj.doSubCombination(obsDict=obsDict,printResults=True)
 
+        from combTools import measToTex
+        ll = [meas for meas in LHC_full_unblind.BLUE_obj.usedMeas if measToTex(meas)=='$ll$']
+        lj = [meas for meas in LHC_full_unblind.BLUE_obj.usedMeas if measToTex(meas)=='$lj$']
+        aj = [meas for meas in LHC_full_unblind.BLUE_obj.usedMeas if measToTex(meas)=='$aj$']
+        other = [meas for meas in LHC_full_unblind.BLUE_obj.usedMeas if not meas in ll and not meas in lj and not meas in aj]
+        obsDict = {'ll':ll, 'lj':lj, 'aj':aj, 'other':other}
+        if args.unblind:
+            LHC_full_unblind.BLUE_obj.doSubCombination(obsDict=obsDict,printResults=True)
+        else:
+            LHC_full.BLUE_obj.doSubCombination(obsDict=obsDict,printResults=True)
 
     if not args.onlyWeightsAbove is None:
 
