@@ -149,7 +149,13 @@ def main():
         if args.unblind:
             LHC_full_unblind.BLUE_obj.doSubCombination(obsDict=obsDict,printResults=True)
         else:
+            res, unc = LHC_full_unblind.BLUE_obj.doSubCombination(obsDict=obsDict,printResults=False)
             LHC_full.BLUE_obj.doSubCombination(obsDict=obsDict,printResults=True)
+            print('\ndifferences:')
+            for ch in obsDict.keys():
+                print('{} - full = {:.2f} GeV'.format(ch,res[ch]-LHC_full_unblind.BLUE_obj.results.mt))
+            
+
 
     if not args.onlyWeightsAbove is None:
 
