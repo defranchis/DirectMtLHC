@@ -1,7 +1,7 @@
 import os, sys, copy
 import numpy as np
 import ROOT
-from ROOT import TCanvas, TGraph, TLegend
+from ROOT import TCanvas, TGraph, TLegend, TLatex
 from BLUE_object import BLUE_object
 from LHC_object import LHC_object
 
@@ -78,12 +78,14 @@ def scanOne(obj,corrMap,syst,corrs):
 
 def plotScanResults(corrs,scan_d,syst,variable,mt_smear=0,rand_offset_small=0):
     c = TCanvas()
-    leg = TLegend(.15,.15,.4,.3)
+    c.SetLeftMargin(0.15)
+    leg = TLegend(.2,.15,.45,.3)
     leg.SetBorderSize(0)
     gd = dict()
     for meth, scan in list(scan_d.items()):
         g = TGraph()
         g.SetName(meth)
+        g.GetYaxis().SetTitleOffset(1.7)
         for i, corr in enumerate(corrs):
             if variable == 'tot':
                 g.SetPoint(i,corr,scan[i].tot)
@@ -112,6 +114,10 @@ def plotScanResults(corrs,scan_d,syst,variable,mt_smear=0,rand_offset_small=0):
         else:
             gd[meth].Draw('l same')
     leg.Draw('same')
+    latexLabel = TLatex()
+    from systNameDict import systNameDict
+    latexLabel.SetTextSize(0.045)
+    latexLabel.DrawLatexNDC(.15,.92,'scan for: {}'.format(systNameDict[syst]))
     c.SaveAs('{}/scan_{}_{}.png'.format(LHC_dir,variable,syst))
     return
 

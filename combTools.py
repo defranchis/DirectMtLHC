@@ -231,7 +231,12 @@ def excludeMeasOneByOne(base_obj,blind=False):
     elif base_obj.ATLAS: suffix = 'ATLAS'
     elif base_obj.CMS: suffix = 'CMS'
     c.SetBottomMargin(0.13)
-    h.GetXaxis().SetTitleOffset(1.5)
+    h.GetXaxis().SetTitleOffset(1.6)
+    if not blind:
+        h.GetYaxis().SetTitleOffset(1.3)
+    else:
+        h.GetYaxis().SetTitleOffset(1.1)
+    c.SetBottomMargin(0.13)
     c.SaveAs('plots/excludeOneByOne_{}.png'.format(suffix))
     c.SaveAs('plots/excludeOneByOne_{}.pdf'.format(suffix))
 
@@ -438,21 +443,24 @@ def plotScanSummary(base_obj):
                     tot_M = TMath.MaxElement(tot.GetN(),tot.GetY())
 
     c = TCanvas()
-    leg = TLegend(.7,.5,.87,.87)
+    leg = TLegend(.5,.6,.87,.87)
     leg.SetBorderSize(0)
+    from systNameDict import systNameDict
     for i,syst in enumerate(mt_maxdiff.keys()):
         rf = ROOT.TFile('{}/syst/{}.root'.format(scan_dir,syst),'read')
         mt = rf.Get('mt')
         mt.SetMarkerColor(i+1)
         mt.SetLineColor(i+1)
-        leg.AddEntry(mt,syst,'pl')
+        leg.AddEntry(mt,systNameDict[syst],'pl')
         if i==0:
             mt.SetTitle('mt dependence on correlations')
+            mt.GetYaxis().SetTitleOffset(1.8)
             mt.GetYaxis().SetRangeUser(mt_m-.003,mt_M+.003)
             mt.Draw('apl')
         else:
             mt.Draw('pl same')
     leg.Draw('same')
+    c.SetLeftMargin(0.15)
     c.SaveAs(scan_dir+'/scan_mt_summary.png')
     c.SaveAs(scan_dir+'/scan_mt_summary.pdf')
     c.Clear()
@@ -463,10 +471,11 @@ def plotScanSummary(base_obj):
         tot = rf.Get('tot')
         tot.SetMarkerColor(i+1)
         tot.SetLineColor(i+1)
-        leg.AddEntry(tot,syst,'pl')
+        leg.AddEntry(tot,systNameDict[syst],'pl')
         if i==0:
             tot.SetTitle('total uncertainty - dependence on correlations')
-            tot.GetYaxis().SetRangeUser(tot_m-.001,tot_M+.001)
+            tot.GetYaxis().SetRangeUser(tot_m-.001,tot_M+.005)
+            tot.GetYaxis().SetTitleOffset(1.8)
             tot.Draw('apl')
         else:
             tot.Draw('pl same')
