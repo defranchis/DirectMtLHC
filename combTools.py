@@ -345,6 +345,8 @@ def increaseAllWeakCorrelations(base_obj):
     c.Clear()
 
 def makeCorrelationScan(base_obj,syst_scan):
+    if base_obj.LHC:
+        scan_dir = scan_dir_LHC
     if not os.path.exists(scan_dir+'/syst'):
         os.makedirs(scan_dir+'/syst')
     step = 0.01
@@ -406,7 +408,10 @@ def makeCorrelationScan(base_obj,syst_scan):
 
     return
 
-def plotScanSummary(base_obj):
+def plotScanSummary(base_obj,blind=False):
+    if base_obj.LHC:
+        scan_dir = scan_dir_LHC
+    
     mt_maxdiff = {}
     tot_maxdiff = {}
     mt_m = 0
@@ -421,7 +426,11 @@ def plotScanSummary(base_obj):
         tot = rf.Get('tot')
         mt_diff = TMath.MaxElement(mt.GetN(),mt.GetY()) - TMath.MinElement(mt.GetN(),mt.GetY())
         tot_diff = TMath.MaxElement(tot.GetN(),tot.GetY()) - TMath.MinElement(tot.GetN(),tot.GetY())
-        if mt_diff/base_obj.results.mt > 0.00004:
+        if not blind:
+            pass_mt = mt_diff/base_obj.results.mt > 0.00004
+        else:
+            pass_mt = mt_diff > 0.004
+        if pass_mt:
             mt_maxdiff[syst] = mt_diff
             if len(list(mt_maxdiff.keys()))==1:
                 mt_m = TMath.MinElement(mt.GetN(),mt.GetY())
@@ -431,7 +440,11 @@ def plotScanSummary(base_obj):
                     mt_m = TMath.MinElement(mt.GetN(),mt.GetY())
                 if TMath.MaxElement(mt.GetN(),mt.GetY()) > mt_M:
                     mt_M = TMath.MaxElement(mt.GetN(),mt.GetY())
-        if tot_diff/base_obj.results.tot > 0.006:
+        if not base_obj.LHC:
+            pass_tot = tot_diff/base_obj.results.tot > 0.006
+        else:
+            pass_tot = tot_diff/base_obj.results.tot > 0.003
+        if pass_tot:
             tot_maxdiff[syst] = tot_diff
             if len(list(tot_maxdiff.keys()))==1:
                 tot_m = TMath.MinElement(tot.GetN(),tot.GetY())
@@ -451,7 +464,7 @@ def plotScanSummary(base_obj):
         mt = rf.Get('mt')
         mt.SetMarkerColor(i+1)
         mt.SetLineColor(i+1)
-        leg.AddEntry(mt,systNameDict[syst],'pl')
+        leg.AddEntry(mt,systNameDict[syst].replace('\\',''),'pl')
         if i==0:
             mt.SetTitle('mt dependence on correlations')
             mt.GetYaxis().SetTitleOffset(1.8)
@@ -461,8 +474,13 @@ def plotScanSummary(base_obj):
             mt.Draw('pl same')
     leg.Draw('same')
     c.SetLeftMargin(0.15)
-    c.SaveAs(scan_dir+'/scan_mt_summary.png')
-    c.SaveAs(scan_dir+'/scan_mt_summary.pdf')
+    if base_obj.LHC:
+        c.SaveAs(scan_dir+'/scan_mt_summary_LHC.png')
+        c.SaveAs(scan_dir+'/scan_mt_summary_LHC.pdf')
+    else:
+        c.SaveAs(scan_dir+'/scan_mt_summary.png')
+        c.SaveAs(scan_dir+'/scan_mt_summary.pdf')
+
     c.Clear()
     leg.Clear()
 
@@ -480,18 +498,25 @@ def plotScanSummary(base_obj):
         else:
             tot.Draw('pl same')
     leg.Draw('same')
-    c.SaveAs(scan_dir+'/scan_tot_summary.png')
-    c.SaveAs(scan_dir+'/scan_tot_summary.pdf')
+    if base_obj.LHC:
+        c.SaveAs(scan_dir+'/scan_tot_summary_LHC.png')
+        c.SaveAs(scan_dir+'/scan_tot_summary_LHC.pdf')
+    else:
+        c.SaveAs(scan_dir+'/scan_tot_summary.png')
+        c.SaveAs(scan_dir+'/scan_tot_summary.pdf')
 
     return
 
-def makeCorrelationScans(base_obj):
+def makeCorrelationScans(base_obj,blind=False):
+    if base_obj.LHC:
+        scan_dir = scan_dir_LHC
 
     if not os.path.exists(scan_dir):
         os.makedirs(scan_dir)
 
-    decreaseAllStrongCorrelations(base_obj)
-    increaseAllWeakCorrelations(base_obj)
+    if not blind:
+        decreaseAllStrongCorrelations(base_obj)
+        increaseAllWeakCorrelations(base_obj)
 
     f = open('{}/slides.tex'.format(scan_dir),'w')
 
@@ -527,7 +552,10 @@ def makeCorrelationScanLHC(base_obj,syst_scan,brutal=False):
     for i,corr in enumerate(corrs):
         obj = base_obj.clone()
         obj.setCorrelationLHC(corr,syst_scan)
-        h_mt.SetPoint(i,corr,obj.results.mt)
+        if not blind:
+            h_mt.SetPoint(i,corr,obj.results.mt)
+        else:
+            h_mt.SetPoint(i,corr,obj.results.mt-base_obj.results.mt)
         h_tot.SetPoint(i,corr,obj.results.tot)
         h_stat.SetPoint(i,corr,obj.results.stat)
         h_syst.SetPoint(i,corr,obj.results.syst)
@@ -547,7 +575,10 @@ def makeCorrelationScanLHC(base_obj,syst_scan,brutal=False):
     href_stat = TGraph()
     href_syst = TGraph()
 
-    href_mt.SetPoint(0,orig_corr,base_obj.results.mt)
+    if not blind:
+        href_mt.SetPoint(0,orig_corr,base_obj.results.mt)
+    else:
+        href_mt.SetPoint(0,orig_corr,0)
     href_tot.SetPoint(0,orig_corr,base_obj.results.tot)
     href_stat.SetPoint(0,orig_corr,base_obj.results.stat)
     href_syst.SetPoint(0,orig_corr,base_obj.results.syst)
