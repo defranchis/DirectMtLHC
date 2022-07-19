@@ -106,8 +106,7 @@ def main():
 
     if args.scanAllCorr:
         makeAllCorrelationScansLHC(LHC_full_unblind,LHC_sep_unblind,blind=not args.unblind)
-        makeCorrelationScans(LHC_full_unblind.BLUE_obj,blind=not args.unblind)
-        plotScanSummary(LHC_full_unblind.BLUE_obj,blind=not args.unblind)
+        plotScanSummary(LHC_full_unblind.BLUE_obj,blind=not args.unblind,syst_list=list(LHC_full_unblind.corrMap.keys()))
 
     if args.flipSigns:
         flipAmbiguousSigns(LHC_full_unblind,LHC_sep_unblind)

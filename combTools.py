@@ -408,7 +408,7 @@ def makeCorrelationScan(base_obj,syst_scan):
 
     return
 
-def plotScanSummary(base_obj,blind=False):
+def plotScanSummary(base_obj,blind=False,syst_list=[]):
     if base_obj.LHC:
         scan_dir = scan_dir_LHC
     
@@ -419,7 +419,10 @@ def plotScanSummary(base_obj,blind=False):
     tot_m = 0
     tot_M = 0
 
-    for i, syst in enumerate(base_obj.usedSyst):
+    if syst_list == []:
+        syst_list = base_obj.usedSyst
+
+    for i, syst in enumerate(syst_list):
         if syst == 'Stat': continue
         rf = ROOT.TFile('{}/syst/{}.root'.format(scan_dir,syst),'read')
         mt = rf.Get('mt')
@@ -429,7 +432,7 @@ def plotScanSummary(base_obj,blind=False):
         if not blind:
             pass_mt = mt_diff/base_obj.results.mt > 0.00004
         else:
-            pass_mt = mt_diff > 0.004
+            pass_mt = mt_diff > 0.003
         if pass_mt:
             mt_maxdiff[syst] = mt_diff
             if len(list(mt_maxdiff.keys()))==1:
@@ -443,7 +446,7 @@ def plotScanSummary(base_obj,blind=False):
         if not base_obj.LHC:
             pass_tot = tot_diff/base_obj.results.tot > 0.006
         else:
-            pass_tot = tot_diff/base_obj.results.tot > 0.003
+            pass_tot = tot_diff/base_obj.results.tot > 0.006
         if pass_tot:
             tot_maxdiff[syst] = tot_diff
             if len(list(tot_maxdiff.keys()))==1:
@@ -456,14 +459,21 @@ def plotScanSummary(base_obj,blind=False):
                     tot_M = TMath.MaxElement(tot.GetN(),tot.GetY())
 
     c = TCanvas()
-    leg = TLegend(.5,.6,.87,.87)
+    leg = TLegend(.5,.6,.87,.87) if not base_obj.LHC else TLegend(.35,.7,.62,.87)
     leg.SetBorderSize(0)
     from systNameDict import systNameDict
-    for i,syst in enumerate(mt_maxdiff.keys()):
+
+    list_mt = mt_maxdiff.keys()
+    list_tot = tot_maxdiff.keys()
+    if base_obj.LHC:
+        list_mt = list_tot = [s for s in list_mt if s in list_tot]
+
+    for i,syst in enumerate(list_mt):
         rf = ROOT.TFile('{}/syst/{}.root'.format(scan_dir,syst),'read')
         mt = rf.Get('mt')
         mt.SetMarkerColor(i+1)
         mt.SetLineColor(i+1)
+        mt.SetLineWidth(2)
         leg.AddEntry(mt,systNameDict[syst].replace('\\',''),'pl')
         if i==0:
             mt.SetTitle('mt dependence on correlations')
@@ -484,11 +494,12 @@ def plotScanSummary(base_obj,blind=False):
     c.Clear()
     leg.Clear()
 
-    for i,syst in enumerate(tot_maxdiff.keys()):
+    for i,syst in enumerate(list_tot):
         rf = ROOT.TFile('{}/syst/{}.root'.format(scan_dir,syst),'read')
         tot = rf.Get('tot')
         tot.SetMarkerColor(i+1)
         tot.SetLineColor(i+1)
+        tot.SetLineWidth(2)
         leg.AddEntry(tot,systNameDict[syst],'pl')
         if i==0:
             tot.SetTitle('total uncertainty - dependence on correlations')
