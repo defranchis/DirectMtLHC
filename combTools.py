@@ -639,11 +639,14 @@ def makeCorrelationScansLHC(base_obj,brutal=False):
 
     return
 
-def drawWeights(base_obj,path):
-    h = TH1F('h','measurement weights; measurement; weight',len(base_obj.usedMeas), -0.5, -.5+len(base_obj.usedMeas))
+def drawWeights(base_obj,path='plots'):
+    h = TH1F('h','LHC combination ; ; measurement weight',len(base_obj.usedMeas), -0.5, -.5+len(base_obj.usedMeas))
     for i, meas in enumerate(base_obj.usedMeas):
         h.Fill(i,base_obj.results.weights[meas])
-        h.GetXaxis().SetBinLabel(i+1,nameForCMSPlots(meas))
+        if base_obj.CMS:
+            h.GetXaxis().SetBinLabel(i+1,nameForCMSPlots(meas))
+        else:
+            h.GetXaxis().SetBinLabel(i+1,measToROOT(meas))
 
     if not os.path.exists(path):
         os.makepaths(path)
@@ -652,8 +655,12 @@ def drawWeights(base_obj,path):
     c = TCanvas()
     h.SetFillColor(ROOT.kYellow)
     h.Draw('hist')
-    c.SaveAs(path+'/weights.png')
-    c.SaveAs(path+'/weights.pdf')
+    if not base_obj.LHC:
+        c.SaveAs(path+'/weights.png')
+        c.SaveAs(path+'/weights.pdf')
+    else:
+        c.SaveAs(path+'/weights_LHC.png')
+        c.SaveAs(path+'/weights_LHC.pdf')
 
     return
 

@@ -2,7 +2,7 @@
 from BLUE_object import BLUE_object
 from LHC_object import LHC_object
 from LHC_tools import makeAllCorrelationScansLHC, flipAmbiguousSigns
-from combTools import getToyResults, getToyResultsLHCobj, excludeMeasOneByOne, makeCorrelationScans, plotScanSummary
+from combTools import getToyResults, getToyResultsLHCobj, excludeMeasOneByOne, makeCorrelationScans, plotScanSummary, drawWeights
 import argparse, sys, copy
 
 import default_files
@@ -96,6 +96,8 @@ def main():
 
     LHC_full_unblind.BLUE_obj.printWeights(prefix='LHC_A')
     LHC_sep_unblind.BLUE_obj.printWeights(prefix='LHC_B')
+
+    drawWeights(LHC_full_unblind.BLUE_obj)
 
     if args.unblind:
         LHC_full_unblind.BLUE_obj.printPulls(prefix='LHC_A')
