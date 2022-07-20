@@ -2,8 +2,9 @@
 from BLUE_object import BLUE_object
 from LHC_object import LHC_object
 from LHC_tools import makeAllCorrelationScansLHC, flipAmbiguousSigns
-from combTools import getToyResults, getToyResultsLHCobj, excludeMeasOneByOne, makeCorrelationScans, plotScanSummary, drawWeights
+from combTools import getToyResults, getToyResultsLHCobj, excludeMeasOneByOne, makeCorrelationScans, plotScanSummary, drawWeights, measToTex, measToROOT
 import argparse, sys, copy
+import numpy as np
 
 import default_files
 
@@ -99,6 +100,8 @@ def main():
 
     drawWeights(LHC_full_unblind.BLUE_obj)
 
+    produceSummaryTable(LHC_full_unblind.BLUE_obj,blind=not args.unblind)
+
     if args.unblind:
         LHC_full_unblind.BLUE_obj.printPulls(prefix='LHC_A')
         LHC_sep_unblind.BLUE_obj.printPulls(prefix='LHC_B')
@@ -141,7 +144,6 @@ def main():
         obsDict = {'ATLAS':ATLAS, 'CMS':CMS}
         LHC_sep_unblind.BLUE_obj.doSubCombination(obsDict=obsDict,printResults=True)
 
-        from combTools import measToTex
         ll = [meas for meas in LHC_full_unblind.BLUE_obj.usedMeas if measToTex(meas)=='$ll$']
         lj = [meas for meas in LHC_full_unblind.BLUE_obj.usedMeas if measToTex(meas)=='$lj$']
         aj = [meas for meas in LHC_full_unblind.BLUE_obj.usedMeas if measToTex(meas)=='$aj$']
@@ -170,6 +172,38 @@ def main():
     if args.excludeMeasOneByOne:
         excludeMeasOneByOne(LHC_full_unblind.BLUE_obj,blind=not args.unblind)
 
+
+    return
+
+def getTotUncFromDict(ud,no_stat=False):
+    unc = np.array([ud[syst] for syst in list(ud.keys())])
+    if not no_stat: return (np.sum(unc**2))**.5
+    else: return (np.sum(unc**2) - ud['Stat']**2)**.5
+
+def produceSummaryTable(obj,blind=True):
+
+    ll = [meas for meas in obj.usedMeas if measToTex(meas)=='$ll$']
+    lj = [meas for meas in obj.usedMeas if measToTex(meas)=='$lj$']
+    aj = [meas for meas in obj.usedMeas if measToTex(meas)=='$aj$']
+    other = [meas for meas in obj.usedMeas if not meas in ll and not meas in lj and not meas in aj]
+    obsDict = {'ll':ll, 'lj':lj, 'aj':aj, 'other':other}
+    res, unc = obj.doSubCombination(obsDict=obsDict,printResults=False)
+
+    of = open('summary_table_LHC.txt','w')
+    of.write('input name \t mt \t stat \t syst \t tot\n\n')
+    
+    for meas in obj.usedMeas:
+        of.write('{},\t {:.2f}, {:.2f}, {:.2f}, {:.2f}\n'.format(measToROOT(meas).replace('#',''),obj.value[meas],obj.uncert[meas]['Stat'],
+                                                                 getTotUncFromDict(obj.uncert[meas],no_stat=True),getTotUncFromDict(obj.uncert[meas])))
+    of.write('\n')
+    for ch in obsDict.keys():
+        mt = res[ch] if not blind else 172
+        stat = unc[ch]['Stat']
+        tot = getTotUncFromDict(unc[ch])
+        of.write('{},\t {:.2f}, {:.2f}, {:.2f}, {:.2f}\n'.format(ch+' comb',mt,stat,(tot**2-stat**2)**.5,tot))
+    of.write('\n')
+    mt_comb = obj.results.mt if not blind else 172
+    of.write('{},\t {:.2f}, {:.2f}, {:.2f}, {:.2f}\n'.format('full comb',mt_comb,obj.results.stat,obj.results.syst,obj.results.tot))
 
     return
 
