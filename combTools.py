@@ -515,6 +515,61 @@ def plotScanSummary(base_obj,blind=False,syst_list=[]):
     else:
         c.SaveAs(scan_dir+'/scan_tot_summary.png')
         c.SaveAs(scan_dir+'/scan_tot_summary.pdf')
+        
+    leg = TLegend(.2,.6,.6,.85)
+    leg.SetBorderSize(0)
+
+    if base_obj.LHC:
+        c.Clear()
+        c.Divide(1,2)
+        p1 = c.cd(1)
+        p1.SetBottomMargin(0.01)
+        p1.SetRightMargin(0.015)
+        p1.SetLeftMargin(0.1)
+        for i,syst in enumerate(list_mt):
+            rf = ROOT.TFile('{}/syst/{}.root'.format(scan_dir,syst),'read')
+            mt = rf.Get('mt')
+            mt.SetMarkerColor(i+1)
+            mt.SetLineColor(i+1)
+            mt.SetLineWidth(2)
+            leg.AddEntry(mt,systNameDict[syst],'l')
+            if i==0:
+                mt.GetYaxis().SetRangeUser(mt_m-.001,mt_M+.005)
+                mt.GetYaxis().SetTitleSize(mt.GetYaxis().GetTitleSize()*1.7)
+                mt.GetYaxis().SetTitleOffset(.8)
+                mt.GetYaxis().SetTitle('m_{t} - m_{t}^{central}')
+                mt.GetYaxis().SetLabelSize(tot.GetYaxis().GetLabelSize()*1.5)
+                mt.GetXaxis().SetLabelSize(0)
+                mt.Draw('apl')
+            else:
+                mt.Draw('pl same')
+        leg.Draw('same')
+
+        p2 = c.cd(2)
+        p2.SetBottomMargin(0.14)
+        p2.SetTopMargin(0.01)
+        p2.SetRightMargin(0.015)
+        p2.SetLeftMargin(0.1)
+        for i,syst in enumerate(list_tot):
+            rf = ROOT.TFile('{}/syst/{}.root'.format(scan_dir,syst),'read')
+            tot = rf.Get('tot')
+            tot.SetMarkerColor(i+1)
+            tot.SetLineColor(i+1)
+            tot.SetLineWidth(2)
+            if i==0:
+                tot.GetYaxis().SetRangeUser(tot_m-.001,tot_M+.005)
+                tot.GetYaxis().SetTitleSize(tot.GetYaxis().GetTitleSize()*1.7)
+                tot.GetYaxis().SetTitleOffset(.8)
+                tot.GetYaxis().SetTitle('total uncertainty')
+                tot.GetXaxis().SetLabelSize(tot.GetXaxis().GetLabelSize()*1.5)
+                tot.GetYaxis().SetLabelSize(tot.GetYaxis().GetLabelSize()*1.5)
+                tot.GetXaxis().SetTitleSize(tot.GetXaxis().GetTitleSize()*1.7)
+                tot.Draw('apl')
+            else:
+                tot.Draw('pl same')
+
+        c.SaveAs(scan_dir+'/scan_full_summary.png')
+        c.SaveAs(scan_dir+'/scan_full_summary.pdf')
 
     return
 
