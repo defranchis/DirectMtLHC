@@ -192,18 +192,27 @@ def produceSummaryTable(obj,blind=True):
     of = open('summary_table_LHC.txt','w')
     of.write('input name \t mt \t stat \t syst \t tot\n\n')
     
+    all_dict = dict()
+
     for meas in obj.usedMeas:
-        of.write('{},\t {:.2f}, {:.2f}, {:.2f}, {:.2f}\n'.format(measToROOT(meas).replace('#',''),obj.value[meas],obj.uncert[meas]['Stat'],
-                                                                 getTotUncFromDict(obj.uncert[meas],no_stat=True),getTotUncFromDict(obj.uncert[meas])))
+        mt, stat, syst, tot = obj.value[meas], obj.uncert[meas]['Stat'], getTotUncFromDict(obj.uncert[meas],no_stat=True), getTotUncFromDict(obj.uncert[meas])
+        of.write('{},\t {:.2f}, {:.2f}, {:.2f}, {:.2f}\n'.format(measToROOT(meas).replace('#',''),mt,stat,syst,tot))
+        all_dict[measToROOT(meas).replace('#','')] = [mt,stat,syst,tot]
+
     of.write('\n')
     for ch in obsDict.keys():
         mt = res[ch] if not blind else 172
         stat = unc[ch]['Stat']
         tot = getTotUncFromDict(unc[ch])
         of.write('{},\t {:.2f}, {:.2f}, {:.2f}, {:.2f}\n'.format(ch+' comb',mt,stat,(tot**2-stat**2)**.5,tot))
+        all_dict[ch+' comb'] = [mt,stat,(tot**2-stat**2)**.5,tot]
     of.write('\n')
     mt_comb = obj.results.mt if not blind else 172
     of.write('{},\t {:.2f}, {:.2f}, {:.2f}, {:.2f}\n'.format('full comb',mt_comb,obj.results.stat,obj.results.syst,obj.results.tot))
+    all_dict['full comb'] = [mt_comb,obj.results.stat,obj.results.syst,obj.results.tot]
+    import json
+    with open('summary_LHC.json','w') as j:
+        j.write(json.dumps(all_dict))
 
     return
 
