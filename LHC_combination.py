@@ -190,7 +190,7 @@ def produceSummaryTable(obj,blind=True):
     res, unc = obj.doSubCombination(obsDict=obsDict,printResults=False)
 
     of = open('summary_table_LHC.txt','w')
-    of.write('input name \t mt \t stat \t syst \t tot\n\n')
+    of.write('input name, \t mt, \t stat, \t syst, \t tot\n\n')
     
     all_dict = dict()
 
