@@ -547,7 +547,7 @@ def plotScanSummary(base_obj,blind=False,syst_list=[]):
 
         p2 = c.cd(2)
         p2.SetBottomMargin(0.14)
-        p2.SetTopMargin(0.01)
+        p2.SetTopMargin(0.05)
         p2.SetRightMargin(0.015)
         p2.SetLeftMargin(0.1)
         for i,syst in enumerate(list_tot):
