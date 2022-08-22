@@ -10,6 +10,7 @@ import default_files
 
 f_ATLAS = default_files.default_file_ATLAS
 f_CMS = default_files.default_file_CMS
+PU_hack = True
 
 def makeLHC_MCstat_file(obj_ATLAS,obj_CMS):
     systForToys = copy.deepcopy(obj_ATLAS.systForToys)
@@ -53,16 +54,16 @@ def main():
 
     args = parser.parse_args()
 
-    obj_ATLAS = BLUE_object(f_ATLAS, ATLAS=True)
+    obj_ATLAS = BLUE_object(f_ATLAS, ATLAS=True, PU_hack=PU_hack)
     # obj_ATLAS.printResults()
     # obj_ATLAS.printImpactsSorted()
 
-    obj_CMS = BLUE_object(f_CMS,ATLAS=False)
+    obj_CMS = BLUE_object(f_CMS,ATLAS=False,PU_hack=PU_hack)
     # obj_CMS.printResults()`
     # obj_CMS.printImpactsSorted()
 
-    LHC_full_unblind = LHC_object(obj_ATLAS, obj_CMS, blind=False, separateCombinations=False)
-    LHC_sep_unblind = LHC_object(obj_ATLAS, obj_CMS, blind=False, separateCombinations=True)
+    LHC_full_unblind = LHC_object(obj_ATLAS, obj_CMS, blind=False, separateCombinations=False, PU_hack=PU_hack)
+    LHC_sep_unblind = LHC_object(obj_ATLAS, obj_CMS, blind=False, separateCombinations=True, PU_hack=PU_hack)
 
     LHC_full_unblind.printCorrTables(draw=True)
     LHC_full_unblind.makeSummaryPlot(blind=not args.unblind)
@@ -73,11 +74,11 @@ def main():
 
 
     if not args.unblind:
-        LHC_full = LHC_object(obj_ATLAS, obj_CMS, blind=True, separateCombinations=False)
+        LHC_full = LHC_object(obj_ATLAS, obj_CMS, blind=True, separateCombinations=False, PU_hack=PU_hack)
         LHC_full.printResults()
         LHC_full.printImpactsSorted()
 
-        LHC_sep = LHC_object(obj_ATLAS, obj_CMS, blind=True, separateCombinations=True)
+        LHC_sep = LHC_object(obj_ATLAS, obj_CMS, blind=True, separateCombinations=True, PU_hack=PU_hack)
         LHC_sep.printResults()
         LHC_sep.printImpactsSorted()
     

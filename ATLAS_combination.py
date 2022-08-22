@@ -33,7 +33,7 @@ def main():
 
     args = parser.parse_args()
 
-    base_obj = BLUE_object(infile,ATLAS=True)
+    base_obj = BLUE_object(infile,ATLAS=True,PU_hack=True)
     base_obj.printResults()
     base_obj.printImpactsSorted()
 

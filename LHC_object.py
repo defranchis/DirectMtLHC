@@ -1,4 +1,4 @@
-from BLUE_object import BLUE_object
+from BLUE_object import BLUE_object, sqrts
 from combTools import measToTex, measToROOT
 import copy
 import sys,os
@@ -10,7 +10,7 @@ from ROOT import TH2D, TCanvas, gStyle, TGraphErrors, TLatex
 from array import *
 
 # corrMap_default = {'JES3': 0.5, 'JESFLV': 0.5, 'RAD': 0.5, 'MCGEN': 0.5, 'BKMC': 1.0, 'PDF': 1.0 , 'BTAG': 0.5, 'UE': 1.0, 'PU': 1.0, 'CR': 1.0}
-corrMap_default = {'JES3': 0.5, 'JESFLV': 0.5, 'RAD': 0.5, 'MCGEN': 0.5, 'BKMC': .85, 'PDF': .85 , 'BTAG': 0.5, 'UE': .85, 'CR': .85}
+corrMap_default = {'JES3': 0.5, 'JESFLV': 0.5, 'RAD': 0.5, 'MCGEN': 0.5, 'BKMC': .85, 'PDF': .85 , 'BTAG': 0.5, 'UE': .85, 'CR': .85, 'PU':.85}
 mergeMap_default = {'ATLAS':{}, 'CMS': {'RAD': ['Q','JPS'],'HADR':['SLEPB','BFRAG']}}
 renameMap_default = {'ATLAS':{} ,'CMS': {'CMSFL1':'JESFLV'}}
 
@@ -21,7 +21,8 @@ plot_dir = 'result_plots'
 
 class LHC_object:
 
-    def __init__(self,ATLAS_obj, CMS_obj, excludeSyst = [], separateCombinations = False, corrMap = None, mergeMap = None, renameMap = None, blind = False, merge_and_rename=True,mergeImpacts={}):
+    def __init__(self,ATLAS_obj, CMS_obj, excludeSyst = [], separateCombinations = False, corrMap = None, mergeMap = None, renameMap = None, blind = False, 
+                 merge_and_rename=True,mergeImpacts={},PU_hack=False):
         self.ATLAS_obj = ATLAS_obj.clone()
         self.CMS_obj = CMS_obj.clone()
         self.obj_d = {'ATLAS':self.ATLAS_obj, 'CMS':self.CMS_obj}
@@ -41,6 +42,7 @@ class LHC_object:
         self.LHC_file = 'LHC_input_sep.txt' if self.separateCombinations else 'LHC_input_full.txt'
         self.merge_and_rename = merge_and_rename
         self.mergeImpacts = mergeImpacts
+        self.PU_hack = PU_hack
 
         # self.removeZeroImpacts()
         # for exp in self.experiments:
@@ -82,7 +84,7 @@ class LHC_object:
                     sys.exit()
 
         self.writeBLUEinputCMS(separateCombinations=self.separateCombinations)
-        self.BLUE_obj = BLUE_object(self.LHC_file,LHC=True,blind=self.blind,mergeImpacts=self.mergeImpacts)
+        self.BLUE_obj = BLUE_object(self.LHC_file,LHC=True,blind=self.blind,mergeImpacts=self.mergeImpacts,PU_hack=self.PU_hack)
         # self.BLUE_obj.checkAllSystMatrices()
         if not self.separateCombinations:
             self.sortUsedMeas()
@@ -93,7 +95,7 @@ class LHC_object:
 
     def update(self):
         self.writeBLUEinputCMS(separateCombinations=self.separateCombinations)
-        self.BLUE_obj = BLUE_object(self.LHC_file,LHC=True,blind=self.blind,mergeImpacts=self.mergeImpacts)
+        self.BLUE_obj = BLUE_object(self.LHC_file,LHC=True,blind=self.blind,mergeImpacts=self.mergeImpacts,PU_hack=self.PU_hack)
 
 
     def renameAllSyst(self):
@@ -191,6 +193,12 @@ class LHC_object:
                     #     corr = 0.85 * (corr/abs(corr))
                 m_dd[meas2] = corr
             m_d[meas1] = m_dd
+
+        if syst == 'PU' and self.PU_hack:
+            for meas1 in self.LHCmeas:
+                for meas2 in self.LHCmeas:
+                    if sqrts(meas1) != sqrts(meas2):
+                        m_d[meas1][meas2] = 0.0
 
         return m_d
 

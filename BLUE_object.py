@@ -25,9 +25,15 @@ class result_object:
         self.signedImpacts = dict()
         self.mergedImpacts = dict()
 
+
+def sqrts(meas):
+    if '8' in meas or '12' in meas:
+        return 8
+    return 7
+
 class BLUE_object:
 
-    def __init__(self,inputfile = None, excludeMeas = [], excludeSyst = [], ATLAS = False, LHC = False, blind = False, mergeImpacts = {}):
+    def __init__(self,inputfile = None, excludeMeas = [], excludeSyst = [], ATLAS = False, LHC = False, blind = False, mergeImpacts = {}, PU_hack = False):
 
         if inputfile is None:
             print('ERROR: please provide input file')
@@ -41,6 +47,7 @@ class BLUE_object:
         self.LHC = LHC
         self.CMS = not (self.ATLAS or self.LHC)
         self.blind = blind
+        self.PU_hack = PU_hack and self.ATLAS
         self.lines = open(inputfile,'r').read().splitlines()
         self.excludeMeas = excludeMeas
         self.excludeSyst = excludeSyst
@@ -143,6 +150,7 @@ class BLUE_object:
         if not self.checkAllMatrixDict(matrix_dict):
             print('ERROR! matrix dictionary is unphysical')
             sys.exit()
+
         return matrix_dict
 
     def getCorrelationMatrixSyst(self,systname):
@@ -513,6 +521,14 @@ class BLUE_object:
                         j_corr_dict[meas_j] = corr
                 i_corr_dict[meas_i] = j_corr_dict
             all_corr_dict[syst]=i_corr_dict
+
+        if self.PU_hack:
+            for i in measurements:
+                for j in measurements:
+                    if sqrts(i) != sqrts(j):
+                        all_corr_dict['PU'][i][j] = 0.0
+                    else:
+                        all_corr_dict['PU'][i][j] = 1.0
 
         goodMatrix = True
         for syst in systnames:
