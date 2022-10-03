@@ -10,7 +10,7 @@ from ROOT import TH2D, TCanvas, gStyle, TGraphErrors, TLatex
 from array import *
 
 # corrMap_default = {'JES3': 0.5, 'JESFLV': 0.5, 'RAD': 0.5, 'MCGEN': 0.5, 'BKMC': 1.0, 'PDF': 1.0 , 'BTAG': 0.5, 'UE': 1.0, 'PU': 1.0, 'CR': 1.0}
-corrMap_default = {'JES3': 0.5, 'JESFLV': 0.5, 'RAD': 0.5, 'MCGEN': 0.5, 'BKMC': .85, 'PDF': .85 , 'BTAG': 0.5, 'UE': .85, 'CR': .85, 'PU':.85}
+corrMap_default = {'JES3': 0.5, 'JESFLV': 0.5, 'RAD': 0.5, 'MCGEN': 0.5, 'BKMC': .85, 'PDF': .85 , 'BTAG': 0.5, 'UE': .85, 'CR': .85}
 mergeMap_default = {'ATLAS':{}, 'CMS': {'RAD': ['Q','JPS'],'HADR':['SLEPB','BFRAG']}}
 renameMap_default = {'ATLAS':{} ,'CMS': {'CMSFL1':'JESFLV'}}
 
@@ -53,6 +53,11 @@ class LHC_object:
 
         if corrMap is None:  self.corrMap = copy.deepcopy(corrMap_default)
         else: self.corrMap = copy.deepcopy(corrMap)
+
+        if self.PU_hack and not 'PU' in list(self.corrMap.keys()):
+            print('\n WARNING: adding PU correlation of 0.85\n')
+            self.corrMap['PU'] = 0.85
+
         if mergeMap is None: self.mergeMap = copy.deepcopy(mergeMap_default)
         else: self.mergeMap = copy.deepcopy(mergeMap)
         if renameMap is None: self.renameMap = copy.deepcopy(renameMap_default)
