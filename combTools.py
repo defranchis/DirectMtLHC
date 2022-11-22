@@ -516,7 +516,7 @@ def plotScanSummary(base_obj,blind=False,syst_list=[]):
         c.SaveAs(scan_dir+'/scan_tot_summary.png')
         c.SaveAs(scan_dir+'/scan_tot_summary.pdf')
         
-    leg = TLegend(.2,.6,.6,.85)
+    leg = TLegend(.4,.6,.8,.85)
     leg.SetBorderSize(0)
 
     if base_obj.LHC:
