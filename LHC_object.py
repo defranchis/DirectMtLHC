@@ -12,9 +12,11 @@ from array import *
 # corrMap_default = {'JES3': 0.5, 'JESFLV': 0.5, 'RAD': 0.5, 'MCGEN': 0.5, 'BKMC': 1.0, 'PDF': 1.0 , 'BTAG': 0.5, 'UE': 1.0, 'PU': 1.0, 'CR': 1.0}
 corrMap_default = {'JES3': 0.5, 'JESFLV': 0.5, 'RAD': 0.5, 'MCGEN': 0.5, 'BKMC': .85, 'PDF': .85 , 'BTAG': 0.5, 'UE': .85, 'CR': .85}
 mergeMap_default = {'ATLAS':{}, 'CMS': {'RAD': ['Q','JPS'],'HADR':['SLEPB','BFRAG']}}
-renameMap_default = {'ATLAS':{} ,'CMS': {'CMSFL1':'JESFLV'}}
+renameMap_default = {'ATLAS':{'bJES':'JESFLV'} ,'CMS': {'JES5':'JESFLV'}}
 
-noSignsOnImpacts = {'ATLAS':['JESFLV', 'BKMC', 'BTAG', 'PDF'], 'CMS': []}
+noSignsOnImpacts = {'ATLAS':['BKMC', 'BTAG', 'PDF'], 'CMS': []}
+
+mergeImpacts_default = {'JESlight':['JES4','JES6','JESflavres','JESflavcomp']}
 
 tab_dir = 'corr_tables'
 plot_dir = 'result_plots'
@@ -22,7 +24,7 @@ plot_dir = 'result_plots'
 class LHC_object:
 
     def __init__(self,ATLAS_obj, CMS_obj, excludeSyst = [], separateCombinations = False, corrMap = None, mergeMap = None, renameMap = None, blind = False, 
-                 merge_and_rename=True,mergeImpacts={},PU_hack=False):
+                 merge_and_rename=True,mergeImpacts=mergeImpacts_default,PU_hack=False):
         self.ATLAS_obj = ATLAS_obj.clone()
         self.CMS_obj = CMS_obj.clone()
         self.obj_d = {'ATLAS':self.ATLAS_obj, 'CMS':self.CMS_obj}

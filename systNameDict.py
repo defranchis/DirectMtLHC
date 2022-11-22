@@ -31,4 +31,12 @@ systNameDict = {
     'Q':'ME scale',
     'JPS':'ME/PS matching',
     'CMSFL1':'LHC JES 4',
+    #new
+    'bJES':'ATLAS-b',
+    'JESflavres':'ATLAS-res',
+    'JESflavcomp':'ATLAS-flavcomp',
+    'JES4':'CMS-g',
+    'JES5':'CMS-b',
+    'JES6':'CMS-l',
+    'JESlight': 'LHC JES g/l',
 }
