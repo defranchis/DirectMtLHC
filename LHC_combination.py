@@ -69,8 +69,8 @@ def main():
     LHC_full_unblind.makeSummaryPlot(blind=not args.unblind)
     
     print('CMS combination \n')
-    LHC_full_unblind.obj_d['CMS'].simplePrint()
-    LHC_full_unblind.obj_d['CMS'].printImpactsSorted()
+    # LHC_full_unblind.obj_d['CMS'].simplePrint()
+    # LHC_full_unblind.obj_d['CMS'].printImpactsSorted()
 
 
     if not args.unblind:
