@@ -715,7 +715,7 @@ def drawWeights(base_obj,path='plots'):
             h.GetXaxis().SetBinLabel(i+1,measToROOT(meas))
 
     if not os.path.exists(path):
-        os.makepaths(path)
+        os.makedirs(path)
 
     ROOT.gStyle.SetOptStat(0000)
     c = TCanvas()
