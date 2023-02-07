@@ -4,7 +4,7 @@ systNameDict = {
     'JES1':'LHC JES 1',
     'BTAG':'b tagging',
     'HADR':'LHC HAD',
-    'JESFLV':'LHC JES 4',
+    'JESFLV':'LHC b-JES',
     'TOPPT':'Top quark \pt',
     'PDF':'PDF',
     'JES2':'LHC JES 2',
