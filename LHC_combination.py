@@ -45,6 +45,7 @@ def main():
     parser = argparse.ArgumentParser(description='specify options')
 
     parser.add_argument('--scanAllCorr',action='store_true', help='scan all correlations with simple assumptions for both methods')
+    parser.add_argument('--scanbJES',action='store_true', help='scan b JES correlations with both methods')
     parser.add_argument('--flipSigns',action='store_true', help='flip all ambiguous signs in LHC correlations')
     parser.add_argument('--unblind',action='store_true', help='do not blind the LHC combination')
     parser.add_argument('--nToys',action='store',type=int, help='number of toys for MC stat', default=0)
@@ -108,8 +109,8 @@ def main():
         LHC_sep_unblind.BLUE_obj.printPulls(prefix='LHC_B')
 
 
-    if args.scanAllCorr:
-        makeAllCorrelationScansLHC(LHC_full_unblind,LHC_sep_unblind,blind=not args.unblind)
+    if args.scanAllCorr or args.scanbJES:
+        makeAllCorrelationScansLHC(LHC_full_unblind,LHC_sep_unblind,blind=not args.unblind, only_bJES = args.scanbJES)
         plotScanSummary(LHC_full_unblind.BLUE_obj,blind=not args.unblind,syst_list=list(LHC_full_unblind.corrMap.keys()))
 
     if args.flipSigns:

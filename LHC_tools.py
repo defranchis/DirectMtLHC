@@ -9,7 +9,7 @@ ROOT.gROOT.SetBatch(True)
 np.random.seed(1)
 from combTools import scan_dir_LHC
 
-def makeAllCorrelationScansLHC(full,sep,blind=False):
+def makeAllCorrelationScansLHC(full,sep,blind=False,only_bJES=False):
 
     os.makedirs(scan_dir_LHC+'/syst',exist_ok=True)
 
@@ -21,6 +21,7 @@ def makeAllCorrelationScansLHC(full,sep,blind=False):
         sys.exit()
     for syst in LHC_full.LHCsyst:
         if syst == 'Stat': continue
+        if only_bJES and syst != 'JESFLV': continue
         makeCorrelationScan(LHC_full,LHC_sep,orig_corrMap,syst,blind)
     return
 
@@ -34,9 +35,10 @@ def makeCorrelationScan(LHC_full,LHC_sep,corrMap,syst,blind=True):
         orig_corrMap[syst] = 0.
 
     corr = orig_corrMap[syst]
-    step = 0.005 if syst == 'JESFLV' else 0.05
+    # step = 0.005 if syst == 'JESFLV' else 0.05
+    step = 0.05
     halfrange = min(0.25, 1-abs(corr))
-    corrs = list(np.arange(corr-halfrange,corr+halfrange+step/2,step))
+    corrs = list(np.arange(corr-halfrange,corr+halfrange+step/2,step)) if not syst == 'JESFLV' else list(np.arange(0,1+step/2,step))
     corrs = [round(c,3) for c in corrs]
 
     scan_d = dict()

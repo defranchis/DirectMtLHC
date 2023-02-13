@@ -534,7 +534,7 @@ def plotScanSummary(base_obj,blind=False,syst_list=[]):
             mt.SetLineWidth(2)
             leg.AddEntry(mt,systNameDict[syst],'l')
             if i==0:
-                mt.GetYaxis().SetRangeUser(mt_m-.001,mt_M+.005)
+                mt.GetYaxis().SetRangeUser(mt_m-.008,mt_M+.005)
                 mt.GetYaxis().SetTitleSize(mt.GetYaxis().GetTitleSize()*1.7)
                 mt.GetYaxis().SetTitleOffset(.8)
                 mt.GetYaxis().SetTitle('m_{t} - m_{t}^{central}')
