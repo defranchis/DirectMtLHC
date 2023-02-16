@@ -10,7 +10,7 @@ import default_files
 
 f_ATLAS = default_files.default_file_ATLAS
 f_CMS = default_files.default_file_CMS
-PU_hack = False
+PU_hack = True
 
 def makeLHC_MCstat_file(obj_ATLAS,obj_CMS):
     systForToys = copy.deepcopy(obj_ATLAS.systForToys)
