@@ -83,6 +83,17 @@ class BLUE_object:
     def clone(self):
         return copy.deepcopy(self)
 
+    def cloneSyst(self, orig_syst, new_syst, scale = 1.):
+        if not orig_syst in self.systnames:
+            print('ERROR: systematics {} (to be cloned) not found')
+            sys.exit()
+        self.systnames.append(new_syst)
+        self.usedSyst.append(new_syst)
+        for meas in self.measurements:
+            self.uncert[meas][new_syst] = copy.deepcopy(self.uncert[meas][orig_syst])*scale
+        self.matrix[new_syst] = copy.deepcopy(self.matrix[orig_syst])
+        self.update()
+
     def getUsedMeasSyst(self):
 
         for excl in self.excludeMeas:
@@ -282,9 +293,9 @@ class BLUE_object:
         print(self.results.weights)
         print()
 
-    def simplePrint(self):
+    def simplePrint(self,blind=False):
         print('mt\t\ttot\tstat\tsyst\t[GeV]')
-        print('{:.3f}\t\t{:.3f}\t{:.3f}\t{:.3f}'.format(self.results.mt,self.results.tot,self.results.stat,self.results.syst))
+        print('{:.3f}\t\t{:.3f}\t{:.3f}\t{:.3f}'.format(self.results.mt if not blind else 179.99,self.results.tot,self.results.stat,self.results.syst))
     
     def printOutput(self):
         print(self.log)
