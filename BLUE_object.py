@@ -557,10 +557,22 @@ class BLUE_object:
         return systnames, measurements,all_central,all_uncertainties,all_corr_dict
 
     def printImpactsSorted(self):
+
+        ofile = 'impacts_' + self.experiment()
+        if self.LHC and len(self.value) == 2:
+            ofile += '_sep'
+        o = open('{}/{}.tex'.format(tab_dir,ofile),'w')
+
+        if not os.path.exists(tab_dir):
+            os.makedirs(tab_dir)
+
         import systNameDict as snd
         for k, v in sorted(list(self.results.mergedImpacts.items()), key=itemgetter(1), reverse = True):
             print('{:>25}\t{:.2f}'.format(snd.systNameDict[k],v).replace('0.00','< 0.01'))
+            o.write('{:>25}\t&\t{:.2f} \\\\ \n'.format(snd.systNameDict[k],v).replace('0.00','$< 0.01$'))
+
         print()
+        o.close()
 
     def deriveSignedImpact(self,syst):
 
@@ -981,3 +993,9 @@ class BLUE_object:
     def printStats(self):
         print('\nchi2/ndf = {:.1f}/{} ({:.1f})'.format(self.chi2,self.ndf,self.chi2/self.ndf))
         print('prob = {:.1f} %\n'.format(self.prob*100))
+
+    def experiment(self):
+        if self.ATLAS: return 'ATLAS'
+        if self.CMS: return 'CMS'
+        if self.LHC: return 'LHC'
+        return 'ERROR'
