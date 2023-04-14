@@ -119,7 +119,7 @@ def main():
     if args.nToys > 0:
 
         # full combination
-        LHC_full_unblind.CMS_obj.prepareForToys('MCstat_CMS_forLHC.txt')
+        LHC_full_unblind.CMS_obj.prepareForToys('inputs/MCstat_CMS_forLHC.txt')
         LHC_full_unblind.ATLAS_obj.prepareForToys('MCstat_ATLAS.txt')
         makeLHC_MCstat_file(LHC_full_unblind.ATLAS_obj,LHC_full_unblind.CMS_obj)        
 
@@ -129,7 +129,7 @@ def main():
         getToyResults(LHC_obj_full,plotToys=False,blind=not args.unblind)
 
         # separate combiantions
-        LHC_sep_unblind.CMS_obj.prepareForToys('MCstat_CMS_forLHC.txt')
+        LHC_sep_unblind.CMS_obj.prepareForToys('inputs/MCstat_CMS_forLHC.txt')
         LHC_sep_unblind.ATLAS_obj.prepareForToys('MCstat_ATLAS.txt')
         LHC_sep_unblind.CMS_obj.throwToys(args.nToys)
         LHC_sep_unblind.ATLAS_obj.throwToys(args.nToys)
