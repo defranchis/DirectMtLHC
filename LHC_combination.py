@@ -203,7 +203,7 @@ def produceSummaryTable(obj,blind=True):
 
     of.write('\n')
     for ch in obsDict.keys():
-        mt = res[ch] if not blind else 172
+        mt = res[ch] if not blind else 172 + (res[ch]-obj.results.mt)
         stat = unc[ch]['Stat']
         tot = getTotUncFromDict(unc[ch])
         of.write('{},\t {:.2f}, {:.2f}, {:.2f}, {:.2f}\n'.format(ch+' comb',mt,stat,(tot**2-stat**2)**.5,tot))
