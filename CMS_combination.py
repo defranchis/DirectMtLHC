@@ -42,6 +42,7 @@ def main():
 
     base_obj = BLUE_object(args.f,excludeMeas,excludeSyst)
     base_obj.printFullCorrTable('CMS')
+
     if args.noSigns:
         base_obj.removeSigns()
 
@@ -51,6 +52,7 @@ def main():
 
     base_obj.printResults()
     base_obj.printImpactsSorted()
+    base_obj.printStats()
     base_obj.printPulls(prefix='CMS')
     base_obj.printWeights(prefix='CMS')
     drawWeights(base_obj,path='plots')

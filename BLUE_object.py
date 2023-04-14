@@ -977,3 +977,7 @@ class BLUE_object:
             obj.simplePrint()
 
         return obj.results
+
+    def printStats(self):
+        print('\nchi2/ndf = {:.1f}/{} ({:.1f})'.format(self.chi2,self.ndf,self.chi2/self.ndf))
+        print('prob = {:.1f} %\n'.format(self.prob*100))
