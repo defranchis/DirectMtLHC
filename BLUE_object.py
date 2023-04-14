@@ -52,6 +52,7 @@ class BLUE_object:
         self.excludeMeas = excludeMeas
         self.excludeSyst = excludeSyst
         self.mergeImpacts = mergeImpacts
+        self.renamed = dict()
 
         if self.ATLAS:
             self.systnames, self.measurements, self.value, self.uncert, self.matrix = self.getAllATLASInfo()
@@ -361,6 +362,9 @@ class BLUE_object:
         toy_lines = f.read().splitlines()
         self.systForToys = toy_lines[0].split()
         for s in self.systForToys:
+            if s in self.renamed.keys():
+                self.systForToys[self.systForToys.index(s)] = self.renamed[s]
+                s = self.renamed[s]
             if not s in self.systnames:
                 print('ERROR: systematic {} in file {} not found in input file'.format(s,fn))
                 sys.exit()
@@ -632,6 +636,9 @@ class BLUE_object:
         for meas in self.measurements:
             self.uncert[meas][new] = self.uncert[meas].pop(old)
         self.matrix[new] = self.matrix.pop(old)
+        if old in self.renamed.keys():
+            print('\nWARNING: systematic {} renamed multiple times\n'.format(old))
+        self.renamed[old] = new
         self.update()
                 
         return

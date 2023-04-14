@@ -3,6 +3,7 @@ from combTools import measToTex, measToROOT
 import copy
 import sys,os
 import numpy as np
+import itertools
 
 import ROOT as rt
 from ROOT import TH2D, TCanvas, gStyle, TGraphErrors, TLatex
@@ -91,6 +92,13 @@ class LHC_object:
 
         self.writeBLUEinputCMS(separateCombinations=self.separateCombinations)
         self.BLUE_obj = BLUE_object(self.LHC_file,LHC=True,blind=self.blind,mergeImpacts=self.mergeImpacts,PU_hack=self.PU_hack)
+
+        self.BLUE_obj.renamed = {**self.obj_d['ATLAS'].renamed,**self.obj_d['CMS'].renamed}
+        for renamed in self.BLUE_obj.renamed.keys():
+            if list(self.BLUE_obj.renamed.keys()).count(renamed) > 1:
+                print('ERROR: ambiguity')
+                sys.exit()
+
         # self.BLUE_obj.checkAllSystMatrices()
         if not self.separateCombinations:
             self.sortUsedMeas()
