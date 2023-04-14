@@ -8,6 +8,7 @@ ROOT.gROOT.SetBatch(True)
 
 toys_dir = 'toys_workdir'
 scan_dir = 'scan_workdir'
+scan_dir_CMS = 'scan_workdir'
 scan_dir_LHC = 'LHC_scan_workdir'
 
 
@@ -345,8 +346,7 @@ def increaseAllWeakCorrelations(base_obj):
     c.Clear()
 
 def makeCorrelationScan(base_obj,syst_scan):
-    if base_obj.LHC:
-        scan_dir = scan_dir_LHC
+    scan_dir = scan_dir_LHC if base_obj.LHC else scan_dir_CMS
     if not os.path.exists(scan_dir+'/syst'):
         os.makedirs(scan_dir+'/syst')
     step = 0.01
@@ -409,8 +409,8 @@ def makeCorrelationScan(base_obj,syst_scan):
     return
 
 def plotScanSummary(base_obj,blind=False,syst_list=[]):
-    if base_obj.LHC:
-        scan_dir = scan_dir_LHC
+
+    scan_dir = scan_dir_LHC if base_obj.LHC else scan_dir_CMS
     
     mt_maxdiff = {}
     tot_maxdiff = {}
@@ -574,8 +574,8 @@ def plotScanSummary(base_obj,blind=False,syst_list=[]):
     return
 
 def makeCorrelationScans(base_obj,blind=False):
-    if base_obj.LHC:
-        scan_dir = scan_dir_LHC
+
+    scan_dir = scan_dir_LHC if base_obj.LHC else scan_dir_CMS
 
     if not os.path.exists(scan_dir):
         os.makedirs(scan_dir)
