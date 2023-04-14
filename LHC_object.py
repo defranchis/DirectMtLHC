@@ -461,6 +461,8 @@ class LHC_object:
                 o.write('& {} '.format(measToTex(meas)))
         o.write('\\\\\n')
         for i,meas1 in enumerate(usedMeas):
+            if not i%3:
+                o.write('\\hline\n')
             o.write(measToTex(meas1)+' ')
             for j,meas2 in enumerate(usedMeas):
                 o.write('& {:.2f} '.format(c[i][j]))
@@ -490,7 +492,9 @@ class LHC_object:
             else:
                 o.write('& {} '.format(measToTex(meas)))
         o.write('\\\\\n')
-        for meas1 in usedMeas:
+        for i, meas1 in enumerate(usedMeas):
+            if not i%3:
+                o.write('\\hline\n')
             o.write(measToTex(meas1)+' ')
             for meas2 in usedMeas:
                 o.write('& {:.2f} '.format(m[meas1][meas2]))
