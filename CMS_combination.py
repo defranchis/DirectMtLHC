@@ -84,7 +84,6 @@ def main():
     if not args.onlyWeightsAbove is None:
         base_obj.doCombinationWeightsAbove(wmin=args.onlyWeightsAbove,printout=True)
 
-    return
 
 if __name__ == "__main__":
     main()
