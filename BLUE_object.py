@@ -968,6 +968,9 @@ class BLUE_object:
         c = np.matmul(np.linalg.inv(u),np.matmul(m,np.linalg.inv(u)))
         o = open('{}/{}_corr_full.tex'.format(td,exp),'w')
 
+        f_start = open('templates/CMS_start.tex')
+        o.write(f_start.read())
+
         for i, meas in enumerate(self.usedMeas):
             if i==0:
                 o.write('\t& {} '.format(measToTex(meas)))
@@ -975,10 +978,14 @@ class BLUE_object:
                 o.write('& {} '.format(measToTex(meas)))
         o.write('\\\\\n')
         for i,meas1 in enumerate(self.usedMeas):
+            if not i%3: o.write('\\hline\n')
             o.write(measToTex(meas1)+' ')
             for j,meas2 in enumerate(self.usedMeas):
                 o.write('& {:.2f} '.format(c[i][j]))
             o.write('\\\\\n')
+            
+        f_end = open('templates/end.tex')
+        o.write(f_end.read())
 
         return
 

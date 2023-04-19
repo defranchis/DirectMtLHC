@@ -4,6 +4,7 @@ import copy
 import sys,os
 import numpy as np
 import itertools
+import systNameDict as snd
 
 import ROOT as rt
 from ROOT import TH2D, TCanvas, gStyle, TGraphErrors, TLatex
@@ -496,6 +497,9 @@ class LHC_object:
         m = self.BLUE_obj.p_matrix[syst]
         o = open('{}/LHC_corr_{}.tex'.format(tab_dir,syst),'w')
 
+        f_start = open('templates/LHC_syst_start.tex')
+        o.write(f_start.read().replace('#SYST#',syst).replace('#SYSTNAME#',snd.systNameDict[syst]))
+
         for i, meas in enumerate(usedMeas):
             if i==0:
                 o.write('\t& {} '.format(measToTex(meas)))
@@ -510,6 +514,8 @@ class LHC_object:
                 o.write('& {:.2f} '.format(m[meas1][meas2]))
             o.write('\\\\\n')
 
+        f_end = open('templates/end.tex')
+        o.write(f_end.read())
             
         return
 
