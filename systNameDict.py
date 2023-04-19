@@ -11,7 +11,7 @@ systNameDict = {
     'RAD':'LHC RAD',
     'CR':'Color reconnection',
     'JER':'Jet energy resolution',
-    'BKMC':'Backround (simulation)',
+    'BKMC':'Background (simulation)',
     'LES':'Lepton energy scale',
     'METH':'Method',
     'UE':'Underlying event',
