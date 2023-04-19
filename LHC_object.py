@@ -458,6 +458,9 @@ class LHC_object:
 
         return
 
+    def printSummaryTable(self):
+        self.BLUE_obj.printSummaryTable(self.corrMap)
+
 
     def getCovariance(self,syst,usedMeas=[]):
         if len(usedMeas) == 0:
@@ -623,5 +626,4 @@ class LHC_object:
         c.SaveAs('{}/summary_plot.pdf'.format(plot_dir))
         
                 
-
         return
