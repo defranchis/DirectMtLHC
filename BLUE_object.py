@@ -568,8 +568,6 @@ class BLUE_object:
     def printImpactsSorted(self):
 
         ofile = 'impacts_' + self.experiment()
-        if self.LHC and len(self.value) == 2:
-            ofile += '_sep'
         o = open('{}/{}.tex'.format(tab_dir,ofile),'w')
 
         if not os.path.exists(tab_dir):
@@ -954,7 +952,7 @@ class BLUE_object:
         return m
 
 
-    def printFullCorrTable(self,exp):
+    def printFullCorrTable(self):
 
         td = 'corr_tables'
 
@@ -966,9 +964,9 @@ class BLUE_object:
             m += self.getCovariance(syst)
         u = np.diag(np.diag(m)**.5)
         c = np.matmul(np.linalg.inv(u),np.matmul(m,np.linalg.inv(u)))
-        o = open('{}/{}_corr_full.tex'.format(td,exp),'w')
+        o = open('{}/{}_corr_full.tex'.format(td,self.experiment()),'w')
 
-        f_start = open('templates/CMS_start.tex')
+        f_start = open('templates/{}_start.tex'.format(self.experiment()))
         o.write(f_start.read())
 
         for i, meas in enumerate(self.usedMeas):
@@ -987,7 +985,7 @@ class BLUE_object:
         f_end = open('templates/end.tex')
         o.write(f_end.read())
 
-        return
+        return c
 
     def doCombinationWeightsAbove(self,wmin,printout=False):
         if wmin<0:
@@ -1016,5 +1014,8 @@ class BLUE_object:
     def experiment(self):
         if self.ATLAS: return 'ATLAS'
         if self.CMS: return 'CMS'
-        if self.LHC: return 'LHC'
+        if self.LHC:
+            if len(self.measurements) == 2:
+                return 'LHC_sep'
+            else: return 'LHC'
         return 'ERROR'

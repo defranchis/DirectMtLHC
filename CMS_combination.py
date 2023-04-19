@@ -41,7 +41,7 @@ def main():
         excludeSyst = [removeUselessCharachters(e) for e in excludeSyst]
 
     base_obj = BLUE_object(args.f,excludeMeas,excludeSyst)
-    base_obj.printFullCorrTable('CMS')
+    base_obj.printFullCorrTable()
 
     if args.noSigns:
         base_obj.removeSigns()

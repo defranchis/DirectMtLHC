@@ -17,7 +17,8 @@ renameMap_default = {'ATLAS':{'bJES':'JESFLV', 'JESflavres':'JESflavresLHC'} ,'C
 
 noSignsOnImpacts = {'ATLAS':['BKMC', 'BTAG', 'PDF'], 'CMS': []}
 
-mergeImpacts_default = {'JESlight':['JES6','JESflavresLHC','JESflavcomp'],'HADR':['HADR','SLEPB']}
+mergeImpacts_default = {'JESlight':['JES6','JESflavresLHC','JESflavcomp']}
+# mergeImpacts_default = {'JESlight':['JES6','JESflavresLHC','JESflavcomp'],'HADR':['HADR','SLEPB']}
 
 tab_dir = 'corr_tables'
 plot_dir = 'result_plots'
@@ -411,7 +412,7 @@ class LHC_object:
         for syst in list(self.corrMap.keys()):
             self.printCorrTable(usedMeas,syst,tab_dir)
 
-        corr = self.printFullCorrTable(usedMeas,tab_dir)
+        corr = self.BLUE_obj.printFullCorrTable()
 
         if draw:
 
@@ -457,29 +458,6 @@ class LHC_object:
 
         return
 
-    def printFullCorrTable(self,usedMeas,tab_dir):
-        m = np.zeros((len(usedMeas),len(usedMeas)))
-        for syst in self.BLUE_obj.usedSyst:
-            m += self.getCovariance(syst,usedMeas)
-        u = np.diag(np.diag(m)**.5)
-        c = np.matmul(np.linalg.inv(u),np.matmul(m,np.linalg.inv(u)))
-        o = open('{}/LHC_corr_full.tex'.format(tab_dir),'w')
-
-        for i, meas in enumerate(usedMeas):
-            if i==0:
-                o.write('\t& {} '.format(measToTex(meas)))
-            else:
-                o.write('& {} '.format(measToTex(meas)))
-        o.write('\\\\\n')
-        for i,meas1 in enumerate(usedMeas):
-            if not i%3:
-                o.write('\\hline\n')
-            o.write(measToTex(meas1)+' ')
-            for j,meas2 in enumerate(usedMeas):
-                o.write('& {:.2f} '.format(c[i][j]))
-            o.write('\\\\\n')
-
-        return c
 
     def getCovariance(self,syst,usedMeas=[]):
         if len(usedMeas) == 0:
