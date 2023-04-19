@@ -1,6 +1,8 @@
 import sys, os, copy
 import numpy as np
 from operator import itemgetter
+import systNameDict as snd
+
 
 import ROOT as rt
 rt.gSystem.Load('libBlue.so')
@@ -573,7 +575,6 @@ class BLUE_object:
         if not os.path.exists(tab_dir):
             os.makedirs(tab_dir)
 
-        import systNameDict as snd
         for k, v in sorted(list(self.results.mergedImpacts.items()), key=itemgetter(1), reverse = True):
             print('{:>25}\t{:.2f}'.format(snd.systNameDict[k],v).replace('0.00','< 0.01'))
             o.write('{:>25}\t&\t{:.2f} \\\\ \n'.format(snd.systNameDict[k],v).replace('0.00','$< 0.01$'))
@@ -800,6 +801,16 @@ class BLUE_object:
         self.results.tot = tot**.5
         return
 
+    def getTotalSystMeas(self,meas):
+        arr = np.array([self.uncert[meas][syst] for syst in self.usedSyst if syst != 'Stat'])
+        return np.sum(arr**2)**.5
+
+    def getTotalUncertMeas(self,meas):
+        arr = np.array([self.uncert[meas][syst] for syst in self.usedSyst])
+        return np.sum(arr**2)**.5
+
+
+
     def prepareTable(self):
         systsToMergeForTable = []
         for l in list(self.mergeImpacts.values()):
@@ -1016,6 +1027,80 @@ class BLUE_object:
         f_end = open('templates/end.tex')
         o.write(f_end.read())
         
+        return
+
+    def printSummaryTable(self):
+        unc_list = [snd.syst_exp, snd.syst_mod, snd.syst_bkg, snd.syst_oth]
+        all_unc = [item for sublist in unc_list for item in sublist]
+        for syst in self.results.mergedImpacts.keys() - ['Stat']:
+            if not syst in all_unc:
+                print('ERROR: systematics {} not found in systNameDict'.format(syst))
+                sys.exit()
+        if self.LHC:
+            self.printSummaryTableLHC(unc_list)
+        else:
+            self.printSummaryTableExp(unc_list)
+            
+        return
+
+    def printSummaryTableLHC(self,unc_list):
+        return
+
+    def printSummaryTableExp(self,unc_list):
+        o = open('corr_tables/summary_table_{}.tex'.format(self.experiment()),'w')
+        
+        f_start = open('templates/summary_{}.tex'.format(self.experiment()))
+        o.write(f_start.read())
+
+        for i, meas in enumerate(self.usedMeas):
+            if i==0:
+                o.write('\t& {} '.format(measToTex(meas)))
+            else:
+                o.write('& {} '.format(measToTex(meas)))
+
+        o.write('& combined \\\\\n')
+        o.write('\\hline\n')
+
+        o.write('\\mt')
+        for meas in self.usedMeas:
+            o.write(' & {:.2f} '.format(self.value[meas]))
+        o.write(' & {:.2f} \\\\\n'.format(self.results.mt))
+
+        for l in unc_list:
+            o.write('\\hline\n')
+            for syst in l:
+                if not syst in self.usedSyst: continue
+                o.write(snd.systNameDict[syst])
+                for meas in self.usedMeas:
+                    if self.uncert[meas][syst] == 0.:
+                        o.write(' & -- ')
+                    elif abs(round(self.uncert[meas][syst],2)) > 0: 
+                        o.write(' & {:.2f} '.format(self.uncert[meas][syst]))
+                    else:
+                        o.write(' & $<0.01$ ')
+                if round(self.results.mergedImpacts[syst],2) > 0:
+                    o.write(' & {:.2f} '.format(self.results.mergedImpacts[syst]))
+                else: o.write(' & $<0.01$ ')
+                o.write('\\\\\n')
+        o.write('\\hline\n')
+        o.write('total systematics')
+        for meas in self.usedMeas:
+            o.write(' & {:.2f} '.format(self.getTotalSystMeas(meas)))
+        o.write(' & {:.2f} \\\\\n'.format(self.results.syst))
+        o.write('statistical')
+        for meas in self.usedMeas:
+            o.write(' & {:.2f} '.format(self.uncert[meas]['Stat']))
+        o.write(' & {:.2f} \\\\\n'.format(self.results.stat))
+        o.write('\\hline\n')
+        o.write('total')
+        for meas in self.usedMeas:
+            o.write(' & {:.2f} '.format(self.getTotalUncertMeas(meas)))
+        o.write(' & {:.2f} \\\\\n'.format(self.results.tot))
+
+        f_end = open('templates/end.tex')
+        o.write(f_end.read())
+
+
         return
 
     def doCombinationWeightsAbove(self,wmin,printout=False):

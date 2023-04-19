@@ -5,6 +5,8 @@ from combTools import *
 
 import default_files
 
+from LHC_object import mergeMap_default, renameMap_default
+
 default_file = default_files.default_file_CMS
 
 def main():
@@ -40,7 +42,10 @@ def main():
         excludeSyst = args.excludeSyst.split(',')
         excludeSyst = [removeUselessCharachters(e) for e in excludeSyst]
 
-    base_obj = BLUE_object(args.f,excludeMeas,excludeSyst)
+    base_obj = BLUE_object(args.f,excludeMeas=excludeMeas,excludeSyst=excludeSyst)
+    for old, new in renameMap_default['CMS'].items():
+        base_obj.renameSyst(old,new)
+
     base_obj.printFullCorrTable()
     base_obj.printPullWeightsTable()
 
@@ -51,8 +56,15 @@ def main():
         print('\nestimating signs of impacts, this will take a short while...\n')
         base_obj.deriveSignedImpacts()
 
+
+    clone = base_obj.clone()
+    for merged, original_l in list(mergeMap_default['CMS'].items()):
+        clone.mergeSyst(merged,original_l)
+    clone.printSummaryTable()
+
+
     base_obj.printResults()
-    base_obj.printImpactsSorted()
+    clone.printImpactsSorted()
     base_obj.printStats()
     base_obj.printPulls(prefix='CMS')
     base_obj.printWeights(prefix='CMS')

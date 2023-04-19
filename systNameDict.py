@@ -41,3 +41,8 @@ systNameDict = {
     'JESlight': 'LHC l-JES',
     'JESflavresLHC':'LHC g-JES',
 }
+
+syst_exp = ['JES1', 'JES2', 'JES3', 'JESFLV', 'JESflavresLHC', 'JESlight', 'CMSJES1', 'JER', 'LES', 'BTAG', 'MET', 'PU', 'TRIG']
+syst_mod = ['MCGEN', 'RAD', 'HADR', 'SLEPB', 'CR', 'UE', 'PDF', 'TOPPT']
+syst_bkg = ['BKDT', 'BKMC']
+syst_oth = ['AtlFastFull', 'AtlJetUnc', 'METH', 'Extra']
