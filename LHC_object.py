@@ -17,7 +17,7 @@ renameMap_default = {'ATLAS':{'bJES':'JESFLV', 'JESflavres':'JESflavresLHC'} ,'C
 
 noSignsOnImpacts = {'ATLAS':['BKMC', 'BTAG', 'PDF'], 'CMS': []}
 
-mergeImpacts_default = {'JESlight':['JES6','JESflavresLHC','JESflavcomp']}
+mergeImpacts_default = {'JESlight':['JES6','JESflavcomp']}
 # mergeImpacts_default = {'JESlight':['JES6','JESflavresLHC','JESflavcomp'],'HADR':['HADR','SLEPB']}
 
 tab_dir = 'corr_tables'

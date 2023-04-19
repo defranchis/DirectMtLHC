@@ -38,6 +38,6 @@ systNameDict = {
     'JES4':'CMS-g',
     'JES5':'CMS-b',
     'JES6':'CMS-l',
-    'JESlight': 'LHC JES g/l',
-    'JESflavresLHC':'LHC-res',
+    'JESlight': 'LHC JES light jets',
+    'JESflavresLHC':'LHC gluon response',
 }
