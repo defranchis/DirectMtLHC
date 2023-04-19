@@ -745,6 +745,7 @@ def measToTex(meas):
     elif 'sto' in meas: return '$t$'
     elif 'SVX' in meas: return '$vtx$'
     elif 'jps' in meas: return '$J/\\psi$'
+    elif meas == 'ATLAS_comb' or meas == 'CMS_comb': return meas.replace('_comb','')
     else: return 'ERROR'
 
 def measToROOT(meas):

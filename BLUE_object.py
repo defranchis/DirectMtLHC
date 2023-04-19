@@ -987,6 +987,37 @@ class BLUE_object:
 
         return c
 
+    def printPullWeightsTable(self, blind=False):
+
+        if not os.path.exists(tab_dir):
+            os.makedirs(tab_dir)
+
+        o = open('{}/{}_pull_weight.tex'.format(tab_dir,self.experiment()),'w')
+
+        f_start = open('templates/{}_start.tex'.format(self.experiment()))
+        o.write(f_start.read().replace('Correlation matrix','Pulls and weights').replace('tab:corr','tab:pulls_weights'))
+
+        for i, meas in enumerate(self.usedMeas):
+            if i==0:
+                o.write('\t& {} '.format(measToTex(meas)))
+            else:
+                o.write('& {} '.format(measToTex(meas)))
+        o.write('\\\\\npull')
+        for meas in self.usedMeas:
+            if not blind:
+                o.write('& {:.2f} '.format(self.results.pulls[meas]))
+            else:
+                o.write('& x.x ')
+        o.write('\\\\\nweight')
+        for meas in self.usedMeas:
+            o.write('& {:.2f} '.format(self.results.weights[meas]))
+        o.write('\\\\\n')
+            
+        f_end = open('templates/end.tex')
+        o.write(f_end.read())
+        
+        return
+
     def doCombinationWeightsAbove(self,wmin,printout=False):
         if wmin<0:
             print('ERROR: in doCombinationWeightsAbove: minimum weight must be positive')

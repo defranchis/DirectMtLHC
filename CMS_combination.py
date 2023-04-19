@@ -42,6 +42,7 @@ def main():
 
     base_obj = BLUE_object(args.f,excludeMeas,excludeSyst)
     base_obj.printFullCorrTable()
+    base_obj.printPullWeightsTable()
 
     if args.noSigns:
         base_obj.removeSigns()
