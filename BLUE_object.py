@@ -276,6 +276,11 @@ class BLUE_object:
                 m[i,j] = matrix[meas1][meas2]*uncert[meas1][syst]*uncert[meas2][syst]
         return m
 
+    def flipAllSignsSyst(self,syst):
+        for meas in self.measurements:
+            self.uncert[meas][syst] *= -1.
+        self.update()
+
     def printResults(self):
         print('\n-> combination results\n')
         if len(self.excludeMeas)>0:

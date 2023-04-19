@@ -57,7 +57,7 @@ class LHC_object:
         else: self.corrMap = copy.deepcopy(corrMap)
 
         if self.PU_hack and not 'PU' in list(self.corrMap.keys()):
-            print('\n WARNING: adding PU correlation of 0.85\n')
+            print('\nWARNING: adding PU correlation of 0.85\n')
             self.corrMap['PU'] = 0.85
 
         if mergeMap is None: self.mergeMap = copy.deepcopy(mergeMap_default)
@@ -71,6 +71,8 @@ class LHC_object:
 
         self.commonSyst = self.getCommonSyst()
         self.LHCsyst = self.prepareLHCcombination()
+
+        self.redefineNegativeSignsLHC()
 
         if self.separateCombinations:
             for obj in list(self.obj_d.values()):
@@ -159,6 +161,14 @@ class LHC_object:
             print()
 
         return LHCsyst
+
+    def redefineNegativeSignsLHC(self):
+        for syst, corr in self.corrMap.items():
+            if corr < 0:
+                print('WARNING: redifining sign for syst {}'.format(syst))
+                self.CMS_obj.flipAllSignsSyst(syst)
+                self.corrMap[syst] *= -1
+        return
 
     def getLHCmeas(self):
         allMeas = []
