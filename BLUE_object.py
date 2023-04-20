@@ -1009,7 +1009,7 @@ class BLUE_object:
                 o.write('\t& {} '.format(measToTex(meas)))
             else:
                 o.write('& {} '.format(measToTex(meas)))
-        o.write('\\\\\npull')
+        o.write('\\\\\n\\hline\npull')
         for meas in self.usedMeas:
             if not blind:
                 o.write('& {:.2f} '.format(self.results.pulls[meas]))
