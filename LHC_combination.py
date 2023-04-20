@@ -101,16 +101,8 @@ def main():
     print(abs(LHC_sep_unblind.getBlueObject().results.mt - LHC_full_unblind.getBlueObject().results.mt), 'GeV\n')
 
 
-    LHC_full_unblind.BLUE_obj.printWeights(prefix='LHC_A')
-    LHC_sep_unblind.BLUE_obj.printWeights(prefix='LHC_B')
-
     drawWeights(LHC_full_unblind.BLUE_obj)
-
     produceSummaryTable(LHC_full_unblind.BLUE_obj,blind=not args.unblind)
-
-    if args.unblind:
-        LHC_full_unblind.BLUE_obj.printPulls(prefix='LHC_A')
-        LHC_sep_unblind.BLUE_obj.printPulls(prefix='LHC_B')
 
 
     if args.scanAllCorr or args.scanbJES:

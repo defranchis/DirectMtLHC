@@ -12,7 +12,7 @@ from combTools import measToTex, removeUselessCharachters, isSymmetricMatrix, is
 
 np.random.seed(1)
 
-tab_dir = 'results_tables'
+tab_dir = 'tables'
 
 class result_object:
 
@@ -933,26 +933,6 @@ class BLUE_object:
         return res, unc
 
 
-    def printPulls(self,prefix):
-        if not os.path.exists(tab_dir):
-            os.makedirs(tab_dir)
-        o = open('{}/{}_pulls.tex'.format(tab_dir,prefix),'w')
-        o.write('measurement & pull \\\\\n')
-        o.write('\\hline\n')
-        for meas in self.usedMeas:
-            o.write('{} & {:.2f} \\\\\n'.format(meas,self.results.pulls[meas]))
-        return
-
-    def printWeights(self,prefix):
-        if not os.path.exists(tab_dir):
-            os.makedirs(tab_dir)
-        o = open('{}/{}_weights.tex'.format(tab_dir,prefix),'w')
-        o.write('measurement & weight \\\\\n')
-        o.write('\\hline\n')
-        for meas in self.usedMeas:
-            o.write('{} & {:.2f} \\\\\n'.format(meas,self.results.weights[meas]))
-        return
-
     def getCovariance(self,syst):
         u = np.array([self.p_uncert[meas][syst] for meas in self.usedMeas])
         corr = np.diag(np.ones(len(self.usedMeas)))
@@ -965,17 +945,15 @@ class BLUE_object:
 
     def printFullCorrTable(self):
 
-        td = 'corr_tables'
-
-        if not os.path.exists(td):
-            os.makedirs(td)
+        if not os.path.exists(tab_dir):
+            os.makedirs(tab_dir)
 
         m = np.zeros((len(self.usedMeas),len(self.usedMeas)))
         for syst in self.usedSyst:
             m += self.getCovariance(syst)
         u = np.diag(np.diag(m)**.5)
         c = np.matmul(np.linalg.inv(u),np.matmul(m,np.linalg.inv(u)))
-        o = open('{}/{}_corr_full.tex'.format(td,self.experiment()),'w')
+        o = open('{}/{}_corr_full.tex'.format(tab_dir,self.experiment()),'w')
 
         f_start = open('templates/{}_start.tex'.format(self.experiment()))
         o.write(f_start.read())
@@ -1044,7 +1022,7 @@ class BLUE_object:
         return
 
     def printSummaryTableLHC(self,unc_list,corrMap):
-        o = open('corr_tables/summary_table_LHC.tex','w')
+        o = open('{}/summary_table_LHC.tex'.format(tab_dir),'w')
         
         f_start = open('templates/summary_LHC.tex')
         o.write(f_start.read())
@@ -1068,7 +1046,7 @@ class BLUE_object:
         return
 
     def printSummaryTableExp(self,unc_list):
-        o = open('corr_tables/summary_table_{}.tex'.format(self.experiment()),'w')
+        o = open('{}/summary_table_{}.tex'.format(tab_dir,self.experiment()),'w')
         
         f_start = open('templates/summary_{}.tex'.format(self.experiment()))
         o.write(f_start.read())
@@ -1179,7 +1157,7 @@ class BLUE_object:
                 print('ERROR: systematics {} not found in systNameDict'.format(syst))
                 sys.exit()
 
-        o = open('corr_tables/CMS_corr_summary.tex','w')
+        o = open('{}/CMS_corr_summary.tex'.format(tab_dir),'w')
 
         f_start = open('templates/CMS_corr_start.tex')
         o.write(f_start.read())

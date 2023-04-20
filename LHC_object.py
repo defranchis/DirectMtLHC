@@ -20,8 +20,8 @@ noSignsOnImpacts = {'ATLAS':['BKMC', 'BTAG', 'PDF'], 'CMS': []}
 mergeImpacts_default = {}
 # mergeImpacts_default = {'JESlight':['JES6','JESflavresLHC','JESflavcomp'],'HADR':['HADR','SLEPB']}
 
-tab_dir = 'corr_tables'
-plot_dir = 'result_plots'
+tab_dir = 'tables'
+plot_dir = 'plots'
 
 class LHC_object:
 
@@ -453,8 +453,8 @@ class LHC_object:
             c.SetBottomMargin(0.1)
             c.SetTopMargin(0.1)
             h.Draw('COLZ TEXT')
-            c.SaveAs('{}/LHC_corr_plot.png'.format(tab_dir))
-            c.SaveAs('{}/LHC_corr_plot.pdf'.format(tab_dir))
+            c.SaveAs('{}/LHC_corr_plot.png'.format(plot_dir))
+            c.SaveAs('{}/LHC_corr_plot.pdf'.format(plot_dir))
 
         return
 

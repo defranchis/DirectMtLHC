@@ -38,7 +38,7 @@ def makeCorrelationScan(LHC_full,LHC_sep,corrMap,syst,blind=True):
     # step = 0.005 if syst == 'JESFLV' else 0.05
     step = 0.05
     halfrange = min(0.25, 1-abs(corr))
-    corrs = list(np.arange(corr-halfrange,corr+halfrange+step/2,step)) if not (syst == 'JESFLV' or syst=='HADR')  else list(np.arange(0,1+step/2,step))
+    corrs = list(np.arange(corr-halfrange,corr+halfrange+step/2,step)) if not (syst == 'JESFLV') else list(np.arange(.5,1+step/2,step))
     corrs = [round(c,3) for c in corrs]
 
     scan_d = dict()

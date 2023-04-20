@@ -721,12 +721,9 @@ def drawWeights(base_obj,path='plots'):
     c = TCanvas()
     h.SetFillColor(ROOT.kYellow)
     h.Draw('hist')
-    if not base_obj.LHC:
-        c.SaveAs(path+'/weights.png')
-        c.SaveAs(path+'/weights.pdf')
-    else:
-        c.SaveAs(path+'/weights_LHC.png')
-        c.SaveAs(path+'/weights_LHC.pdf')
+    c.SaveAs('{}/weights_{}.png'.format(path,base_obj.experiment()))
+    c.SaveAs('{}/weights_{}.pdf'.format(path,base_obj.experiment()))
+
 
     return
 
