@@ -69,7 +69,7 @@ def main():
     LHC_full_unblind.printCorrTables(draw=True)
     LHC_full_unblind.BLUE_obj.printPullWeightsTable(blind=not args.unblind)
     LHC_full_unblind.printSummaryTable()
-    LHC_full_unblind.makeSummaryPlot(blind=not args.unblind)
+    # LHC_full_unblind.makeSummaryPlot(blind=not args.unblind)
     
     LHC_sep_unblind.BLUE_obj.printPullWeightsTable(blind=not args.unblind)
 
