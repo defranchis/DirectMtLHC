@@ -572,6 +572,10 @@ class BLUE_object:
         ofile = 'impacts_' + self.experiment()
         o = open('{}/{}.tex'.format(tab_dir,ofile),'w')
 
+        f_start = open('templates/impacts_start.tex')
+        o.write(f_start.read().replace('#EXPTAB#',self.experiment(table=True)).replace('#EXP#',self.experiment()))
+
+
         if not os.path.exists(tab_dir):
             os.makedirs(tab_dir)
 
@@ -580,6 +584,10 @@ class BLUE_object:
             o.write('{:>25}\t&\t{:.2f} \\\\ \n'.format(snd.systNameDict[k],v).replace('0.00','$< 0.01$'))
 
         print()
+
+        f_end = open('templates/end.tex')
+        o.write(f_end.read().replace('}}','}'))
+
         o.close()
 
     def deriveSignedImpact(self,syst):
@@ -1202,12 +1210,12 @@ class BLUE_object:
         print('\nchi2/ndf = {:.1f}/{} ({:.1f})'.format(self.chi2,self.ndf,self.chi2/self.ndf))
         print('prob = {:.1f} %\n'.format(self.prob*100))
 
-    def experiment(self):
+    def experiment(self,table=False):
         if self.ATLAS: return 'ATLAS'
         if self.CMS: return 'CMS'
         if self.LHC:
             if len(self.measurements) == 2:
-                return 'LHC_sep'
+                return 'LHC_sep' if not table else 'LHC (method B)'
             else: return 'LHC'
         return 'ERROR'
 
