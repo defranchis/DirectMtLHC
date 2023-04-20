@@ -581,9 +581,16 @@ class BLUE_object:
 
         for k, v in sorted(list(self.results.mergedImpacts.items()), key=itemgetter(1), reverse = True):
             print('{:>25}\t{:.2f}'.format(snd.systNameDict[k],v).replace('0.00','< 0.01'))
-            o.write('{:>25}\t&\t{:.2f} \\\\ \n'.format(snd.systNameDict[k],v).replace('0.00','$< 0.01$'))
+            if k != 'Stat':
+                o.write('{:>25}\t&\t{:.2f} \\\\ \n'.format(snd.systNameDict[k],v).replace('0.00','$< 0.01$'))
 
         print()
+
+        o.write('\\hline\n')
+        o.write('total systematics & {:.2f} \\\\\n'.format(self.results.syst))
+        o.write('statistical & {:.2f} \\\\\n'.format(self.results.stat))
+        o.write('\\hline\n')
+        o.write('total & {:.2f} \\\\\n'.format(self.results.tot))
 
         f_end = open('templates/end.tex')
         o.write(f_end.read().replace('}}','}'))
