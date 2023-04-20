@@ -980,7 +980,10 @@ class BLUE_object:
             o.write('\\\\\n')
             
         f_end = open('templates/end.tex')
-        o.write(f_end.read())
+        if self.CMS:
+            o.write(f_end.read().replace('}}','}'))
+        else:
+            o.write(f_end.read())
 
         return c
 
@@ -1012,10 +1015,11 @@ class BLUE_object:
             
         f_end = open('templates/end.tex')
 
-        if self.experiment() == 'LHC_sep':
-            o.write(f_end.read().replace('}}','}'))
-        else:
+        if self.experiment() == 'LHC':
             o.write(f_end.read())
+        else:
+            o.write(f_end.read().replace('}}','}'))
+
         
         return
 
