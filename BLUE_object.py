@@ -1121,6 +1121,82 @@ class BLUE_object:
         f_end = open('templates/end.tex')
         o.write(f_end.read())
 
+        return
+
+    def getSystNotInEra(self,com):
+        syst_l = []
+        for syst in self.usedSyst:
+            l = []
+            for meas in self.usedMeas:
+                if sqrts(meas) == com:
+                    l.append(self.uncert[meas][syst])
+            if np.all(np.array(l)==0):
+                syst_l.append(syst)
+            
+        return syst_l
+
+    def pickTwo(self,com):
+        l = []
+        for meas in self.usedMeas:
+            if sqrts(meas) == com:
+                l.append(meas)
+            if len(l)==2: break
+        return l
+
+    def getCorrAssumptions(self,syst,pick_two_7,pick_two_8):
+        return [self.matrix[syst][pick_two_7[0]][pick_two_7[1]], self.matrix[syst][pick_two_8[0]][pick_two_8[1]], self.matrix[syst][pick_two_7[0]][pick_two_8[0]]]
+
+    def printSummaryCorrTableCMS(self):
+        
+        if not self.CMS:
+            print('ERROR: called printSummaryCorrTableCMS for {}'.format(self.experiment()))
+        
+        not_in_7 = self.getSystNotInEra(7)
+        not_in_8 = self.getSystNotInEra(8)
+        pick_two_7 = self.pickTwo(7)
+        pick_two_8 = self.pickTwo(8)
+
+        d = {}
+        for syst in self.usedSyst:
+            d[syst] = self.getCorrAssumptions(syst,pick_two_7,pick_two_8)
+
+        from LHC_object import mergeMap_default
+        unc_list = copy.deepcopy([snd.syst_exp, snd.syst_mod, snd.syst_bkg, snd.syst_oth])
+        for l in unc_list:
+            for new, merged in mergeMap_default['CMS'].items():
+                if new in l:
+                    l.remove(new)
+                    l.extend(merged)
+        
+        for syst in self.usedSyst:
+            if syst == 'Stat': continue
+            found = False
+            for l in unc_list:
+                if syst in l: 
+                    found = True
+                    break
+            if not found:
+                print('ERROR: systematics {} not found in systNameDict'.format(syst))
+                sys.exit()
+
+        o = open('corr_tables/CMS_corr_summary.tex','w')
+
+        f_start = open('templates/CMS_corr_start.tex')
+        o.write(f_start.read())
+
+
+        for l in unc_list:
+            o.write('\\hline\n')
+            for syst in l:
+                if syst.startswith('Atl'):
+                    continue
+                o.write('{} & {} & {} & {} \\\\\n'.format(snd.systNameDict[syst],
+                                                          d[syst][0] if not syst in not_in_7 else '--',
+                                                          d[syst][1] if not syst in not_in_8 else '--',
+                                                          d[syst][2] if not syst in not_in_7 and not syst in not_in_8 else '--',
+                                                      ))
+        f_end = open('templates/end.tex')
+        o.write(f_end.read().replace('}}','}'))
 
         return
 
@@ -1156,3 +1232,4 @@ class BLUE_object:
                 return 'LHC_sep'
             else: return 'LHC'
         return 'ERROR'
+

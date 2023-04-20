@@ -69,6 +69,7 @@ def main():
     base_obj.printPulls(prefix='CMS')
     base_obj.printWeights(prefix='CMS')
     drawWeights(base_obj,path='plots')
+    base_obj.printSummaryCorrTableCMS()
 
     if args.excludeMeasOneByOne:
         excludeMeasOneByOne(base_obj)
