@@ -12,6 +12,7 @@ from combTools import scan_dir_LHC
 def makeAllCorrelationScansLHC(full,sep,blind=False,only_bJES=False):
 
     os.makedirs(scan_dir_LHC+'/syst',exist_ok=True)
+    os.makedirs(scan_dir_LHC+'/scans',exist_ok=True)
 
     LHC_full = full.clone()
     LHC_sep = sep.clone()
@@ -120,7 +121,7 @@ def plotScanResults(corrs,scan_d,syst,variable,blind=True):
     from systNameDict import systNameDict
     latexLabel.SetTextSize(0.045)
     latexLabel.DrawLatexNDC(.15,.92,'scan for: {}'.format(systNameDict[syst]))
-    c.SaveAs('{}/scan_{}_{}.png'.format(scan_dir_LHC,variable,syst))
+    c.SaveAs('{}/scans/scan_{}_{}.png'.format(scan_dir_LHC,variable,syst))
 
     gd['full'].SetName(variable)
 
