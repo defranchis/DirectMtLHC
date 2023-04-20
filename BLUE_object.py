@@ -587,10 +587,10 @@ class BLUE_object:
         print()
 
         o.write('\\hline\n')
-        o.write('total systematics & {:.2f} \\\\\n'.format(self.results.syst))
-        o.write('statistical & {:.2f} \\\\\n'.format(self.results.stat))
+        o.write('Total systematics & {:.2f} \\\\\n'.format(self.results.syst))
+        o.write('Statistical & {:.2f} \\\\\n'.format(self.results.stat))
         o.write('\\hline\n')
-        o.write('total & {:.2f} \\\\\n'.format(self.results.tot))
+        o.write('Total & {:.2f} \\\\\n'.format(self.results.tot))
 
         f_end = open('templates/end.tex')
         o.write(f_end.read().replace('}}','}'))
