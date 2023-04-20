@@ -3,7 +3,7 @@ from BLUE_object import BLUE_object
 from LHC_object import LHC_object
 from LHC_tools import makeAllCorrelationScansLHC, flipAmbiguousSigns
 from combTools import getToyResults, getToyResultsLHCobj, excludeMeasOneByOne, makeCorrelationScans, plotScanSummary, drawWeights, measToTex, measToROOT
-import argparse, sys, copy
+import argparse, sys, copy, os
 import numpy as np
 
 import default_files
@@ -212,6 +212,8 @@ def produceSummaryTable(obj,blind=True):
     with open('summary_LHC.json','w') as j:
         j.write(json.dumps(all_dict))
 
+    os.system('python3 plotter/summaryPlot.py')
+        
     return
 
 
