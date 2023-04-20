@@ -1011,7 +1011,11 @@ class BLUE_object:
         o.write('\\\\\n')
             
         f_end = open('templates/end.tex')
-        o.write(f_end.read())
+
+        if self.experiment() == 'LHC_sep':
+            o.write(f_end.read().replace('}}','}'))
+        else:
+            o.write(f_end.read())
         
         return
 
