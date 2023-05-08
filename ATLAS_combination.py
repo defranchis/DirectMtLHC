@@ -35,7 +35,7 @@ def main():
 
     args = parser.parse_args()
 
-    base_obj = BLUE_object(infile,ATLAS=True,PU_hack=False)
+    base_obj = BLUE_object(infile,ATLAS=True,PU_hack=True)
     for old, new in renameMap_default['ATLAS'].items():
         base_obj.renameSyst(old,new)
 
