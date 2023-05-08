@@ -359,6 +359,12 @@ class LHC_object:
             self.LHCmatrix = self.createLHCmatrix()
         self.update()
 
+    def updateCorr(self,syst,corr):
+        self.corrMap[syst] = corr
+        if not self.separateCombinations:
+            self.LHCmatrix = self.createLHCmatrix()
+        self.update()
+
     def simplePrint(self):
         self.BLUE_obj.simplePrint()
 
@@ -523,6 +529,26 @@ class LHC_object:
             tot += d[syst]**2
         return tot**.5
 
+    def getUpDownRangeSyst(self,syst):
+        if syst in self.ATLAS_only + self.CMS_only or syst == 'JES1':
+            return None, None
+        if not syst in self.corrMap.keys():
+            return -.25, .25
+        if self.corrMap[syst] == 0.5:
+            return .25, .75
+        if self.corrMap[syst] == 0.85:
+            return .5, 1
+        else:
+            return None, None
+
+    def getMassTotCorrPointSyst(self,syst,corr):
+        clone = self.clone()
+        clone.updateCorr(syst,corr)
+        return np.array([clone.BLUE_obj.results.mt, clone.BLUE_obj.results.tot])
+
+    def getDeltaScan(self, up, down, syst):
+        diff = (abs(self.getMassTotCorrPointSyst(syst,up) - self.getMassTotCorrPointSyst(syst,down))/2*1000).round()
+        return list(diff)
 
     def printSummaryTableLHC(self):
         unc_list = self.BLUE_obj.getUncertaintyListForTable()
@@ -536,16 +562,19 @@ class LHC_object:
             for syst in l:
                 o.write(snd.systNameDict[syst])
                 o.write(' & {} &'.format(self.corrMap[syst] if syst in self.corrMap.keys() else 0 if syst not in self.ATLAS_only + self.CMS_only else '--'))
-                if not syst in self.corrMap.keys():
-                    o.write(' -- ')
-                elif syst == 'JESFLV': #hardcoded
-                    o.write(' 0.5 -- 1')
+                if syst in self.ATLAS_only + self.CMS_only or syst == 'JES1':
+                    o.write(' -- & -- & --')
                 else:
-                    o.write(' 0.25 -- 0.75' if self.corrMap[syst] == 0.5 else ' 0.7 -- 1')
+                    down, up = self.getUpDownRangeSyst(syst)
+                    o.write(' {} -- {}'.format(down,up))
+                    deltaM, deltaTot = self.getDeltaScan(up,down,syst)
+                    o.write(' & {:.0f}'.format(deltaM) if deltaM>0 else '& $<1$') 
+                    o.write(' & {:.0f} '.format(deltaTot) if deltaTot>0 else '& $<1$ ') 
+                    
                 o.write('\\\\\n')
 
         f_end = open('templates/end.tex')
-        o.write(f_end.read().replace('}}','}'))
+        o.write(f_end.read().splitlines()[0].replace('}}','}'))
 
         return
 
