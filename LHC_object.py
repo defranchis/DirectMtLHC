@@ -72,7 +72,7 @@ class LHC_object:
             self.mergeAllSyst()
 
         self.commonSyst = self.getCommonSyst()
-        self.LHCsyst = self.prepareLHCcombination()
+        self.ATLAS_only, self.CMS_only, self.LHCsyst = self.prepareLHCcombination()
 
         self.redefineNegativeSignsLHC()
 
@@ -162,7 +162,7 @@ class LHC_object:
             print(CMS_only)
             print()
 
-        return LHCsyst
+        return ATLAS_only, CMS_only, LHCsyst
 
     def redefineNegativeSignsLHC(self):
         for syst, corr in self.corrMap.items():
@@ -458,9 +458,6 @@ class LHC_object:
 
         return
 
-    def printSummaryTable(self):
-        self.BLUE_obj.printSummaryTable(self.corrMap)
-
 
     def getCovariance(self,syst,usedMeas=[]):
         if len(usedMeas) == 0:
@@ -525,6 +522,34 @@ class LHC_object:
         for syst in d.keys():
             tot += d[syst]**2
         return tot**.5
+
+
+    def printSummaryTableLHC(self):
+        unc_list = self.BLUE_obj.getUncertaintyListForTable()
+        o = open('{}/summary_table_LHC.tex'.format(tab_dir),'w')
+        
+        f_start = open('templates/summary_LHC.tex')
+        o.write(f_start.read())
+
+        for l in unc_list:
+            o.write('\\hline\n')
+            for syst in l:
+                o.write(snd.systNameDict[syst])
+                o.write(' & {} &'.format(self.corrMap[syst] if syst in self.corrMap.keys() else 0 if syst not in self.ATLAS_only + self.CMS_only else '--'))
+                if not syst in self.corrMap.keys():
+                    o.write(' -- ')
+                elif syst == 'JESFLV': #hardcoded
+                    o.write(' 0.5 -- 1')
+                else:
+                    o.write(' 0.25 -- 0.75' if self.corrMap[syst] == 0.5 else ' 0.7 -- 1')
+                o.write('\\\\\n')
+
+        f_end = open('templates/end.tex')
+        o.write(f_end.read().replace('}}','}'))
+
+        return
+
+
 
     def makeSummaryPlot(self,blind=True):
 

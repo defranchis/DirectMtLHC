@@ -1030,43 +1030,22 @@ class BLUE_object:
         
         return
 
-    def printSummaryTable(self,corrMap={}):
+    def getUncertaintyListForTable(self):
         unc_list = [snd.syst_exp, snd.syst_mod, snd.syst_bkg, snd.syst_oth]
         all_unc = [item for sublist in unc_list for item in sublist]
         for syst in self.results.mergedImpacts.keys() - ['Stat']:
             if not syst in all_unc:
                 print('ERROR: systematics {} not found in systNameDict'.format(syst))
                 sys.exit()
+        return unc_list
+
+    def printSummaryTable(self):
+        unc_list = self.getUncertaintyListForTable()
         if self.LHC:
-            self.printSummaryTableLHC(unc_list,corrMap)
+            print('ERROR: use printSummaryTableLHC function instead')
         else:
             self.printSummaryTableExp(unc_list)
-            
-        return
 
-    def printSummaryTableLHC(self,unc_list,corrMap):
-        o = open('{}/summary_table_LHC.tex'.format(tab_dir),'w')
-        
-        f_start = open('templates/summary_LHC.tex')
-        o.write(f_start.read())
-
-        for l in unc_list:
-            o.write('\\hline\n')
-            for syst in l:
-                o.write(snd.systNameDict[syst])
-                o.write(' & {} &'.format(corrMap[syst] if syst in corrMap.keys() else 0))
-                if not syst in corrMap.keys():
-                    o.write(' -- ')
-                elif syst == 'JESFLV': #hardcoded
-                    o.write(' 0.5 -- 1')
-                else:
-                    o.write(' 0.25 -- 0.75' if corrMap[syst] == 0.5 else ' 0.7 -- 1')
-                o.write('\\\\\n')
-
-        f_end = open('templates/end.tex')
-        o.write(f_end.read().replace('}}','}'))
-
-        return
 
     def printSummaryTableExp(self,unc_list):
         o = open('{}/summary_table_{}.tex'.format(tab_dir,self.experiment()),'w')
