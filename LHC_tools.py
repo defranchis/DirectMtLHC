@@ -174,10 +174,10 @@ def flipAllSignsLHC(LHC_full,LHC_sep,ambiguous_l,orig_corrMap):
     for meth, obj in list(obj_d.items()):
         print()
         print('-> method =', meth)
-        print('uncertainty original signs =', obj.getBlueObject().results.tot, 'GeV')
+        print('uncertainty original signs =', round(obj.getBlueObject().results.tot,3), 'GeV')
         mt_orig = obj.getBlueObject().results.mt
         obj.setNewLHCcorrMap(corrMap)
-        print('uncertainty flipped signs =', obj.getBlueObject().results.tot, 'GeV')
+        print('uncertainty flipped signs =', round(obj.getBlueObject().results.tot,3), 'GeV')
         print('mt(flip) - mt(original) =', round(obj.getBlueObject().results.mt-mt_orig,3) , 'GeV')
 
 def flipSignLHC(LHC_full,LHC_sep,syst,orig_corrMap):
