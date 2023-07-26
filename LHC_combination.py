@@ -68,6 +68,8 @@ def main():
 
     LHC_full_unblind.printCorrTables(draw=True)
     LHC_full_unblind.BLUE_obj.printPullWeightsTable(blind=not args.unblind)
+    if args.unblind:
+        LHC_full_unblind.printPullWeightsComparisonTable()
     LHC_full_unblind.printSummaryTableLHC()
     # LHC_full_unblind.makeSummaryPlot(blind=not args.unblind)
     
@@ -102,7 +104,7 @@ def main():
 
 
     drawWeights(LHC_full_unblind.BLUE_obj)
-    produceSummaryTable(LHC_full_unblind.BLUE_obj,blind=not args.unblind)
+    produceSummaryTable(LHC_full_unblind,blind=not args.unblind)
 
 
     if args.scanAllCorr or args.scanbJES:
@@ -171,6 +173,13 @@ def main():
         excludeMeasOneByOne(LHC_full_unblind.BLUE_obj,blind=not args.unblind)
 
 
+    print(LHC_full_unblind.BLUE_obj.chi2)
+    print(LHC_full_unblind.BLUE_obj.prob)
+    print()
+    print(LHC_sep_unblind.BLUE_obj.chi2)
+    print(LHC_sep_unblind.BLUE_obj.prob)
+
+
     return
 
 def getTotUncFromDict(ud,no_stat=False):
@@ -178,8 +187,9 @@ def getTotUncFromDict(ud,no_stat=False):
     if not no_stat: return (np.sum(unc**2))**.5
     else: return (np.sum(unc**2) - ud['Stat']**2)**.5
 
-def produceSummaryTable(obj,blind=True):
+def produceSummaryTable(LHC_obj,blind=True):
 
+    obj = LHC_obj.BLUE_obj
     ll = [meas for meas in obj.usedMeas if measToTex(meas)=='$ll$']
     lj = [meas for meas in obj.usedMeas if measToTex(meas)=='$lj$']
     aj = [meas for meas in obj.usedMeas if measToTex(meas)=='$aj$']
@@ -196,6 +206,13 @@ def produceSummaryTable(obj,blind=True):
         mt, stat, syst, tot = obj.value[meas], obj.uncert[meas]['Stat'], getTotUncFromDict(obj.uncert[meas],no_stat=True), getTotUncFromDict(obj.uncert[meas])
         of.write('{},\t {:.2f}, {:.2f}, {:.2f}, {:.2f}\n'.format(measToROOT(meas).replace('#',''),mt,stat,syst,tot))
         all_dict[measToROOT(meas).replace('#','')] = [mt,stat,syst,tot]
+
+    of.write('\n')
+    of.write('{},\t {:.2f}, {:.2f}, {:.2f}, {:.2f}\n'.format('ATLAS_comb',LHC_obj.ATLAS_obj.results.mt,LHC_obj.ATLAS_obj.results.stat,LHC_obj.ATLAS_obj.results.syst,LHC_obj.ATLAS_obj.results.tot))
+    of.write('{},\t {:.2f}, {:.2f}, {:.2f}, {:.2f}\n'.format('CMS_comb',LHC_obj.CMS_obj.results.mt,LHC_obj.CMS_obj.results.stat,LHC_obj.CMS_obj.results.syst,LHC_obj.CMS_obj.results.tot))
+    all_dict['ATLAS_comb'] = [LHC_obj.ATLAS_obj.results.mt,LHC_obj.ATLAS_obj.results.stat,LHC_obj.ATLAS_obj.results.syst,LHC_obj.ATLAS_obj.results.tot]
+    all_dict['CMS_comb'] = [LHC_obj.CMS_obj.results.mt,LHC_obj.CMS_obj.results.stat,LHC_obj.CMS_obj.results.syst,LHC_obj.CMS_obj.results.tot]
+    of.write('\n')
 
     of.write('\n')
     for ch in obsDict.keys():
