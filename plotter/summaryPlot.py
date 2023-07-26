@@ -61,7 +61,7 @@ gPad.SetTopMargin(0.01)
 gPad.SetBottomMargin(0.09)
 
 # Draw axis
-haxis = TH1F('haxis','haxis;m_{top} [GeV]',1,xmin,xmax)
+haxis = TH1F('haxis',';m_{t} [GeV]',1,xmin,xmax)
 haxis.SetLineWidth(0)
 haxis.Draw()
 haxis.GetYaxis().SetNdivisions(0)
@@ -145,7 +145,7 @@ gPad.RedrawAxis()
 # Header for m(top) values
 latexMeasLabel = TLatex()
 latexMeasLabel.SetTextSize(text_size*0.8); 
-latexMeasLabel.DrawLatex( xmin + (xmax-xmin)*0.71, measurements.getYpos(measurements._measurements[0].getName()) + 0.02, "m_{top} #pm total (#pm stat #pm syst)")
+latexMeasLabel.DrawLatex( xmin + (xmax-xmin)*0.71, measurements.getYpos(measurements._measurements[0].getName()) + 0.02, "m_{t} #pm total (#pm stat #pm syst)")
 
 # Measurement labels
 for m in itertools.chain(measurements._measurements):
@@ -187,7 +187,8 @@ err_stat_leg.Draw("p")
 latexMeasLabel.SetTextFont(defaultFont)
 latexMeasLabel.SetTextSize(text_size)
 latexMeasLabel.SetTextColor(kGray+2)
-latexMeasLabel.DrawLatex(err_leg.GetPointX(0)-err_size*1.2, err_leg_y-0.032, "total stat")
+latexMeasLabel.DrawLatex(err_leg.GetPointX(0)-err_size*1.25, err_leg_y+0.02, "total")
+latexMeasLabel.DrawLatex(err_leg.GetPointX(0)-err_size*0.55, err_leg_y-0.032, "stat")
 
 gPad.Update()
 

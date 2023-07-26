@@ -38,11 +38,11 @@ class topMeas:
         elif 'll ' in name:
             self._displayName += ', dilepton'
         elif 'lj ' in name:
-            self._displayName += ', l+jets'
+            self._displayName += ', lepton+jets'
         elif 'aj ' in name:
-            self._displayName += ', all jets'
+            self._displayName += ', all-jets'
         elif ' vtx ' in name:
-            self._displayName += ', vertex mass'
+            self._displayName += ', secondary vertex'
         elif 'Psi ' in name:
             self._displayName += ', J/\\psi'
         elif ' t ' in name:
