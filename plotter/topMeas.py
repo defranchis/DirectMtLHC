@@ -16,12 +16,13 @@ line_width2 = 2
 
 class topMeas:
     def setType(self, name):
-        if 'comb' in name:
-            self._type = Comb
-        elif 'ATLAS' in name:
+        if 'ATLAS' in name:
             self._type = ATLAS
         elif 'CMS' in name:
             self._type = CMS
+        elif 'comb' in name:
+            self._type = Comb
+
 
     def setDisplayName(self, name):
         self._displayName = ''
@@ -30,7 +31,7 @@ class topMeas:
         elif 'CMS' in name:
             self._displayName += 'CMS'
         elif 'comb' in name:
-            self._displayName += 'LHC combined BLIND'
+            self._displayName += 'LHC combined'
         
         if 'full ' in name:
             self._displayName += ''

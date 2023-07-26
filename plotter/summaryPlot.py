@@ -155,7 +155,7 @@ for m in itertools.chain(measurements._measurements):
     if measurements._needTitle[m.getName()]:
         title = m.getType()
         if title==Comb:
-            title = "LHC BLIND"
+            title = "LHC combination"
         latexMeasLabel.SetTextFont(62)
         latexMeasLabel.DrawLatex(xmin + (xmax-xmin)*0.02, measurements.getYpos(m.getName()) - 0.01 + measurements._ygap, title)
     latexMeasLabel.SetTextFont(defaultFont)
