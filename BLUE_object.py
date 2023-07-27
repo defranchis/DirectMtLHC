@@ -1076,7 +1076,7 @@ class BLUE_object:
                     if self.uncert[meas][syst] == 0.:
                         o.write(' & -- ')
                     elif abs(round(self.uncert[meas][syst],2)) > 0: 
-                        o.write(' & {:.2f} '.format(self.uncert[meas][syst]))
+                        o.write(' & {:.2f} '.format(abs(self.uncert[meas][syst])))
                     else:
                         o.write(' & $<0.01$ ')
                 if round(self.results.mergedImpacts[syst],2) > 0:
