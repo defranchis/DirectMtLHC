@@ -747,7 +747,7 @@ def measToTex(meas):
 
 def measToROOT(meas):
     name = 'CMS ' if 'CMS' in meas else 'ATLAS '
-    if 'dil' in meas or 'MT2' in meas: name+='ll '
+    if 'dil' in meas or 'MT2' in meas: name+='dil '
     elif 'lj' in meas: name+='lj '
     elif 'allhad' in meas or 'aj' in meas: name+='aj '
     elif 'sto' in meas: name+='t '
