@@ -459,6 +459,14 @@ class LHC_object:
             c.SetBottomMargin(0.1)
             c.SetTopMargin(0.1)
             h.Draw('COLZ TEXT')
+
+            LHCLabel1 = TLatex()
+            LHCLabel1.SetTextSize(0.05)
+            LHCLabel1.SetTextColor(1)
+            LHCLabel1.SetTextFont(42)
+            LHCLabel1.DrawLatex(.01, 15, "#font[72]{ATLAS+CMS} Internal")
+            
+
             c.SaveAs('{}/LHC_corr_plot.png'.format(plot_dir))
             c.SaveAs('{}/LHC_corr_plot.pdf'.format(plot_dir))
 
@@ -562,11 +570,11 @@ class LHC_object:
             for syst in l:
                 o.write(snd.systNameDict[syst])
                 o.write(' & {} &'.format(self.corrMap[syst] if syst in self.corrMap.keys() else 0 if syst not in self.ATLAS_only + self.CMS_only else '--'))
-                if syst in self.ATLAS_only + self.CMS_only or syst == 'JES1':
+                if syst in self.ATLAS_only + self.CMS_only or syst == 'JES1' or syst == 'METH':
                     o.write(' -- & -- & --')
                 else:
                     down, up = self.getUpDownRangeSyst(syst)
-                    o.write(' {} -- {}'.format(down,up))
+                    o.write(' [-{:.2f}, +{:.2f}]'.format(abs(down),abs(up)))
                     deltaM, deltaTot = self.getDeltaScan(up,down,syst)
                     o.write(' & {:.0f}'.format(deltaM) if deltaM>0 else '& $<1$') 
                     o.write(' & {:.0f} '.format(deltaTot) if deltaTot>0 else '& $<1$ ') 
