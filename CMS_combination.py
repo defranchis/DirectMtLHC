@@ -55,7 +55,9 @@ def main():
         print('\nestimating signs of impacts, this will take a short while...\n')
         base_obj.deriveSignedImpacts()
 
-
+        
+    base_obj.printSummaryTable(CMS_grid=True)
+    
     clone = base_obj.clone()
     for merged, original_l in list(mergeMap_default['CMS'].items()):
         clone.mergeSyst(merged,original_l)

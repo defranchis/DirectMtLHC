@@ -1039,19 +1039,23 @@ class BLUE_object:
                 sys.exit()
         return unc_list
 
-    def printSummaryTable(self):
+    def printSummaryTable(self,CMS_grid=False):
         unc_list = self.getUncertaintyListForTable()
+        if CMS_grid and not self.CMS:
+            print('ERROR: can use CMS grid only for CMS combination')
+            sys.exit()
         if self.LHC:
             print('ERROR: use printSummaryTableLHC function instead')
+            sys.exit()
         else:
-            self.printSummaryTableExp(unc_list)
+            self.printSummaryTableExp(unc_list,CMS_grid)
 
 
-    def printSummaryTableExp(self,unc_list):
-        o = open('{}/summary_table_{}.tex'.format(tab_dir,self.experiment()),'w')
+    def printSummaryTableExp(self,unc_list,CMS_grid):
+        o = open('{}/summary_table_{}.tex'.format(tab_dir,self.experiment() if not CMS_grid else self.experiment()+'_CMS_grid'),'w')
         
         f_start = open('templates/summary_{}.tex'.format(self.experiment()))
-        o.write(f_start.read())
+        o.write(f_start.read() if not CMS_grid else f_start.read().replace('LHC grid','CMS grid').replace('data_input_CMS','data_input_CMS_grid'))
 
         for i, meas in enumerate(self.usedMeas):
             if i==0:
@@ -1076,7 +1080,7 @@ class BLUE_object:
                     if self.uncert[meas][syst] == 0.:
                         o.write(' & -- ')
                     elif abs(round(self.uncert[meas][syst],2)) > 0: 
-                        o.write(' & {:.2f} '.format(abs(self.uncert[meas][syst])))
+                        o.write(' & {:.2f} '.format(abs(self.uncert[meas][syst]) if not CMS_grid else self.uncert[meas][syst]))
                     else:
                         o.write(' & $<0.01$ ')
                 if round(self.results.mergedImpacts[syst],2) > 0:

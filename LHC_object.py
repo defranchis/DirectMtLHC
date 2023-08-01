@@ -415,7 +415,8 @@ class LHC_object:
 
         usedMeas = self.usedMeas_sorted
     
-        for syst in list(self.corrMap.keys()):
+        # for syst in list(self.corrMap.keys()):
+        for syst in self.BLUE_obj.usedSyst:
             self.printCorrTable(usedMeas,syst,tab_dir)
 
         corr = self.BLUE_obj.printFullCorrTable()
