@@ -47,7 +47,7 @@ def main():
     parser.add_argument('--scanAllCorr',action='store_true', help='scan all correlations with simple assumptions for both methods')
     parser.add_argument('--scanbJES',action='store_true', help='scan b JES correlations with both methods')
     parser.add_argument('--flipSigns',action='store_true', help='flip all ambiguous signs in LHC correlations')
-    parser.add_argument('--unblind',action='store_true', help='do not blind the LHC combination')
+    parser.add_argument('--blind', dest='unblind', action='store_false', help='blind the LHC combination')
     parser.add_argument('--nToys',action='store',type=int, help='number of toys for MC stat', default=0)
     parser.add_argument('--subCombinations',action='store_true', help='perform sub-combinations')
     parser.add_argument('--onlyWeightsAbove',action='store',type=float, help='re-perform combination with ony weights above given value')
