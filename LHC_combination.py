@@ -144,7 +144,7 @@ def main():
         obsDict = {'ATLAS':ATLAS, 'CMS':CMS}
         LHC_sep_unblind.BLUE_obj.doSubCombination(obsDict=obsDict,printResults=True)
 
-        ll = [meas for meas in LHC_full_unblind.BLUE_obj.usedMeas if measToTex(meas)=='$ll$']
+        ll = [meas for meas in LHC_full_unblind.BLUE_obj.usedMeas if measToTex(meas)=='$dil$']
         lj = [meas for meas in LHC_full_unblind.BLUE_obj.usedMeas if measToTex(meas)=='$lj$']
         aj = [meas for meas in LHC_full_unblind.BLUE_obj.usedMeas if measToTex(meas)=='$aj$']
         other = [meas for meas in LHC_full_unblind.BLUE_obj.usedMeas if not meas in ll and not meas in lj and not meas in aj]
@@ -190,7 +190,7 @@ def getTotUncFromDict(ud,no_stat=False):
 def produceSummaryTable(LHC_obj,blind=True):
 
     obj = LHC_obj.BLUE_obj
-    ll = [meas for meas in obj.usedMeas if measToTex(meas)=='$ll$']
+    ll = [meas for meas in obj.usedMeas if measToTex(meas)=='$dil$']
     lj = [meas for meas in obj.usedMeas if measToTex(meas)=='$lj$']
     aj = [meas for meas in obj.usedMeas if measToTex(meas)=='$aj$']
     other = [meas for meas in obj.usedMeas if not meas in ll and not meas in lj and not meas in aj]

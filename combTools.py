@@ -736,7 +736,7 @@ def nameForCMSPlots(name):
 
 
 def measToTex(meas):
-    if 'dil' in meas or 'MT2' in meas: return '$ll$'
+    if 'dil' in meas or 'MT2' in meas: return '$dil$'
     elif 'lj' in meas: return '$lj$'
     elif 'allhad' in meas or 'aj' in meas: return '$aj$'
     elif 'sto' in meas: return '$t$'
