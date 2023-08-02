@@ -13,7 +13,8 @@ from array import *
 
 corrMap_default = {'JES3': 0.5, 'JESFLV': 0.85, 'RAD': 0.5, 'MCGEN': 0.5, 'BKMC': .85, 'PDF': .85 , 'BTAG': 0.5, 'UE': .85, 'CR': .85, 'JESflavresLHC': .85, 'HADR':-.5}
 mergeMap_default = {'ATLAS':{}, 'CMS': {'RAD': ['Q','JPS']}}
-renameMap_default = {'ATLAS':{'bJES':'JESFLV', 'JESflavres':'JESflavresLHC', 'JESflavcomp':'JESlight'} ,'CMS': {'JES5':'JESFLV', 'JES4':'JESflavresLHC', 'BFRAG':'HADR', 'JES6': 'JESlight'}}
+renameMap_default = {'ATLAS':{'bJES':'JESFLV', 'JESflavres':'JESflavresLHC', 'JESflavcomp':'JESlight', 'Other':'Extra'} ,
+                     'CMS': {'JES5':'JESFLV', 'JES4':'JESflavresLHC', 'BFRAG':'HADR', 'JES6': 'JESlight'}}
 
 noSignsOnImpacts = {'ATLAS':['BKMC', 'BTAG', 'PDF'], 'CMS': []}
 
@@ -566,24 +567,25 @@ class LHC_object:
         f_start = open('templates/summary_LHC.tex')
         o.write(f_start.read())
 
-        for l in unc_list:
-            o.write('\\hline\n')
+        for i,l in enumerate(unc_list):
+            if i==0: o.write('\\hline')
             for syst in l:
+                o.write('\n')
                 o.write(snd.systNameDict[syst])
-                o.write(' & {} &'.format(self.corrMap[syst] if syst in self.corrMap.keys() else 0 if syst not in self.ATLAS_only + self.CMS_only else '--'))
-                if syst in self.ATLAS_only + self.CMS_only or syst == 'JES1' or syst == 'METH':
-                    o.write(' -- & -- & --')
+                o.write(' & {} &'.format(self.corrMap[syst] if syst in self.corrMap.keys() else 0 if syst not in self.ATLAS_only + self.CMS_only else '\\NA'))
+                if syst in self.ATLAS_only + self.CMS_only or syst in ['JES1','METH','Extra']:
+                    o.write(' \\NA & \\NA & \\NA ')
                 else:
                     down, up = self.getUpDownRangeSyst(syst)
-                    o.write(' [{:+.2f}, {:+.2f}]'.format(down,up))
+                    o.write(' $\\left[{:+.2f}, {:+.2f}\\right]$'.format(down,up))
                     deltaM, deltaTot = self.getDeltaScan(up,down,syst)
-                    o.write(' & {:.0f}'.format(deltaM) if deltaM>0 else '& $<1$') 
-                    o.write(' & {:.0f} '.format(deltaTot) if deltaTot>0 else '& $<1$ ') 
+                    o.write(' & {:.0f}'.format(deltaM) if deltaM>0 else ' & $<$1') 
+                    o.write(' & {:.0f} '.format(deltaTot) if deltaTot>0 else ' & $<$1 ') 
                     
-                o.write('\\\\\n')
+                o.write('\\\\')
+            o.write(' [\\cmsTabSkip]')
 
-        f_end = open('templates/end.tex')
-        o.write(f_end.read().splitlines()[0].replace('}}','}'))
+        o.write('\n\\end{scotch}')
 
         return
 
