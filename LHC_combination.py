@@ -71,6 +71,7 @@ def main():
     if args.unblind:
         LHC_full_unblind.printPullWeightsComparisonTable()
     LHC_full_unblind.printSummaryTableLHC()
+    LHC_full_unblind.printAllImpactsSorted()
     # LHC_full_unblind.makeSummaryPlot(blind=not args.unblind)
     
     LHC_sep_unblind.BLUE_obj.printPullWeightsTable(blind=not args.unblind)

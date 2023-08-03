@@ -4,6 +4,7 @@ import copy
 import sys,os
 import numpy as np
 import itertools
+from operator import itemgetter
 import systNameDict as snd
 
 import ROOT as rt
@@ -731,6 +732,34 @@ class LHC_object:
 
         f_end = open('templates/end.tex')
         o.write(f_end.read())
-
         
+        return
+
+    def printAllImpactsSorted(self):
+
+        if not os.path.exists(tab_dir):
+            os.makedirs(tab_dir)
+
+        o = open('{}/impacts_all.tex'.format(tab_dir),'w')
+        f_start = open('templates/impacts_all_start.tex')
+        o.write(f_start.read())
+
+        for k, v in sorted(list(self.BLUE_obj.results.mergedImpacts.items()), key=itemgetter(1), reverse = True):
+            if k == 'Stat': continue
+            #TODO: make sure it works when systematics are merged
+            o.write('\n')
+            a = self.ATLAS_obj.results.mergedImpacts[k] if k in self.ATLAS_obj.results.mergedImpacts.keys() else 999
+            c = self.CMS_obj.results.mergedImpacts[k] if k in self.CMS_obj.results.mergedImpacts.keys() else 999
+            o.write('{:>25}\t&\t{:.2f}\t&\t{:.2f}\t&\t{:.2f} \\\\'.format(snd.systNameDict[k],v,a,c).replace('0.00','$<$0.01').replace('999.00','\\NA'))
+
+
+        o.write(' [\\cmsTabSkip]\n')
+        o.write('{:>25}\t&\t{:.2f}\t&\t{:.2f}\t&\t{:.2f} \\\\\n'.format('Total systematics',self.BLUE_obj.results.syst,self.ATLAS_obj.results.syst,self.CMS_obj.results.syst))
+        o.write('{:>25}\t&\t{:.2f}\t&\t{:.2f}\t&\t{:.2f} \\\\'.format('Statistical',self.BLUE_obj.results.stat,self.ATLAS_obj.results.stat,self.CMS_obj.results.stat))
+        o.write(' [\\cmsTabSkip]\n')
+        o.write('{:>25}\t&\t{:.2f}\t&\t{:.2f}\t&\t{:.2f} \\\\\n'.format('Total',self.BLUE_obj.results.tot,self.ATLAS_obj.results.tot,self.CMS_obj.results.tot))
+
+        o.write('\n\\end{scotch}')
+        o.close()
+
         return
