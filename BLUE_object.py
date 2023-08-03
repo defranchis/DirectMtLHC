@@ -824,6 +824,14 @@ class BLUE_object:
         return np.sum(arr**2)**.5
 
 
+    def setMergeImpacts(self,mergeImpacts,force=False):
+        if len(self.mergeImpacts) > 0 and not force:
+            print('ERROR: mergeImpacts already set. Use force=True for forcing new values')
+            sys.exit()
+        self.mergeImpacts = mergeImpacts
+        print(self.mergeImpacts)
+        self.update()
+        return
 
     def prepareTable(self):
         systsToMergeForTable = []
@@ -831,7 +839,7 @@ class BLUE_object:
             systsToMergeForTable.extend(l)
         for syst in systsToMergeForTable:
             if not syst in self.usedSyst:
-                print('ERROR: systematics {} (to be merged) not found')
+                print('ERROR: systematics {} (to be merged) not found'.format(syst))
                 sys.exit()
 
         if len(systsToMergeForTable) != len(set(systsToMergeForTable)):

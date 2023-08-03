@@ -73,6 +73,10 @@ class LHC_object:
             self.renameAllSyst()
             self.mergeAllSyst()
 
+        if len(self.mergeImpacts) > 0:
+            self.ATLAS_obj.setMergeImpacts(self.mergeImpacts)
+            self.CMS_obj.setMergeImpacts(self.mergeImpacts)
+
         self.commonSyst = self.getCommonSyst()
         self.ATLAS_only, self.CMS_only, self.LHCsyst = self.prepareLHCcombination()
 
