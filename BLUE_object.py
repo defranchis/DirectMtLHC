@@ -569,15 +569,14 @@ class BLUE_object:
 
     def printImpactsSorted(self):
 
+        if not os.path.exists(tab_dir):
+            os.makedirs(tab_dir)
+
         ofile = 'impacts_' + self.experiment()
         o = open('{}/{}.tex'.format(tab_dir,ofile),'w')
 
         f_start = open('templates/impacts_start.tex')
         o.write(f_start.read().replace('#EXPTAB#',self.experiment(table=True)).replace('#EXP#',self.experiment()))
-
-
-        if not os.path.exists(tab_dir):
-            os.makedirs(tab_dir)
 
         for k, v in sorted(list(self.results.mergedImpacts.items()), key=itemgetter(1), reverse = True):
             print('{:>25}\t{:.2f}'.format(snd.systNameDict[k],v).replace('0.00','< 0.01'))
