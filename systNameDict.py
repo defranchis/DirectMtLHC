@@ -47,4 +47,4 @@ systNameDict = {
 syst_exp = ['JES1', 'JES2', 'JES3', 'JESFLV', 'JESflavresLHC', 'JESlight', 'CMSJES1', 'JER', 'LES', 'BTAG', 'MET', 'PU', 'TRIG']
 syst_mod = ['MCGEN', 'RAD', 'HADR', 'SLEPB', 'CR', 'UE', 'PDF', 'TOPPT','Q','JPS']
 syst_bkg = ['BKDT', 'BKMC']
-syst_oth = ['AtlFastFull', 'AtlJetUnc', 'METH', 'Extra']
+syst_oth = ['AtlFastFull', 'AtlJetUnc', 'METH', 'Other', 'Extra']

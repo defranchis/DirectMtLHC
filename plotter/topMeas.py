@@ -35,7 +35,7 @@ class topMeas:
         
         if 'full ' in name:
             self._displayName += ''
-        elif 'll ' in name:
+        elif 'dil ' in name:
             self._displayName += ', dilepton'
         elif 'lj ' in name:
             self._displayName += ', lepton+jets'

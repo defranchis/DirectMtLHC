@@ -566,7 +566,17 @@ class LHC_object:
         return list(diff)
 
     def printSummaryTableLHC(self):
+
         unc_list = self.BLUE_obj.getUncertaintyListForTable()
+
+        all_unc = []
+        for l in unc_list:
+            all_unc.extend(l)
+        for syst in self.BLUE_obj.usedSyst:
+            if not syst in all_unc and syst !='Stat':
+                print('ERROR: uncertainty {} missing from categorised list. Please add it'.format(syst))
+                sys.exit()
+
         o = open('{}/summary_table_LHC.tex'.format(tab_dir),'w')
         
         f_start = open('templates/summary_LHC.tex')
@@ -575,6 +585,7 @@ class LHC_object:
         for i,l in enumerate(unc_list):
             if i==0: o.write('\\hline')
             for syst in l:
+                if not syst in self.BLUE_obj.usedSyst: continue
                 o.write('\n')
                 o.write(snd.systNameDict[syst])
                 o.write(' & {} &'.format(self.corrMap[syst] if syst in self.corrMap.keys() else 0 if syst not in self.ATLAS_only + self.CMS_only else '\\NA'))

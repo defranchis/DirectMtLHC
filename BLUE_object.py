@@ -1089,10 +1089,10 @@ class BLUE_object:
                     elif abs(round(self.uncert[meas][syst],2)) > 0: 
                         o.write(' & {:.2f} '.format(abs(self.uncert[meas][syst]) if not CMS_grid else self.uncert[meas][syst]))
                     else:
-                        o.write(' & $<0.01$ ')
+                        o.write(' & $<$0.01 ')
                 if round(self.results.mergedImpacts[syst],2) > 0:
                     o.write(' & {:.2f} '.format(self.results.mergedImpacts[syst]))
-                else: o.write(' & $<0.01$ ')
+                else: o.write(' & $<$0.01 ')
                 o.write('\\\\\n')
         o.write('\\hline\n')
         o.write('Total systematics')
@@ -1109,8 +1109,7 @@ class BLUE_object:
             o.write(' & {:.2f} '.format(self.getTotalUncertMeas(meas)))
         o.write(' & {:.2f} \\\\\n'.format(self.results.tot))
 
-        f_end = open('templates/end.tex')
-        o.write(f_end.read())
+        o.write('\n\\end{tabular}')
 
         return
 
@@ -1177,6 +1176,8 @@ class BLUE_object:
 
 
         for l in unc_list:
+            if l not in self.usedSyst:
+                continue
             o.write('\\hline\n')
             for syst in l:
                 if syst.startswith('Atl'):
