@@ -1225,3 +1225,9 @@ class BLUE_object:
             else: return 'LHC'
         return 'ERROR'
 
+    def printWeights(self):
+        print()
+        for meas in self.usedMeas:
+            print( 'weight {}\t{:.3f}'.format(meas,self.results.weights[meas]))
+        print()
+        return
