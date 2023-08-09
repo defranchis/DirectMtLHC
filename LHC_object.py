@@ -765,7 +765,7 @@ class LHC_object:
             o.write('\n')
             a = self.ATLAS_obj.results.mergedImpacts[k] if k in self.ATLAS_obj.results.mergedImpacts.keys() else 999
             c = self.CMS_obj.results.mergedImpacts[k] if k in self.CMS_obj.results.mergedImpacts.keys() else 999
-            o.write('{:>25}\t&\t{:.2f}\t&\t{:.2f}\t&\t{:.2f} \\\\'.format(snd.systNameDict[k],v,a,c).replace('0.00','$<$0.01').replace('999.00','\\NA'))
+            o.write('{:>25}\t&\t{:.2f}\t&\t{:.2f}\t&\t{:.2f} \\\\'.format(snd.systNameDict[k],v,a,c).replace('0.00','\makebox[0pt][r]{$<$}0.01').replace('999.00','\\NA'))
 
 
         o.write(' [\\cmsTabSkip]\n')
