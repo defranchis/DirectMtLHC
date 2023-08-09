@@ -195,7 +195,7 @@ def produceSummaryTable(LHC_obj,blind=True):
     lj = [meas for meas in obj.usedMeas if measToTex(meas)=='$lj$']
     aj = [meas for meas in obj.usedMeas if measToTex(meas)=='$aj$']
     other = [meas for meas in obj.usedMeas if not meas in ll and not meas in lj and not meas in aj]
-    obsDict = {'ll':ll, 'lj':lj, 'aj':aj, 'other':other}
+    obsDict = {'dil':ll, 'lj':lj, 'aj':aj, 'other':other}
     res, unc = obj.doSubCombination(obsDict=obsDict,printResults=False)
 
     of = open('summary_table_LHC.txt','w')
