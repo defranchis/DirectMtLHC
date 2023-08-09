@@ -716,9 +716,12 @@ class LHC_object:
             os.makedirs(tab_dir)
 
         o = open('{}/LHC_weight_comparison.tex'.format(tab_dir),'w')
+        O = open('{}/LHC_BLUE_weights_pulls.tex'.format(tab_dir),'w')
 
         f_start = open('templates/LHC_start.tex')
         o.write(f_start.read().replace('Correlation matrix','LHC pulls and weights, and weights comparison with ATLAS and CMS').replace('tab:corr','tab:pulls_weights_comparison').replace(': LHC combination',''))
+        F_start = open('templates/LHC_start_paper.tex')
+        O.write(F_start.read())
 
         for i, meas in enumerate(self.BLUE_obj.usedMeas):
             if i==0:
@@ -726,11 +729,15 @@ class LHC_object:
             else:
                 o.write('& {} '.format(measToTex(meas)))
         o.write('\\\\\n\\hline\nLHC pulls ')
+        O.write('Pull ')
         for meas in self.BLUE_obj.usedMeas:
             o.write('& {:.2f} '.format(self.BLUE_obj.results.pulls[meas]))
+            O.write('& ${:+.2f}$ '.format(self.BLUE_obj.results.pulls[meas]))
         o.write('\\\\\nLHC weights ')
+        O.write('\\\\\nWeight ')
         for meas in self.BLUE_obj.usedMeas:
             o.write('& {:.2f} '.format(self.BLUE_obj.results.weights[meas]))
+            O.write('& ${:+.2f}$ '.format(self.BLUE_obj.results.weights[meas]))
         o.write('\\\\\n\\hline\nATLAS weights/2 ')
         for meas in self.BLUE_obj.usedMeas:
             if not meas in self.ATLAS_obj.usedMeas:
@@ -747,6 +754,8 @@ class LHC_object:
 
         f_end = open('templates/end.tex')
         o.write(f_end.read())
+        O.write(' \\\\\n\end{scotch}}')
+
         
         return
 
