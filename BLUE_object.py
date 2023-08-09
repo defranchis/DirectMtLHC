@@ -1064,28 +1064,29 @@ class BLUE_object:
         f_start = open('templates/summary_{}.tex'.format(self.experiment()))
         o.write(f_start.read() if not CMS_grid else f_start.read().replace('LHC grid','CMS grid').replace('data_input_CMS','data_input_CMS_grid'))
 
-        for i, meas in enumerate(self.usedMeas):
-            if i==0:
-                o.write('\t& {} '.format(measToTex(meas)))
-            else:
-                o.write('& {} '.format(measToTex(meas)))
+        # for i, meas in enumerate(self.usedMeas):
+        #     if i==0:
+        #         o.write('\t& {} '.format(measToTex(meas)))
+        #     else:
+        #         o.write('& {} '.format(measToTex(meas)))
 
-        o.write('& combined \\\\\n')
-        o.write('\\hline\n')
+        # o.write('& combined \\\\\n')
+        # o.write('\\hline\n')
 
         o.write('\\mt')
         for meas in self.usedMeas:
             o.write(' & {:.2f} '.format(self.value[meas]))
-        o.write(' & {:.2f} \\\\\n'.format(self.results.mt))
+        o.write(' & {:.2f} \\\\'.format(self.results.mt))
 
         for l in unc_list:
-            o.write('\\hline\n')
+            o.write(' [\\cmsTabSkip]')
             for syst in l:
                 if not syst in self.usedSyst: continue
+                o.write('\n')
                 o.write(snd.systNameDict[syst])
                 for meas in self.usedMeas:
                     if self.uncert[meas][syst] == 0.:
-                        o.write(' & -- ')
+                        o.write(' & \\NA ')
                     elif abs(round(self.uncert[meas][syst],2)) > 0: 
                         o.write(' & {:.2f} '.format(abs(self.uncert[meas][syst]) if not CMS_grid else self.uncert[meas][syst]))
                     else:
@@ -1093,8 +1094,9 @@ class BLUE_object:
                 if round(self.results.mergedImpacts[syst],2) > 0:
                     o.write(' & {:.2f} '.format(self.results.mergedImpacts[syst]))
                 else: o.write(' & $<$0.01 ')
-                o.write('\\\\\n')
-        o.write('\\hline\n')
+                o.write('\\\\')
+
+        o.write(' [\\cmsTabSkip]\n')
         o.write('Total systematics')
         for meas in self.usedMeas:
             o.write(' & {:.2f} '.format(self.getTotalSystMeas(meas)))
@@ -1102,14 +1104,16 @@ class BLUE_object:
         o.write('Statistical')
         for meas in self.usedMeas:
             o.write(' & {:.2f} '.format(self.uncert[meas]['Stat']))
-        o.write(' & {:.2f} \\\\\n'.format(self.results.stat))
-        o.write('\\hline\n')
+        o.write(' & {:.2f} \\\\'.format(self.results.stat))
+        o.write(' [\\cmsTabSkip]\n')
         o.write('Total')
         for meas in self.usedMeas:
             o.write(' & {:.2f} '.format(self.getTotalUncertMeas(meas)))
         o.write(' & {:.2f} \\\\\n'.format(self.results.tot))
 
-        o.write('\n\\end{tabular}')
+        o.write('\\end{scotch}')
+        if self.experiment() == 'CMS':
+            o.write('}')
 
         return
 
