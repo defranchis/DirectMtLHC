@@ -593,7 +593,7 @@ class LHC_object:
                     o.write(' \\NA & \\NA & \\NA ')
                 else:
                     down, up = self.getUpDownRangeSyst(syst)
-                    o.write(' $\\left[{:+.2f}, {:+.2f}\\right]$'.format(down,up))
+                    o.write(' $[{:+}, {:+}]$'.format(down,up))
                     deltaM, deltaTot = self.getDeltaScan(up,down,syst)
                     o.write(' & {:.0f}'.format(deltaM) if deltaM>0 else ' & $<$1') 
                     o.write(' & {:.0f} '.format(deltaTot) if deltaTot>0 else ' & $<$1 ') 
