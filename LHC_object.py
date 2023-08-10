@@ -12,7 +12,7 @@ from ROOT import TH2D, TCanvas, gStyle, TGraphErrors, TLatex
 
 from array import *
 
-corrMap_default = {'JES3': 0.5, 'JESFLV': 0.85, 'RAD': 0.5, 'MCGEN': 0.5, 'BKMC': .85, 'PDF': .85 , 'BTAG': 0.5, 'UE': .85, 'CR': .85, 'JESflavresLHC': .85, 'HADR':-.5}
+corrMap_default = {'JES3': 0.5, 'JESFLV': 0.85, 'RAD': 0.5, 'MCGEN': 0.5, 'BKMC': .85, 'PDF': .85 , 'BTAG': 0.5, 'UE': .5, 'CR': .5, 'JESflavresLHC': .85, 'HADR':-.5}
 mergeMap_default = {'ATLAS':{}, 'CMS': {'RAD': ['Q','JPS']}}
 renameMap_default = {'ATLAS':{'bJES':'JESFLV', 'JESflavres':'JESflavresLHC', 'JESflavcomp':'JESlight', 'Other':'Extra'} ,
                      'CMS': {'JES5':'JESFLV', 'JES4':'JESflavresLHC', 'BFRAG':'HADR', 'JES6': 'JESlight'}}
