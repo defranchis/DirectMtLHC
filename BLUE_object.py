@@ -906,9 +906,13 @@ class BLUE_object:
         
         return
 
-    def doSubCombination(self,obsDict,printResults=False):
+    def doSubCombination(self,obsDict,printResults=False,jsonForPlot=False):
 
         nObs = len(list(obsDict.keys()))
+
+        if jsonForPlot and nObs != 2:
+            print('ERROR: cannot print json')
+            sys.exit()
 
         vecObs = rt.vector('Int_t')()
         for i,meas in enumerate(self.usedMeas):
@@ -951,6 +955,23 @@ class BLUE_object:
             for j,syst in enumerate(self.usedSyst):
                 uncobs[syst] = results[i][j+1]
             unc[obs] = uncobs
+
+        if jsonForPlot:
+            uncert = rt.TMatrixD(nObs,1)
+            myBlue.GetUncert(uncert)
+            rho = rt.TMatrixD(nObs,nObs)
+            myBlue.GetRhoRes(rho)
+
+            all_dict = dict()
+            all_dict['ATLAS_mt'] = res['ATLAS']
+            all_dict['CMS_mt'] = res['CMS']
+            all_dict['ATLAS_tot'] = uncert[0,0]
+            all_dict['CMS_tot'] = uncert[1,0]
+            all_dict['rho'] = rho[0][1]
+
+            import json
+            with open('subcomb_full.json','w') as j:
+                j.write(json.dumps(all_dict))
 
         return res, unc
 

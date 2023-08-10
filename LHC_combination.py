@@ -138,7 +138,7 @@ def main():
         CMS = [meas for meas in LHC_full_unblind.BLUE_obj.usedMeas if 'CMS' in meas]
         ATLAS = [meas for meas in LHC_full_unblind.BLUE_obj.usedMeas if not meas in CMS]
         obsDict = {'ATLAS':ATLAS, 'CMS':CMS}
-        LHC_full_unblind.BLUE_obj.doSubCombination(obsDict=obsDict,printResults=True)
+        LHC_full_unblind.BLUE_obj.doSubCombination(obsDict=obsDict,printResults=True,jsonForPlot=True)
 
         CMS = [meas for meas in LHC_sep_unblind.BLUE_obj.usedMeas if 'CMS' in meas]
         ATLAS = [meas for meas in LHC_sep_unblind.BLUE_obj.usedMeas if not meas in CMS]
