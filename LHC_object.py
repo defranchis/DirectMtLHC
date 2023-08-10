@@ -731,11 +731,15 @@ class LHC_object:
         o.write('\\\\\n\\hline\nLHC pulls ')
         O.write('Pull ')
         for meas in self.BLUE_obj.usedMeas:
+            if meas == 'CMS11_dil':
+                O.write('& ')
             o.write('& {:.2f} '.format(self.BLUE_obj.results.pulls[meas]))
             O.write('& ${:+.2f}$ '.format(self.BLUE_obj.results.pulls[meas]))
         o.write('\\\\\nLHC weights ')
         O.write('\\\\\nWeight ')
         for meas in self.BLUE_obj.usedMeas:
+            if meas == 'CMS11_dil':
+                O.write('& ')
             o.write('& {:.2f} '.format(self.BLUE_obj.results.weights[meas]))
             O.write('& ${:+.2f}$ '.format(self.BLUE_obj.results.weights[meas]))
         o.write('\\\\\n\\hline\nATLAS weights/2 ')
