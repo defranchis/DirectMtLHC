@@ -739,9 +739,9 @@ def measToTex(meas):
     if 'dil' in meas or 'MT2' in meas: return '$dil$'
     elif 'lj' in meas: return '$lj$'
     elif 'allhad' in meas or 'aj' in meas: return '$aj$'
-    elif 'sto' in meas: return '$t$'
+    elif 'sto' in meas: return '$\PQt$'
     elif 'SVX' in meas: return '$vtx$'
-    elif 'jps' in meas: return '$J/\\psi$'
+    elif 'jps' in meas: return '$\PJGy$'
     elif meas == 'ATLAS_comb' or meas == 'CMS_comb': return meas.replace('_comb','')
     else: return 'ERROR'
 

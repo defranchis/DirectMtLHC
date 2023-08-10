@@ -422,7 +422,24 @@ class LHC_object:
         usedMeas = self.usedMeas_sorted
     
         # for syst in list(self.corrMap.keys()):
-        for syst in self.BLUE_obj.usedSyst:
+        O = open('{}/all_corr_tables.tex'.format(tab_dir),'w')
+
+        unc_list = self.BLUE_obj.getUncertaintyListForTable()
+
+        all_unc = []
+        for l in unc_list:
+            all_unc.extend(l)
+
+        for syst in all_unc:
+            if not syst in self.BLUE_obj.usedSyst:
+                continue
+            if syst=='Stat': continue
+            O.write('\\begin{table*}[!h]\n\\centering\n')
+            O.write('\\topcaption{Correlation matrix for '+snd.systNameDict[syst]+'}\n')
+            O.write('\\label{tab:corr_'+syst+'}\n')
+            O.write('\input{corr_tables/LHC_corr_'+syst+'.tex}\n')
+            O.write('\\end{table*}\n\n')
+
             self.printCorrTable(usedMeas,syst,tab_dir)
 
         corr = self.BLUE_obj.printFullCorrTable()
@@ -496,25 +513,29 @@ class LHC_object:
         m = self.BLUE_obj.p_matrix[syst]
         o = open('{}/LHC_corr_{}.tex'.format(tab_dir,syst),'w')
 
-        f_start = open('templates/LHC_syst_start.tex')
-        o.write(f_start.read().replace('#SYST#',syst).replace('#SYSTNAME#',snd.systNameDict[syst]))
+        f_start = open('templates/LHC_corr_start.tex')
+        o.write(f_start.read())
 
-        for i, meas in enumerate(usedMeas):
-            if i==0:
-                o.write('\t& {} '.format(measToTex(meas)))
-            else:
-                o.write('& {} '.format(measToTex(meas)))
-        o.write('\\\\\n')
-        for i, meas1 in enumerate(usedMeas):
-            if not i%3:
-                o.write('\\hline\n')
-            o.write(measToTex(meas1)+' ')
+        # for i, meas in enumerate(usedMeas):
+        #     if i==0:
+        #         o.write('\t& {} '.format(measToTex(meas)))
+        #     else:
+        #         o.write('& {} '.format(measToTex(meas)))
+        # o.write('\\\\\n')
+        for meas1 in usedMeas:
+            o.write(measToTex(meas1).replace('$','')+' ')
             for meas2 in usedMeas:
+                if meas2 == 'CMS11_dil':
+                    o.write('& ')
                 o.write('& {:.2f} '.format(m[meas1][meas2]))
-            o.write('\\\\\n')
+            o.write('\\\\')
+            if meas1 in ['allhad7','allhad8','CMS11_aj']:
+                o.write('[1ex]')
+            o.write('\n')
 
-        f_end = open('templates/end.tex')
-        o.write(f_end.read())
+        o.write('\\end{scotch}}')
+        # f_end = open('templates/end.tex')
+        # o.write(f_end.read())
             
         return
 
