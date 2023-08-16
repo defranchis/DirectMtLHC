@@ -1201,10 +1201,10 @@ class BLUE_object:
 
 
         for l in unc_list:
-            if l not in self.usedSyst:
-                continue
             o.write('\\hline\n')
             for syst in l:
+                if syst not in self.usedSyst:
+                    continue
                 if syst.startswith('Atl'):
                     continue
                 o.write('{} & {} & {} & {} \\\\\n'.format(snd.systNameDict[syst],
