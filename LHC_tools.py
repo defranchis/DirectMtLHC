@@ -9,7 +9,7 @@ ROOT.gROOT.SetBatch(True)
 np.random.seed(1)
 from combTools import scan_dir_LHC
 
-def makeAllCorrelationScansLHC(full,sep,blind=False,only_bJES=False):
+def makeAllCorrelationScansLHC(full,sep,blind=True,only_bJES=False):
 
     os.makedirs(scan_dir_LHC+'/syst',exist_ok=True)
     os.makedirs(scan_dir_LHC+'/scans',exist_ok=True)
@@ -120,7 +120,7 @@ def plotScanResults(corrs,scan_d,syst,variable,blind=True):
     latexLabel = TLatex()
     from systNameDict import systNameDict
     latexLabel.SetTextSize(0.045)
-    latexLabel.DrawLatexNDC(.15,.92,'scan for: {}'.format(systNameDict[syst]))
+    latexLabel.DrawLatexNDC(.15,.92,'scan for: {}'.format(syst))
     c.SaveAs('{}/scans/scan_{}_{}.png'.format(scan_dir_LHC,variable,syst))
 
     gd['full'].SetName(variable)
