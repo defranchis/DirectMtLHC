@@ -1001,7 +1001,7 @@ class BLUE_object:
             for j, meas in enumerate(self.usedMeas):
                 if meas == 'CMS11_dil':
                     o.write('& ')
-                o.write(('& ${:+.2f}$ '.format(w_dict[obs][j])).replace('-0.00','0.00').replace('0.00','\makebox[0pt][r]{$<$}0.01'))
+                o.write(('& ${:+.2f}$ '.format(w_dict[obs][j])).replace('-0.00','+0.00').replace('+0.00','\makebox[0pt][r]{$<$}0.01'))
             o.write('\\\\\n')
 
         o.write('\end{scotch}}')
