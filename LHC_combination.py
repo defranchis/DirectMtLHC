@@ -138,7 +138,7 @@ def main():
         CMS = [meas for meas in LHC_full_unblind.BLUE_obj.usedMeas if 'CMS' in meas]
         ATLAS = [meas for meas in LHC_full_unblind.BLUE_obj.usedMeas if not meas in CMS]
         obsDict = {'ATLAS':ATLAS, 'CMS':CMS}
-        LHC_full_unblind.BLUE_obj.doSubCombination(obsDict=obsDict,printResults=True,jsonForPlot=True)
+        LHC_full_unblind.BLUE_obj.doSubCombination(obsDict=obsDict,printResults=True,jsonForPlot=True,tabName='experiment')
 
         CMS = [meas for meas in LHC_sep_unblind.BLUE_obj.usedMeas if 'CMS' in meas]
         ATLAS = [meas for meas in LHC_sep_unblind.BLUE_obj.usedMeas if not meas in CMS]
@@ -151,7 +151,7 @@ def main():
         other = [meas for meas in LHC_full_unblind.BLUE_obj.usedMeas if not meas in ll and not meas in lj and not meas in aj]
         obsDict = {'ll':ll, 'lj':lj, 'aj':aj, 'other':other}
         if args.unblind:
-            LHC_full_unblind.BLUE_obj.doSubCombination(obsDict=obsDict,printResults=True)
+            LHC_full_unblind.BLUE_obj.doSubCombination(obsDict=obsDict,printResults=True,tabName='channel')
         else:
             res, unc = LHC_full_unblind.BLUE_obj.doSubCombination(obsDict=obsDict,printResults=False)
             LHC_full.BLUE_obj.doSubCombination(obsDict=obsDict,printResults=True)

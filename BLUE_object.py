@@ -906,7 +906,7 @@ class BLUE_object:
         
         return
 
-    def doSubCombination(self,obsDict,printResults=False,jsonForPlot=False):
+    def doSubCombination(self,obsDict,printResults=False,jsonForPlot=False,tabName=None):
 
         nObs = len(list(obsDict.keys()))
 
@@ -976,7 +976,38 @@ class BLUE_object:
             with open('subcomb_full.json','w') as j:
                 j.write(json.dumps(all_dict))
 
+        if not tabName is None:
+            weights = rt.TMatrixD(myBlue.GetActEst(),myBlue.GetActObs())
+            myBlue.GetWeight(weights)
+            w_dict = dict()
+            for i, obs in enumerate(obsDict.keys()):
+                w_dict[obs] = [weights[j][i] for j, _ in enumerate(vecObs)]
+            self.printSubCombWeights(name=tabName,w_dict=w_dict)
+
         return res, unc
+
+
+    def printSubCombWeights(self,name,w_dict):
+
+        if not os.path.exists(tab_dir):
+            os.makedirs(tab_dir)
+
+        o = open('{}/subcomb_weight_{}.tex'.format(tab_dir,name),'w')
+        f_start = open('templates/LHC_start_paper.tex')
+        o.write(f_start.read())
+
+        for obs in list(w_dict.keys()):
+            o.write('{} '.format(obs))
+            for j, meas in enumerate(self.usedMeas):
+                if meas == 'CMS11_dil':
+                    o.write('& ')
+                o.write(('& ${:+.2f}$ '.format(w_dict[obs][j])).replace('-0.00','0.00').replace('0.00','\makebox[0pt][r]{$<$}0.01'))
+            o.write('\\\\\n')
+
+        o.write('\end{scotch}}')
+
+        return
+
 
 
     def getCovariance(self,syst):
