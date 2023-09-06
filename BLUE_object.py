@@ -943,6 +943,9 @@ class BLUE_object:
             myBlue.PrintResult()
             myBlue.PrintWeight()
             myBlue.PrintRhoRes()
+            print('chi2 = {:.2f}'.format(myBlue.GetChiq()))
+            print('ndof = {}'.format(myBlue.GetNdof()))
+            print('prob = {:.1f}%'.format(myBlue.GetProb()*100))
 
         results = rt.TMatrixD(nObs,len(self.usedSyst)+1)
         myBlue.GetResult(results)
