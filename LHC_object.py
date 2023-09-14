@@ -488,7 +488,7 @@ class LHC_object:
             LHCLabel1.SetTextSize(0.05)
             LHCLabel1.SetTextColor(1)
             LHCLabel1.SetTextFont(42)
-            LHCLabel1.DrawLatex(.01, 15, "#font[72]{ATLAS+CMS} Internal")
+            LHCLabel1.DrawLatex(.01, 15, "#font[72]{ATLAS+CMS} Preliminary")
             
 
             c.SaveAs('{}/LHC_corr_plot.png'.format(plot_dir))
