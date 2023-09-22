@@ -487,9 +487,14 @@ class LHC_object:
             LHCLabel1 = TLatex()
             LHCLabel1.SetTextSize(0.05)
             LHCLabel1.SetTextColor(1)
-            LHCLabel1.SetTextFont(42)
-            LHCLabel1.DrawLatex(.01, 15, "#font[72]{ATLAS+CMS} Preliminary")
+            # LHCLabel1.SetTextFont(72)
+            LHCLabel1.DrawLatex(.01, 15, "#font[62]{ATLAS+CMS Preliminary}")
             
+            LHCLabel2 = TLatex()
+            LHCLabel2.SetTextSize(0.04)
+            LHCLabel2.SetTextColor(1)
+            LHCLabel2.DrawLatex(11.5, 15, "#sqrt{s} = 7, 8 TeV")
+
 
             c.SaveAs('{}/LHC_corr_plot.png'.format(plot_dir))
             c.SaveAs('{}/LHC_corr_plot.pdf'.format(plot_dir))

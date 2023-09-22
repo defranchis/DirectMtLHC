@@ -118,7 +118,7 @@ LHCLabel1 = TLatex()
 LHCLabel1.SetTextSize(text_size*1.1)
 LHCLabel1.SetTextColor(1)
 LHCLabel1.SetTextFont(defaultFont)
-LHCLabel1.DrawLatex(xmin + (xmax-xmin)*0.02, y_labels, "#font[72]{ATLAS+CMS} Preliminary")
+LHCLabel1.DrawLatex(xmin + (xmax-xmin)*0.02, y_labels, "#font[62]{ATLAS+CMS Preliminary}")
 LHCLabel1.SetTextFont(defaultFont);
 LHCLabel1.SetTextSize(0.9*text_size);
 LHCLabel1.DrawLatex(xmin + (xmax-xmin)*0.02, y_labels-0.03,"LHC#font[52]{#scale[1.2]{top}}WG")
