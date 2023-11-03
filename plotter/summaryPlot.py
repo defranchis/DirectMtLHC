@@ -118,22 +118,22 @@ LHCLabel1 = TLatex()
 LHCLabel1.SetTextSize(text_size*1.1)
 LHCLabel1.SetTextColor(1)
 LHCLabel1.SetTextFont(defaultFont)
-LHCLabel1.DrawLatex(xmin + (xmax-xmin)*0.02, y_labels, "#font[62]{ATLAS+CMS Preliminary}")
+LHCLabel1.DrawLatex(xmin + (xmax-xmin)*0.02, y_labels, "#font[62]{ATLAS+CMS}")
 LHCLabel1.SetTextFont(defaultFont);
-LHCLabel1.SetTextSize(0.9*text_size);
-LHCLabel1.DrawLatex(xmin + (xmax-xmin)*0.02, y_labels-0.03,"LHC#font[52]{#scale[1.2]{top}}WG")
+# LHCLabel1.SetTextSize(0.9*text_size);
+# LHCLabel1.DrawLatex(xmin + (xmax-xmin)*0.02, y_labels-0.03,"LHC#font[52]{#scale[1.2]{top}}WG")
 LHCLabel1.SetTextSize(text_size)
 LHCLabel1.DrawLatex(xmin + (xmax-xmin)*0.8, y_labels, "#sqrt{s}=7,8 TeV")
 
 # Legend for boxes
-boxLeg = TLegend(xmin + (xmax-xmin)*0.02,  y_labels-0.12, xmin + (xmax-xmin)*0.4, y_labels-0.05,"","NB")
+boxLeg = TLegend(xmin + (xmax-xmin)*0.02,  y_labels-0.11, xmin + (xmax-xmin)*0.4, y_labels-0.04,"","NB")
 #boxLeg = TLegend(0.05, 0.2, 0.8, 0.9)
 boxLeg.SetFillStyle(0)
 boxLeg.SetLineWidth(0)
 boxLeg.SetShadowColor(0)
 boxLeg.SetTextSize(text_size)
 boxLeg.SetTextFont(defaultFont)
-boxLeg.AddEntry(line, "LHC combined", "l")
+boxLeg.AddEntry(line, "ATLAS+CMS combined", "l")
 boxLeg.AddEntry(statbox, "stat uncertainty","f")
 boxLeg.AddEntry(totbox, "total uncertainty","f")
 boxLeg.Draw()
@@ -155,7 +155,9 @@ for m in itertools.chain(measurements._measurements):
     if measurements._needTitle[m.getName()]:
         title = m.getType()
         if title==Comb:
-            title = "LHC combination"
+            title = "ATLAS+CMS"
+            LHCLabel1.SetTextSize(0.85*text_size);
+            LHCLabel1.DrawLatex(xmin + (xmax-xmin)*0.19,  measurements.getYpos(m.getName()) - 0.01 + measurements._ygap,"LHC#font[52]{#scale[1.2]{top}}WG")
         latexMeasLabel.SetTextFont(62)
         latexMeasLabel.DrawLatex(xmin + (xmax-xmin)*0.02, measurements.getYpos(m.getName()) - 0.01 + measurements._ygap, title)
     latexMeasLabel.SetTextFont(defaultFont)
@@ -163,8 +165,9 @@ for m in itertools.chain(measurements._measurements):
         latexMeasLabel.SetTextFont(62)
         latexMeasLabel.SetTextSize(1.05*text_size)
     latexMeasLabel.DrawLatex(xmin + (xmax-xmin)*0.02, measurements.getYpos(m.getName()) - 0.01, m.getDisplayName(True))
-    latexMeasLabel.SetTextSize(text_size*0.8); 
-    if m.getName() == "full comb" or 'run 1' in m.getName():
+    latexMeasLabel.SetTextSize(text_size*0.8);
+    if m.getName() == "full comb" or 'run 1' in m.getName() or m.getName().endswith('_comb'):
+        latexMeasLabel.SetTextFont(62)
         latexMeasLabel.SetTextSize(latexMeasLabel.GetTextSize()*1.05); 
     latexMeasLabel.DrawLatex(xmin + (xmax-xmin)*0.7, measurements.getYpos(m.getName()) - 0.01, m.getDisplayValErr())    
 
