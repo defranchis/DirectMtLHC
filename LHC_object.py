@@ -488,7 +488,7 @@ class LHC_object:
             LHCLabel1.SetTextSize(0.05)
             LHCLabel1.SetTextColor(1)
             # LHCLabel1.SetTextFont(72)
-            LHCLabel1.DrawLatex(.01, 15, "#font[62]{ATLAS+CMS Preliminary}")
+            LHCLabel1.DrawLatex(.01, 15, "#font[62]{ATLAS+CMS}")
             
             LHCLabel2 = TLatex()
             LHCLabel2.SetTextSize(0.04)
