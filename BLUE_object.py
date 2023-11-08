@@ -997,7 +997,7 @@ class BLUE_object:
         o.write(f_start.read())
 
         for obs in list(w_dict.keys()):
-            o.write('{} '.format(obs))
+            o.write('{} '.format(obs if name != 'experiment' else '\mt'+obs))
             for j, meas in enumerate(self.usedMeas):
                 if meas == 'CMS11_dil':
                     o.write('& ')
