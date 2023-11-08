@@ -145,7 +145,7 @@ gPad.RedrawAxis()
 # Header for m(top) values
 latexMeasLabel = TLatex()
 latexMeasLabel.SetTextSize(text_size*0.8); 
-latexMeasLabel.DrawLatex( xmin + (xmax-xmin)*0.71, measurements.getYpos(measurements._measurements[0].getName()) + 0.02, "m_{t} #pm total (#pm stat #pm syst)")
+latexMeasLabel.DrawLatex( xmin + (xmax-xmin)*0.7, measurements.getYpos(measurements._measurements[0].getName()) + 0.02, "m_{t} #pm total (#pm stat #pm syst) [GeV]")
 
 # Measurement labels
 for m in itertools.chain(measurements._measurements):
