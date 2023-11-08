@@ -435,7 +435,7 @@ class LHC_object:
                 continue
             if syst=='Stat': continue
             O.write('\\begin{table*}[!h]\n\\centering\n')
-            O.write('\\topcaption{Correlation matrix for '+snd.systNameDict[syst]+'}\n')
+            O.write('\\topcaption{Correlation matrix for '+snd.systNameDict[syst]+'.}\n')
             O.write('\\label{tab:corr_'+syst+'}\n')
             O.write('\input{corr_tables/LHC_corr_'+syst+'.tex}\n')
             O.write('\\end{table*}\n\n')
@@ -809,10 +809,10 @@ class LHC_object:
 
 
         o.write(' [\\cmsTabSkip]\n')
-        o.write('{:>25}\t&\t{:.2f}\t&\t{:.2f}\t&\t{:.2f} \\\\\n'.format('Total systematics',self.BLUE_obj.results.syst,self.ATLAS_obj.results.syst,self.CMS_obj.results.syst))
-        o.write('{:>25}\t&\t{:.2f}\t&\t{:.2f}\t&\t{:.2f} \\\\'.format('Statistical',self.BLUE_obj.results.stat,self.ATLAS_obj.results.stat,self.CMS_obj.results.stat))
+        o.write('{:>25}\t&\t{:.2f}\t&\t{:.2f}\t&\t{:.2f} \\\\\n'.format('Total systematic unc.',self.BLUE_obj.results.syst,self.ATLAS_obj.results.syst,self.CMS_obj.results.syst))
+        o.write('{:>25}\t&\t{:.2f}\t&\t{:.2f}\t&\t{:.2f} \\\\'.format('Statistical unc.',self.BLUE_obj.results.stat,self.ATLAS_obj.results.stat,self.CMS_obj.results.stat))
         o.write(' [\\cmsTabSkip]\n')
-        o.write('{:>25}\t&\t{:.2f}\t&\t{:.2f}\t&\t{:.2f} \\\\\n'.format('Total',self.BLUE_obj.results.tot,self.ATLAS_obj.results.tot,self.CMS_obj.results.tot))
+        o.write('{:>25}\t&\t{:.2f}\t&\t{:.2f}\t&\t{:.2f} \\\\\n'.format('Total uncertainty',self.BLUE_obj.results.tot,self.ATLAS_obj.results.tot,self.CMS_obj.results.tot))
 
         o.write('\n\\end{scotch}')
         o.close()
