@@ -42,9 +42,10 @@ systNameDict = {
     'JESflavresLHC':'\LHCgJES',
     'Extra':'Other',
     'Other':'Other',
+    'f-JES':'CMS flavour JES',
 }
 
-syst_exp = ['JES1', 'JES2', 'JES3', 'JESFLV', 'JESflavresLHC', 'JESlight', 'CMSJES1', 'JER', 'LES', 'BTAG', 'MET', 'PU', 'TRIG']
+syst_exp = ['JES1', 'JES2', 'JES3', 'JESFLV', 'JESflavresLHC', 'JESlight', 'CMSJES1', 'JER', 'LES', 'BTAG', 'MET', 'PU', 'TRIG','f-JES']
 syst_mod = ['MCGEN', 'RAD', 'HADR', 'SLEPB', 'CR', 'UE', 'PDF', 'TOPPT','Q','JPS']
 syst_bkg = ['BKDT', 'BKMC']
 syst_oth = ['AtlFastFull', 'AtlJetUnc', 'METH', 'Other', 'Extra']

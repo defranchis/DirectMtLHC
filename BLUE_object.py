@@ -733,8 +733,6 @@ class BLUE_object:
         return True
 
 
-
-
     def mergeSyst(self,merged,original_l):
         for original in original_l:
             if not original in self.usedSyst:
@@ -767,6 +765,35 @@ class BLUE_object:
         self.update()
 
         return
+
+
+    def mergeSystLinear(self,merged,original_l):
+
+        for orig in original_l:
+            if not orig in self.usedSyst:
+                print('ERROR: systematics {} not in input file or not in use'.format(orig))
+                sys.exit()
+            if self.matrix[orig] != self.matrix[original_l[0]]:
+                print('ERROR: to merge linearly all correlation matrices must be identical!')
+                sys.exit()
+
+        for meas in self.measurements:
+            self.uncert[meas][merged] = np.sum(np.array([self.uncert[meas][orig] for orig in original_l]))
+            for orig in original_l:
+                self.uncert[meas].pop(orig)
+
+        self.matrix[merged] = copy.deepcopy(self.matrix[original_l[0]])        
+        self.systnames.append(merged)
+
+        for orig in original_l:
+            self.systnames.remove(orig)
+            self.matrix.pop(orig)
+            
+        self.update()
+
+        return
+
+
 
 
     def checkAllSystMatrices(self):
