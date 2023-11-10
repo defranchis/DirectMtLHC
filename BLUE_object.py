@@ -586,7 +586,7 @@ class BLUE_object:
         print()
 
         o.write('\\hline\n')
-        o.write('Total Systematics & {:.2f} \\\\\n'.format(self.results.syst))
+        o.write('Total systematic & {:.2f} \\\\\n'.format(self.results.syst))
         o.write('Statistical & {:.2f} \\\\\n'.format(self.results.stat))
         o.write('\\hline\n')
         o.write('Total & {:.2f} \\\\\n'.format(self.results.tot))
@@ -1179,7 +1179,7 @@ class BLUE_object:
                 o.write('\\\\')
 
         o.write(' [\\cmsTabSkip]\n')
-        o.write('Total systematics')
+        o.write('Total systematic')
         for meas in self.usedMeas:
             o.write(' & {:.2f} '.format(self.getTotalSystMeas(meas)))
         o.write(' & {:.2f} \\\\\n'.format(self.results.syst))
