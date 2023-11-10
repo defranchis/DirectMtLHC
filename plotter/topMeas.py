@@ -104,9 +104,9 @@ class topMeas:
         displayString = "{:3.2f}".format(self.getVal())
         displayString += ' #pm '
         displayString += "{:1.2f}".format(self.getTotalErr())
-        displayString += ' (#pm'
+        displayString += ' (#pm '
         displayString += "{:1.2f}".format(self.getStatErr())
-        displayString += '#pm'
+        displayString += ' #pm '
         displayString += "{:1.2f}".format(self.getSystErr())
         displayString += ')'
         return displayString
