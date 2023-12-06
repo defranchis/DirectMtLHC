@@ -1,4 +1,3 @@
-
 from BLUE_object import BLUE_object
 from LHC_object import LHC_object
 from LHC_tools import makeAllCorrelationScansLHC, flipAmbiguousSigns
@@ -172,13 +171,6 @@ def main():
 
     if args.excludeMeasOneByOne:
         excludeMeasOneByOne(LHC_full_unblind.BLUE_obj,blind=not args.unblind)
-
-
-    print(LHC_full_unblind.BLUE_obj.chi2)
-    print(LHC_full_unblind.BLUE_obj.prob)
-    print()
-    print(LHC_sep_unblind.BLUE_obj.chi2)
-    print(LHC_sep_unblind.BLUE_obj.prob)
 
 
     return
