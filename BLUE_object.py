@@ -1011,8 +1011,26 @@ class BLUE_object:
                 w_dict[obs] = [weights[j][i] for j, _ in enumerate(vecObs)]
             self.printSubCombWeights(name=tabName,w_dict=w_dict)
 
+        if tabName == 'channel':
+            rho = rt.TMatrixD(myBlue.GetActObs(),myBlue.GetActObs())
+            myBlue.GetRhoRes(rho)
+            self.printSubCombCorrTable(obsDict,rho,tabName)
+
         return res, unc
 
+    def printSubCombCorrTable(self,obsDict,rho,tabName):
+        o = open('{}/subcomb_corr_{}.tex'.format(tab_dir,tabName),'w')
+        o.write('\\begin{scotch}{'+'c'*(len(obsDict)+1)+'}\n')
+        for obs in list(obsDict.keys()):
+            o.write('& {} '.format(obs).replace('other','Other'))
+        o.write('\\\\ \hline \n')
+        for i, obs in enumerate(list(obsDict.keys())):
+            o.write(obs.replace('other','Other'))
+            for j, _ in enumerate(list(obsDict.keys())):
+                o.write(' & {:.2f}'.format(rho[i][j]).replace('0.00','\makebox[0pt][r]{$<$}0.01'))
+            o.write(' \\\\\n')
+        o.write('\\end{scotch}')
+        return
 
     def printSubCombWeights(self,name,w_dict):
 
