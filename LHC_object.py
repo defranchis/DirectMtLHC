@@ -494,7 +494,7 @@ class LHC_object:
             LHCLabel2.SetTextSize(0.04)
             LHCLabel2.SetTextColor(1)
             LHCLabel2.SetTextFont(42)
-            LHCLabel2.DrawLatex(12, 15, "#sqrt{s}=7,8 TeV")
+            LHCLabel2.DrawLatex(12, 15, "#sqrt{s} = 7,8 TeV")
 
 
             c.SaveAs('{}/LHC_corr_plot.png'.format(plot_dir))

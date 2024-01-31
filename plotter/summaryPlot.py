@@ -123,7 +123,7 @@ LHCLabel1.SetTextFont(defaultFont);
 # LHCLabel1.SetTextSize(0.9*text_size);
 # LHCLabel1.DrawLatex(xmin + (xmax-xmin)*0.02, y_labels-0.03,"LHC#font[52]{#scale[1.2]{top}}WG")
 LHCLabel1.SetTextSize(text_size)
-LHCLabel1.DrawLatex(xmin + (xmax-xmin)*0.8, y_labels, "#sqrt{s}=7,8 TeV")
+LHCLabel1.DrawLatex(xmin + (xmax-xmin)*0.8, y_labels, "#sqrt{s} = 7,8 TeV")
 
 # Legend for boxes
 boxLeg = TLegend(xmin + (xmax-xmin)*0.02,  y_labels-0.11, xmin + (xmax-xmin)*0.4, y_labels-0.04,"","NB")
@@ -145,7 +145,7 @@ gPad.RedrawAxis()
 # Header for m(top) values
 latexMeasLabel = TLatex()
 latexMeasLabel.SetTextSize(text_size*0.8); 
-latexMeasLabel.DrawLatex( xmin + (xmax-xmin)*0.7, measurements.getYpos(measurements._measurements[0].getName()) + 0.02, "m_{t} #pm total (#pm stat #pm syst) [GeV]")
+latexMeasLabel.DrawLatex( xmin + (xmax-xmin)*0.7, measurements.getYpos(measurements._measurements[0].getName()) + 0.04, "m_{t} #pm total (#pm stat #pm syst) [GeV]")
 
 # Measurement labels
 for m in itertools.chain(measurements._measurements):
