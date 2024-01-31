@@ -435,7 +435,7 @@ class LHC_object:
                 continue
             if syst=='Stat': continue
             O.write('\\begin{table*}[!h]\n\\centering\n')
-            O.write('\\topcaption{Correlation matrix for '+snd.systNameDict[syst]+' for all the input measurements. The input measurements are the ATLAS and CMS 7 and 8\TeV \mt measurements in the dilepton (``dil\'\'), lepton+jets (``lj\'\'), and all-jets (``aj\'\') channels, and the CMS 8\TeV \mt measurements in the single top (``t\'\'), secondary vertex (``vtx\'\'), and \\PJGy analysis (``\\PJGy\'\').}\n') #FIXME please...
+            O.write('\\topcaption{Correlation matrix for the '+snd.systNameDict[syst]+' category for all of the input measurements. The input measurements are the ATLAS and CMS 7 and 8\TeV \mt measurements in the dilepton (``dil\'\'), lepton+jets (``lj\'\'), and all-jets (``aj\'\') channels, and the CMS 8\TeV \mt measurements in the single top (``t\'\'), secondary vertex (``vtx\'\'), and \\PJGy analysis (``\\PJGy\'\').}\n') #FIXME please...
             O.write('\\label{tab:corr_'+syst+'}\n')
             O.write('\input{corr_tables/LHC_corr_'+syst+'.tex}\n')
             O.write('\\end{table*}\n\n')
