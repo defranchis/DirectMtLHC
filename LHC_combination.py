@@ -75,7 +75,7 @@ def main():
     
     LHC_sep_unblind.BLUE_obj.printPullWeightsTable(blind=not args.unblind)
 
-    print('CMS combination \n')
+    # print('CMS combination \n')
     # LHC_full_unblind.obj_d['CMS'].simplePrint()
     # LHC_full_unblind.obj_d['CMS'].printImpactsSorted()
 
