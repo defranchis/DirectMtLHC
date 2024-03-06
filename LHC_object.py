@@ -3,26 +3,32 @@ from combTools import measToTex, measToROOT
 import copy
 import sys,os
 import numpy as np
+import itertools
+from operator import itemgetter
+import systNameDict as snd
 
 import ROOT as rt
 from ROOT import TH2D, TCanvas, gStyle, TGraphErrors, TLatex
 
 from array import *
 
-# corrMap_default = {'JES3': 0.5, 'JESFLV': 0.5, 'RAD': 0.5, 'MCGEN': 0.5, 'BKMC': 1.0, 'PDF': 1.0 , 'BTAG': 0.5, 'UE': 1.0, 'PU': 1.0, 'CR': 1.0}
-corrMap_default = {'JES3': 0.5, 'JESFLV': 0.5, 'RAD': 0.5, 'MCGEN': 0.5, 'BKMC': .85, 'PDF': .85 , 'BTAG': 0.5, 'UE': .85, 'CR': .85}
-mergeMap_default = {'ATLAS':{}, 'CMS': {'RAD': ['Q','JPS'],'HADR':['SLEPB','BFRAG']}}
-renameMap_default = {'ATLAS':{} ,'CMS': {'CMSFL1':'JESFLV'}}
+corrMap_default = {'JES3': 0.5, 'JESFLV': 0.85, 'RAD': 0.5, 'MCGEN': 0.5, 'BKMC': .85, 'PDF': .85 , 'BTAG': 0.5, 'UE': .5, 'CR': .5, 'JESflavresLHC': .85, 'HADR':-.5}
+mergeMap_default = {'ATLAS':{}, 'CMS': {'RAD': ['Q','JPS']}}
+renameMap_default = {'ATLAS':{'bJES':'JESFLV', 'JESflavres':'JESflavresLHC', 'JESflavcomp':'JESlight', 'Other':'Extra'} ,
+                     'CMS': {'JES5':'JESFLV', 'JES4':'JESflavresLHC', 'BFRAG':'HADR', 'JES6': 'JESlight'}}
 
-noSignsOnImpacts = {'ATLAS':['JESFLV', 'BKMC', 'BTAG', 'PDF'], 'CMS': []}
+noSignsOnImpacts = {'ATLAS':['BKMC', 'BTAG', 'PDF'], 'CMS': []}
 
-tab_dir = 'corr_tables'
-plot_dir = 'result_plots'
+mergeImpacts_default = {}
+# mergeImpacts_default = {'JESlight':['JES6','JESflavresLHC','JESflavcomp'],'HADR':['HADR','SLEPB']}
+
+tab_dir = 'tables'
+plot_dir = 'plots'
 
 class LHC_object:
 
     def __init__(self,ATLAS_obj, CMS_obj, excludeSyst = [], separateCombinations = False, corrMap = None, mergeMap = None, renameMap = None, blind = False, 
-                 merge_and_rename=True,mergeImpacts={},PU_hack=False):
+                 merge_and_rename=True,mergeImpacts=mergeImpacts_default,PU_hack=False):
         self.ATLAS_obj = ATLAS_obj.clone()
         self.CMS_obj = CMS_obj.clone()
         self.obj_d = {'ATLAS':self.ATLAS_obj, 'CMS':self.CMS_obj}
@@ -55,7 +61,7 @@ class LHC_object:
         else: self.corrMap = copy.deepcopy(corrMap)
 
         if self.PU_hack and not 'PU' in list(self.corrMap.keys()):
-            print('\n WARNING: adding PU correlation of 0.85\n')
+            print('\nWARNING: adding PU correlation of 0.85\n')
             self.corrMap['PU'] = 0.85
 
         if mergeMap is None: self.mergeMap = copy.deepcopy(mergeMap_default)
@@ -67,8 +73,14 @@ class LHC_object:
             self.renameAllSyst()
             self.mergeAllSyst()
 
+        if len(self.mergeImpacts) > 0:
+            self.ATLAS_obj.setMergeImpacts(self.mergeImpacts)
+            self.CMS_obj.setMergeImpacts(self.mergeImpacts)
+
         self.commonSyst = self.getCommonSyst()
-        self.LHCsyst = self.prepareLHCcombination()
+        self.ATLAS_only, self.CMS_only, self.LHCsyst = self.prepareLHCcombination()
+
+        self.redefineNegativeSignsLHC()
 
         if self.separateCombinations:
             for obj in list(self.obj_d.values()):
@@ -90,6 +102,13 @@ class LHC_object:
 
         self.writeBLUEinputCMS(separateCombinations=self.separateCombinations)
         self.BLUE_obj = BLUE_object(self.LHC_file,LHC=True,blind=self.blind,mergeImpacts=self.mergeImpacts,PU_hack=self.PU_hack)
+
+        self.BLUE_obj.renamed = {**self.obj_d['ATLAS'].renamed,**self.obj_d['CMS'].renamed}
+        for renamed in self.BLUE_obj.renamed.keys():
+            if list(self.BLUE_obj.renamed.keys()).count(renamed) > 1:
+                print('ERROR: ambiguity')
+                sys.exit()
+
         # self.BLUE_obj.checkAllSystMatrices()
         if not self.separateCombinations:
             self.sortUsedMeas()
@@ -149,7 +168,15 @@ class LHC_object:
             print(CMS_only)
             print()
 
-        return LHCsyst
+        return ATLAS_only, CMS_only, LHCsyst
+
+    def redefineNegativeSignsLHC(self):
+        for syst, corr in self.corrMap.items():
+            if corr < 0:
+                print('WARNING: redifining sign for syst {}'.format(syst))
+                self.CMS_obj.flipAllSignsSyst(syst)
+                self.corrMap[syst] *= -1
+        return
 
     def getLHCmeas(self):
         allMeas = []
@@ -338,6 +365,12 @@ class LHC_object:
             self.LHCmatrix = self.createLHCmatrix()
         self.update()
 
+    def updateCorr(self,syst,corr):
+        self.corrMap[syst] = corr
+        if not self.separateCombinations:
+            self.LHCmatrix = self.createLHCmatrix()
+        self.update()
+
     def simplePrint(self):
         self.BLUE_obj.simplePrint()
 
@@ -388,10 +421,28 @@ class LHC_object:
 
         usedMeas = self.usedMeas_sorted
     
-        for syst in list(self.corrMap.keys()):
+        # for syst in list(self.corrMap.keys()):
+        O = open('{}/all_corr_tables.tex'.format(tab_dir),'w')
+
+        unc_list = self.BLUE_obj.getUncertaintyListForTable()
+
+        all_unc = []
+        for l in unc_list:
+            all_unc.extend(l)
+
+        for syst in all_unc:
+            if not syst in self.BLUE_obj.usedSyst:
+                continue
+            if syst=='Stat': continue
+            O.write('\\begin{table*}[!h]\n\\centering\n')
+            O.write('\\topcaption{Correlation matrix for the '+snd.systNameDict[syst]+' category for all of the input measurements. The input measurements are the ATLAS and CMS 7 and 8\TeV \mt measurements in the dilepton (``dil\'\'), lepton+jets (``lj\'\'), and all-jets (``aj\'\') channels, and the CMS 8\TeV \mt measurements in the single top (``t\'\'), secondary vertex (``vtx\'\'), and \\PJGy analysis (``\\PJGy\'\').}\n') #FIXME please...
+            O.write('\\label{tab:corr_'+syst+'}\n')
+            O.write('\input{corr_tables/LHC_corr_'+syst+'.tex}\n')
+            O.write('\\end{table*}\n\n')
+
             self.printCorrTable(usedMeas,syst,tab_dir)
 
-        corr = self.printFullCorrTable(usedMeas,tab_dir)
+        corr = self.BLUE_obj.printFullCorrTable()
 
         if draw:
 
@@ -432,32 +483,25 @@ class LHC_object:
             c.SetBottomMargin(0.1)
             c.SetTopMargin(0.1)
             h.Draw('COLZ TEXT')
-            c.SaveAs('{}/LHC_corr_plot.png'.format(tab_dir))
-            c.SaveAs('{}/LHC_corr_plot.pdf'.format(tab_dir))
+
+            LHCLabel1 = TLatex()
+            LHCLabel1.SetTextSize(0.05)
+            LHCLabel1.SetTextColor(1)
+            # LHCLabel1.SetTextFont(72)
+            LHCLabel1.DrawLatex(.01, 15, "#font[62]{ATLAS+CMS}")
+            
+            LHCLabel2 = TLatex()
+            LHCLabel2.SetTextSize(0.04)
+            LHCLabel2.SetTextColor(1)
+            LHCLabel2.SetTextFont(42)
+            LHCLabel2.DrawLatex(12, 15, "#sqrt{s} = 7,8 TeV")
+
+
+            c.SaveAs('{}/LHC_corr_plot.png'.format(plot_dir))
+            c.SaveAs('{}/LHC_corr_plot.pdf'.format(plot_dir))
 
         return
 
-    def printFullCorrTable(self,usedMeas,tab_dir):
-        m = np.zeros((len(usedMeas),len(usedMeas)))
-        for syst in self.BLUE_obj.usedSyst:
-            m += self.getCovariance(syst,usedMeas)
-        u = np.diag(np.diag(m)**.5)
-        c = np.matmul(np.linalg.inv(u),np.matmul(m,np.linalg.inv(u)))
-        o = open('{}/LHC_corr_full.tex'.format(tab_dir),'w')
-
-        for i, meas in enumerate(usedMeas):
-            if i==0:
-                o.write('\t& {} '.format(measToTex(meas)))
-            else:
-                o.write('& {} '.format(measToTex(meas)))
-        o.write('\\\\\n')
-        for i,meas1 in enumerate(usedMeas):
-            o.write(measToTex(meas1)+' ')
-            for j,meas2 in enumerate(usedMeas):
-                o.write('& {:.2f} '.format(c[i][j]))
-            o.write('\\\\\n')
-
-        return c
 
     def getCovariance(self,syst,usedMeas=[]):
         if len(usedMeas) == 0:
@@ -475,18 +519,29 @@ class LHC_object:
         m = self.BLUE_obj.p_matrix[syst]
         o = open('{}/LHC_corr_{}.tex'.format(tab_dir,syst),'w')
 
-        for i, meas in enumerate(usedMeas):
-            if i==0:
-                o.write('\t& {} '.format(measToTex(meas)))
-            else:
-                o.write('& {} '.format(measToTex(meas)))
-        o.write('\\\\\n')
-        for meas1 in usedMeas:
-            o.write(measToTex(meas1)+' ')
-            for meas2 in usedMeas:
-                o.write('& {:.2f} '.format(m[meas1][meas2]))
-            o.write('\\\\\n')
+        f_start = open('templates/LHC_corr_start.tex')
+        o.write(f_start.read())
 
+        # for i, meas in enumerate(usedMeas):
+        #     if i==0:
+        #         o.write('\t& {} '.format(measToTex(meas)))
+        #     else:
+        #         o.write('& {} '.format(measToTex(meas)))
+        # o.write('\\\\\n')
+        for meas1 in usedMeas:
+            o.write(measToTex(meas1).replace('$','')+' ')
+            for meas2 in usedMeas:
+                if meas2 == 'CMS11_dil':
+                    o.write('& ')
+                o.write('& {:.2f} '.format(m[meas1][meas2]))
+            o.write('\\\\')
+            if meas1 in ['allhad7','allhad8','CMS11_aj']:
+                o.write('[1ex]')
+            o.write('\n')
+
+        o.write('\\end{scotch}}')
+        # f_end = open('templates/end.tex')
+        # o.write(f_end.read())
             
         return
 
@@ -515,6 +570,69 @@ class LHC_object:
         for syst in d.keys():
             tot += d[syst]**2
         return tot**.5
+
+    def getUpDownRangeSyst(self,syst):
+        if syst in self.ATLAS_only + self.CMS_only or syst == 'JES1':
+            return None, None
+        if not syst in self.corrMap.keys():
+            return -.25, .25
+        if self.corrMap[syst] == 0.5:
+            return .25, .75
+        if self.corrMap[syst] == 0.85:
+            return .5, 1
+        else:
+            return None, None
+
+    def getMassTotCorrPointSyst(self,syst,corr):
+        clone = self.clone()
+        clone.updateCorr(syst,corr)
+        return np.array([clone.BLUE_obj.results.mt, clone.BLUE_obj.results.tot])
+
+    def getDeltaScan(self, up, down, syst):
+        diff = (abs(self.getMassTotCorrPointSyst(syst,up) - self.getMassTotCorrPointSyst(syst,down))/2*1000).round()
+        return list(diff)
+
+    def printSummaryTableLHC(self):
+
+        unc_list = self.BLUE_obj.getUncertaintyListForTable()
+
+        all_unc = []
+        for l in unc_list:
+            all_unc.extend(l)
+        for syst in self.BLUE_obj.usedSyst:
+            if not syst in all_unc and syst !='Stat':
+                print('ERROR: uncertainty {} missing from categorised list. Please add it'.format(syst))
+                sys.exit()
+
+        o = open('{}/summary_table_LHC.tex'.format(tab_dir),'w')
+        
+        f_start = open('templates/summary_LHC.tex')
+        o.write(f_start.read())
+
+        for i,l in enumerate(unc_list):
+            if i==0: o.write('\\hline')
+            for syst in l:
+                if not syst in self.BLUE_obj.usedSyst: continue
+                o.write('\n')
+                o.write(snd.systNameDict[syst])
+                o.write(' & {} &'.format(self.corrMap[syst] if syst in self.corrMap.keys() else 0 if syst not in self.ATLAS_only + self.CMS_only else '\\NA'))
+                if syst in self.ATLAS_only + self.CMS_only or syst in ['JES1','METH','Extra']:
+                    o.write(' \\NA & \\NA & \\NA ')
+                else:
+                    down, up = self.getUpDownRangeSyst(syst)
+                    o.write(' $[{:+}, {:+}]$'.format(down,up))
+                    deltaM, deltaTot = self.getDeltaScan(up,down,syst)
+                    o.write(' & {:.0f}'.format(deltaM) if deltaM>0 else ' & $<$1') 
+                    o.write(' & {:.0f} '.format(deltaTot) if deltaTot>0 else ' & $<$1 ') 
+                    
+                o.write('\\\\')
+            o.write(' [\\cmsTabSkip]')
+
+        o.write('\n\\end{scotch}')
+
+        return
+
+
 
     def makeSummaryPlot(self,blind=True):
 
@@ -616,5 +734,87 @@ class LHC_object:
         c.SaveAs('{}/summary_plot.pdf'.format(plot_dir))
         
                 
+        return
+
+
+    def printPullWeightsComparisonTable(self):
+
+        if not os.path.exists(tab_dir):
+            os.makedirs(tab_dir)
+
+        o = open('{}/LHC_weight_comparison.tex'.format(tab_dir),'w')
+        O = open('{}/LHC_BLUE_weights_pulls.tex'.format(tab_dir),'w')
+
+        f_start = open('templates/LHC_start.tex')
+        o.write(f_start.read().replace('Correlation matrix','LHC pulls and weights, and weights comparison with ATLAS and CMS').replace('tab:corr','tab:pulls_weights_comparison').replace(': LHC combination',''))
+        F_start = open('templates/LHC_start_paper.tex')
+        O.write(F_start.read())
+
+        for i, meas in enumerate(self.BLUE_obj.usedMeas):
+            if i==0:
+                o.write('\t& {} '.format(measToTex(meas)))
+            else:
+                o.write('& {} '.format(measToTex(meas)))
+        o.write('\\\\\n\\hline\nLHC pulls ')
+        O.write('Pull ')
+        for meas in self.BLUE_obj.usedMeas:
+            if meas == 'CMS11_dil':
+                O.write('& ')
+            o.write('& {:.2f} '.format(self.BLUE_obj.results.pulls[meas]))
+            O.write('& ${:+.2f}$ '.format(self.BLUE_obj.results.pulls[meas]))
+        o.write('\\\\\nLHC weights ')
+        O.write('\\\\\nWeight ')
+        for meas in self.BLUE_obj.usedMeas:
+            if meas == 'CMS11_dil':
+                O.write('& ')
+            o.write('& {:.2f} '.format(self.BLUE_obj.results.weights[meas]))
+            O.write('& ${:+.2f}$ '.format(self.BLUE_obj.results.weights[meas]))
+        o.write('\\\\\n\\hline\nATLAS weights/2 ')
+        for meas in self.BLUE_obj.usedMeas:
+            if not meas in self.ATLAS_obj.usedMeas:
+                o.write('& -- ')
+            else:
+                o.write('& {:.2f} '.format(self.ATLAS_obj.results.weights[meas]/2))
+        o.write('\\\\\nCMS weights/2 ')
+        for meas in self.BLUE_obj.usedMeas:
+            if not meas in self.CMS_obj.usedMeas:
+                o.write('& -- ')
+            else:
+                o.write('& {:.2f} '.format(self.CMS_obj.results.weights[meas]/2))
+        o.write('\\\\\n')            
+
+        f_end = open('templates/end.tex')
+        o.write(f_end.read())
+        O.write(' \\\\\n\end{scotch}}')
+
+        
+        return
+
+    def printAllImpactsSorted(self):
+
+        if not os.path.exists(tab_dir):
+            os.makedirs(tab_dir)
+
+        o = open('{}/impacts_all.tex'.format(tab_dir),'w')
+        f_start = open('templates/impacts_all_start.tex')
+        o.write(f_start.read())
+
+        for k, v in sorted(list(self.BLUE_obj.results.mergedImpacts.items()), key=itemgetter(1), reverse = True):
+            if k == 'Stat': continue
+            #TODO: make sure it works when systematics are merged
+            o.write('\n')
+            a = self.ATLAS_obj.results.mergedImpacts[k] if k in self.ATLAS_obj.results.mergedImpacts.keys() else 999
+            c = self.CMS_obj.results.mergedImpacts[k] if k in self.CMS_obj.results.mergedImpacts.keys() else 999
+            o.write('{:>25}\t&\t{:.2f}\t&\t{:.2f}\t&\t{:.2f} \\\\'.format(snd.systNameDict[k],v,a,c).replace('0.00','\makebox[0pt][r]{$<$}0.01').replace('999.00','\\NA'))
+
+
+        o.write(' [\\cmsTabSkip]\n')
+        o.write('{:>25}\t&\t{:.2f}\t&\t{:.2f}\t&\t{:.2f} \\\\\n'.format('Total systematic',self.BLUE_obj.results.syst,self.ATLAS_obj.results.syst,self.CMS_obj.results.syst))
+        o.write('{:>25}\t&\t{:.2f}\t&\t{:.2f}\t&\t{:.2f} \\\\'.format('Statistical',self.BLUE_obj.results.stat,self.ATLAS_obj.results.stat,self.CMS_obj.results.stat))
+        o.write(' [\\cmsTabSkip]\n')
+        o.write('{:>25}\t&\t{:.2f}\t&\t{:.2f}\t&\t{:.2f} \\\\\n'.format('Total',self.BLUE_obj.results.tot,self.ATLAS_obj.results.tot,self.CMS_obj.results.tot))
+
+        o.write('\n\\end{scotch}')
+        o.close()
 
         return

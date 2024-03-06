@@ -5,6 +5,8 @@ from combTools import *
 
 import default_files
 
+from LHC_object import mergeMap_default, renameMap_default
+
 default_file = default_files.default_file_CMS
 
 def main():
@@ -22,8 +24,8 @@ def main():
     parser.add_argument('--noSigns',action='store_true', help='remove correlation signs')
     parser.add_argument('--deriveImpactSigns',action='store_true', help='derive signs of the impacts')
     parser.add_argument('--subCombinations',action='store_true', help='perform sub-combinations')
-    parser.add_argument('--printPulls',action='store_true', help='print pulls')
     parser.add_argument('--onlyWeightsAbove',action='store',type=float, help='re-perform combination with ony weights above given value')
+    parser.add_argument('--mergeJES',action='store_true', help='linearly combine flavour JES')
 
     args = parser.parse_args()
 
@@ -40,8 +42,16 @@ def main():
         excludeSyst = args.excludeSyst.split(',')
         excludeSyst = [removeUselessCharachters(e) for e in excludeSyst]
 
-    base_obj = BLUE_object(args.f,excludeMeas,excludeSyst)
-    base_obj.printFullCorrTable('CMS')
+    base_obj = BLUE_object(args.f,excludeMeas=excludeMeas,excludeSyst=excludeSyst)
+    for old, new in renameMap_default['CMS'].items():
+        base_obj.renameSyst(old,new)
+
+    if args.mergeJES:
+        base_obj.mergeSystLinear('f-JES',['JESFLV','JESflavresLHC','JESlight'])
+
+    base_obj.printFullCorrTable()
+    base_obj.printPullWeightsTable()
+
     if args.noSigns:
         base_obj.removeSigns()
 
@@ -49,11 +59,20 @@ def main():
         print('\nestimating signs of impacts, this will take a short while...\n')
         base_obj.deriveSignedImpacts()
 
+        
+    base_obj.printSummaryTable(CMS_grid=True)
+    
+    clone = base_obj.clone()
+    for merged, original_l in list(mergeMap_default['CMS'].items()):
+        clone.mergeSyst(merged,original_l)
+    clone.printSummaryTable()
+
+
     base_obj.printResults()
-    base_obj.printImpactsSorted()
-    base_obj.printPulls(prefix='CMS')
-    base_obj.printWeights(prefix='CMS')
+    clone.printImpactsSorted()
+    base_obj.printStats()
     drawWeights(base_obj,path='plots')
+    base_obj.printSummaryCorrTableCMS()
 
     if args.excludeMeasOneByOne:
         excludeMeasOneByOne(base_obj)
@@ -82,7 +101,6 @@ def main():
     if not args.onlyWeightsAbove is None:
         base_obj.doCombinationWeightsAbove(wmin=args.onlyWeightsAbove,printout=True)
 
-    return
 
 if __name__ == "__main__":
     main()

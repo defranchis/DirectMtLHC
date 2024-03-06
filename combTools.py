@@ -8,6 +8,7 @@ ROOT.gROOT.SetBatch(True)
 
 toys_dir = 'toys_workdir'
 scan_dir = 'scan_workdir'
+scan_dir_CMS = 'scan_workdir'
 scan_dir_LHC = 'LHC_scan_workdir'
 
 
@@ -65,11 +66,11 @@ def plotToyResults(l_mt, l_tot, l_stat, l_syst, d_weights, d_syst, base_obj):
     l.SetLineColor(ROOT.kGreen)
     h_mt.DrawNormalized()
     l.Draw('same')
-    c.SaveAs('{}/mt.png'.format(toys_dir))
-    c.SaveAs('{}/mt.pdf'.format(toys_dir))
+    c.SaveAs('{}/toy_mt.png'.format(toys_dir))
+    c.SaveAs('{}/toy_mt.pdf'.format(toys_dir))
     c.Clear()
     f.write('\\begin{{frame}}{{toys for variable mt}}\n')
-    f.write('\\centering\\includegraphics[width=.75\\textwidth]{{{}/mt.pdf}}\n'.format(toys_dir))
+    f.write('\\centering\\includegraphics[width=.75\\textwidth]{{{}/toy_mt.pdf}}\n'.format(toys_dir))
     f.write('\\end{frame}\n\n')
 
     h_tot = TH1F('h_tot','h_tot',70,np.array(l_tot).mean()-3*np.array(l_tot).std(),np.array(l_tot).mean()+3*np.array(l_tot).std())
@@ -82,11 +83,11 @@ def plotToyResults(l_mt, l_tot, l_stat, l_syst, d_weights, d_syst, base_obj):
     l.SetLineColor(ROOT.kGreen)
     h_tot.DrawNormalized()
     l.Draw('same')
-    c.SaveAs('{}/tot.png'.format(toys_dir))
-    c.SaveAs('{}/tot.pdf'.format(toys_dir))
+    c.SaveAs('{}/toy_tot.png'.format(toys_dir))
+    c.SaveAs('{}/toy_tot.pdf'.format(toys_dir))
     c.Clear()
     f.write('\\begin{{frame}}{{toys for variable tot}}\n')
-    f.write('\\centering\\includegraphics[width=.75\\textwidth]{{{}/tot.pdf}}\n'.format(toys_dir))
+    f.write('\\centering\\includegraphics[width=.75\\textwidth]{{{}/toy_tot.pdf}}\n'.format(toys_dir))
     f.write('\\end{frame}\n\n')
 
     h_stat = TH1F('h_stat','h_stat',70,np.array(l_stat).mean()-3*np.array(l_stat).std(),np.array(l_stat).mean()+3*np.array(l_stat).std())
@@ -99,11 +100,11 @@ def plotToyResults(l_mt, l_tot, l_stat, l_syst, d_weights, d_syst, base_obj):
     l.SetLineColor(ROOT.kGreen)
     h_stat.DrawNormalized()
     l.Draw('same')
-    c.SaveAs('{}/stat.png'.format(toys_dir))
-    c.SaveAs('{}/stat.pdf'.format(toys_dir))
+    c.SaveAs('{}/toy_stat.png'.format(toys_dir))
+    c.SaveAs('{}/toy_stat.pdf'.format(toys_dir))
     c.Clear()
     f.write('\\begin{{frame}}{{toys for variable stat}}\n')
-    f.write('\\centering\\includegraphics[width=.75\\textwidth]{{{}/stat.pdf}}\n'.format(toys_dir))
+    f.write('\\centering\\includegraphics[width=.75\\textwidth]{{{}/toy_stat.pdf}}\n'.format(toys_dir))
     f.write('\\end{frame}\n\n')
 
     h_syst = TH1F('h_syst','h_syst',70,np.array(l_syst).mean()-3*np.array(l_syst).std(),np.array(l_syst).mean()+3*np.array(l_syst).std())
@@ -116,11 +117,11 @@ def plotToyResults(l_mt, l_tot, l_stat, l_syst, d_weights, d_syst, base_obj):
     l.SetLineColor(ROOT.kGreen)
     h_syst.DrawNormalized()
     l.Draw('same')
-    c.SaveAs('{}/syst.png'.format(toys_dir))
-    c.SaveAs('{}/syst.pdf'.format(toys_dir))
+    c.SaveAs('{}/toy_syst.png'.format(toys_dir))
+    c.SaveAs('{}/toy_syst.pdf'.format(toys_dir))
     c.Clear()
     f.write('\\begin{{frame}}{{toys for variable syst}}\n')
-    f.write('\\centering\\includegraphics[width=.75\\textwidth]{{{}/syst.pdf}}\n'.format(toys_dir))
+    f.write('\\centering\\includegraphics[width=.75\\textwidth]{{{}/toy_syst.pdf}}\n'.format(toys_dir))
     f.write('\\end{frame}\n\n')
 
     if not os.path.exists('{}/syst'.format(toys_dir)):
@@ -345,8 +346,7 @@ def increaseAllWeakCorrelations(base_obj):
     c.Clear()
 
 def makeCorrelationScan(base_obj,syst_scan):
-    if base_obj.LHC:
-        scan_dir = scan_dir_LHC
+    scan_dir = scan_dir_LHC if base_obj.LHC else scan_dir_CMS
     if not os.path.exists(scan_dir+'/syst'):
         os.makedirs(scan_dir+'/syst')
     step = 0.01
@@ -409,8 +409,8 @@ def makeCorrelationScan(base_obj,syst_scan):
     return
 
 def plotScanSummary(base_obj,blind=False,syst_list=[]):
-    if base_obj.LHC:
-        scan_dir = scan_dir_LHC
+
+    scan_dir = scan_dir_LHC if base_obj.LHC else scan_dir_CMS
     
     mt_maxdiff = {}
     tot_maxdiff = {}
@@ -516,7 +516,7 @@ def plotScanSummary(base_obj,blind=False,syst_list=[]):
         c.SaveAs(scan_dir+'/scan_tot_summary.png')
         c.SaveAs(scan_dir+'/scan_tot_summary.pdf')
         
-    leg = TLegend(.2,.6,.6,.85)
+    leg = TLegend(.4,.6,.8,.85)
     leg.SetBorderSize(0)
 
     if base_obj.LHC:
@@ -534,7 +534,7 @@ def plotScanSummary(base_obj,blind=False,syst_list=[]):
             mt.SetLineWidth(2)
             leg.AddEntry(mt,systNameDict[syst],'l')
             if i==0:
-                mt.GetYaxis().SetRangeUser(mt_m-.001,mt_M+.005)
+                mt.GetYaxis().SetRangeUser(mt_m-.008,mt_M+.005)
                 mt.GetYaxis().SetTitleSize(mt.GetYaxis().GetTitleSize()*1.7)
                 mt.GetYaxis().SetTitleOffset(.8)
                 mt.GetYaxis().SetTitle('m_{t} - m_{t}^{central}')
@@ -574,8 +574,8 @@ def plotScanSummary(base_obj,blind=False,syst_list=[]):
     return
 
 def makeCorrelationScans(base_obj,blind=False):
-    if base_obj.LHC:
-        scan_dir = scan_dir_LHC
+
+    scan_dir = scan_dir_LHC if base_obj.LHC else scan_dir_CMS
 
     if not os.path.exists(scan_dir):
         os.makedirs(scan_dir)
@@ -715,18 +715,15 @@ def drawWeights(base_obj,path='plots'):
             h.GetXaxis().SetBinLabel(i+1,measToROOT(meas))
 
     if not os.path.exists(path):
-        os.makepaths(path)
+        os.makedirs(path)
 
     ROOT.gStyle.SetOptStat(0000)
     c = TCanvas()
     h.SetFillColor(ROOT.kYellow)
     h.Draw('hist')
-    if not base_obj.LHC:
-        c.SaveAs(path+'/weights.png')
-        c.SaveAs(path+'/weights.pdf')
-    else:
-        c.SaveAs(path+'/weights_LHC.png')
-        c.SaveAs(path+'/weights_LHC.pdf')
+    c.SaveAs('{}/weights_{}.png'.format(path,base_obj.experiment()))
+    c.SaveAs('{}/weights_{}.pdf'.format(path,base_obj.experiment()))
+
 
     return
 
@@ -739,17 +736,18 @@ def nameForCMSPlots(name):
 
 
 def measToTex(meas):
-    if 'dil' in meas or 'MT2' in meas: return '$ll$'
+    if 'dil' in meas or 'MT2' in meas: return '$dil$'
     elif 'lj' in meas: return '$lj$'
     elif 'allhad' in meas or 'aj' in meas: return '$aj$'
-    elif 'sto' in meas: return '$t$'
+    elif 'sto' in meas: return '$\PQt$'
     elif 'SVX' in meas: return '$vtx$'
-    elif 'jps' in meas: return '$J/\\psi$'
+    elif 'jps' in meas: return '$\PJGy$'
+    elif meas == 'ATLAS_comb' or meas == 'CMS_comb': return meas.replace('_comb','')
     else: return 'ERROR'
 
 def measToROOT(meas):
     name = 'CMS ' if 'CMS' in meas else 'ATLAS '
-    if 'dil' in meas or 'MT2' in meas: name+='ll '
+    if 'dil' in meas or 'MT2' in meas: name+='dil '
     elif 'lj' in meas: name+='lj '
     elif 'allhad' in meas or 'aj' in meas: name+='aj '
     elif 'sto' in meas: name+='t '
