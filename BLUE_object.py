@@ -298,7 +298,8 @@ class BLUE_object:
         else:
             print(self.results.impacts)
         print()
-        print(self.results.weights)
+        rounded_weights = {key:round(self.results.weights[key]*100,1) for key in self.results.weights.keys()}
+        print(rounded_weights)
         print()
 
     def simplePrint(self,blind=False):
