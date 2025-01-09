@@ -1,6 +1,8 @@
 import sys, os, copy
 import numpy as np
 from operator import itemgetter
+import systNameDict as snd
+
 
 import ROOT as rt
 rt.gSystem.Load('libBlue.so')
@@ -10,7 +12,7 @@ from combTools import measToTex, removeUselessCharachters, isSymmetricMatrix, is
 
 np.random.seed(1)
 
-tab_dir = 'results_tables'
+tab_dir = 'tables'
 
 class result_object:
 
@@ -52,6 +54,7 @@ class BLUE_object:
         self.excludeMeas = excludeMeas
         self.excludeSyst = excludeSyst
         self.mergeImpacts = mergeImpacts
+        self.renamed = dict()
 
         if self.ATLAS:
             self.systnames, self.measurements, self.value, self.uncert, self.matrix = self.getAllATLASInfo()
@@ -82,6 +85,17 @@ class BLUE_object:
 
     def clone(self):
         return copy.deepcopy(self)
+
+    def cloneSyst(self, orig_syst, new_syst, scale = 1.):
+        if not orig_syst in self.systnames:
+            print('ERROR: systematics {} (to be cloned) not found')
+            sys.exit()
+        self.systnames.append(new_syst)
+        self.usedSyst.append(new_syst)
+        for meas in self.measurements:
+            self.uncert[meas][new_syst] = copy.deepcopy(self.uncert[meas][orig_syst])*scale
+        self.matrix[new_syst] = copy.deepcopy(self.matrix[orig_syst])
+        self.update()
 
     def getUsedMeasSyst(self):
 
@@ -264,6 +278,11 @@ class BLUE_object:
                 m[i,j] = matrix[meas1][meas2]*uncert[meas1][syst]*uncert[meas2][syst]
         return m
 
+    def flipAllSignsSyst(self,syst):
+        for meas in self.measurements:
+            self.uncert[meas][syst] *= -1.
+        self.update()
+
     def printResults(self):
         print('\n-> combination results\n')
         if len(self.excludeMeas)>0:
@@ -279,12 +298,13 @@ class BLUE_object:
         else:
             print(self.results.impacts)
         print()
-        print(self.results.weights)
+        rounded_weights = {key:round(self.results.weights[key]*100,1) for key in self.results.weights.keys()}
+        print(rounded_weights)
         print()
 
-    def simplePrint(self):
+    def simplePrint(self,blind=False):
         print('mt\t\ttot\tstat\tsyst\t[GeV]')
-        print('{:.3f}\t\t{:.3f}\t{:.3f}\t{:.3f}'.format(self.results.mt,self.results.tot,self.results.stat,self.results.syst))
+        print('{:.3f}\t\t{:.3f}\t{:.3f}\t{:.3f}'.format(self.results.mt if not blind else 179.99,self.results.tot,self.results.stat,self.results.syst))
     
     def printOutput(self):
         print(self.log)
@@ -350,6 +370,9 @@ class BLUE_object:
         toy_lines = f.read().splitlines()
         self.systForToys = toy_lines[0].split()
         for s in self.systForToys:
+            if s in self.renamed.keys():
+                self.systForToys[self.systForToys.index(s)] = self.renamed[s]
+                s = self.renamed[s]
             if not s in self.systnames:
                 print('ERROR: systematic {} in file {} not found in input file'.format(s,fn))
                 sys.exit()
@@ -546,10 +569,33 @@ class BLUE_object:
         return systnames, measurements,all_central,all_uncertainties,all_corr_dict
 
     def printImpactsSorted(self):
-        import systNameDict as snd
+
+        if not os.path.exists(tab_dir):
+            os.makedirs(tab_dir)
+
+        ofile = 'impacts_' + self.experiment()
+        o = open('{}/{}.tex'.format(tab_dir,ofile),'w')
+
+        f_start = open('templates/impacts_start.tex')
+        o.write(f_start.read().replace('#EXPTAB#',self.experiment(table=True)).replace('#EXP#',self.experiment()))
+
         for k, v in sorted(list(self.results.mergedImpacts.items()), key=itemgetter(1), reverse = True):
             print('{:>25}\t{:.2f}'.format(snd.systNameDict[k],v).replace('0.00','< 0.01'))
+            if k != 'Stat':
+                o.write('{:>25}\t&\t{:.2f} \\\\ \n'.format(snd.systNameDict[k],v).replace('0.00','$< 0.01$'))
+
         print()
+
+        o.write('\\hline\n')
+        o.write('Total systematic & {:.2f} \\\\\n'.format(self.results.syst))
+        o.write('Statistical & {:.2f} \\\\\n'.format(self.results.stat))
+        o.write('\\hline\n')
+        o.write('Total & {:.2f} \\\\\n'.format(self.results.tot))
+
+        f_end = open('templates/end.tex')
+        o.write(f_end.read().replace('}}','}'))
+
+        o.close()
 
     def deriveSignedImpact(self,syst):
 
@@ -609,6 +655,9 @@ class BLUE_object:
         for meas in self.measurements:
             self.uncert[meas][new] = self.uncert[meas].pop(old)
         self.matrix[new] = self.matrix.pop(old)
+        if old in self.renamed.keys():
+            print('\nWARNING: systematic {} renamed multiple times\n'.format(old))
+        self.renamed[old] = new
         self.update()
                 
         return
@@ -685,8 +734,6 @@ class BLUE_object:
         return True
 
 
-
-
     def mergeSyst(self,merged,original_l):
         for original in original_l:
             if not original in self.usedSyst:
@@ -719,6 +766,35 @@ class BLUE_object:
         self.update()
 
         return
+
+
+    def mergeSystLinear(self,merged,original_l):
+
+        for orig in original_l:
+            if not orig in self.usedSyst:
+                print('ERROR: systematics {} not in input file or not in use'.format(orig))
+                sys.exit()
+            if self.matrix[orig] != self.matrix[original_l[0]]:
+                print('ERROR: to merge linearly all correlation matrices must be identical!')
+                sys.exit()
+
+        for meas in self.measurements:
+            self.uncert[meas][merged] = np.sum(np.array([self.uncert[meas][orig] for orig in original_l]))
+            for orig in original_l:
+                self.uncert[meas].pop(orig)
+
+        self.matrix[merged] = copy.deepcopy(self.matrix[original_l[0]])        
+        self.systnames.append(merged)
+
+        for orig in original_l:
+            self.systnames.remove(orig)
+            self.matrix.pop(orig)
+            
+        self.update()
+
+        return
+
+
 
 
     def checkAllSystMatrices(self):
@@ -767,13 +843,31 @@ class BLUE_object:
         self.results.tot = tot**.5
         return
 
+    def getTotalSystMeas(self,meas):
+        arr = np.array([self.uncert[meas][syst] for syst in self.usedSyst if syst != 'Stat'])
+        return np.sum(arr**2)**.5
+
+    def getTotalUncertMeas(self,meas):
+        arr = np.array([self.uncert[meas][syst] for syst in self.usedSyst])
+        return np.sum(arr**2)**.5
+
+
+    def setMergeImpacts(self,mergeImpacts,force=False):
+        if len(self.mergeImpacts) > 0 and not force:
+            print('ERROR: mergeImpacts already set. Use force=True for forcing new values')
+            sys.exit()
+        self.mergeImpacts = mergeImpacts
+        print(self.mergeImpacts)
+        self.update()
+        return
+
     def prepareTable(self):
         systsToMergeForTable = []
         for l in list(self.mergeImpacts.values()):
             systsToMergeForTable.extend(l)
         for syst in systsToMergeForTable:
             if not syst in self.usedSyst:
-                print('ERROR: systematics {} (to be merged) not found')
+                print('ERROR: systematics {} (to be merged) not found'.format(syst))
                 sys.exit()
 
         if len(systsToMergeForTable) != len(set(systsToMergeForTable)):
@@ -840,9 +934,13 @@ class BLUE_object:
         
         return
 
-    def doSubCombination(self,obsDict,printResults=False):
+    def doSubCombination(self,obsDict,printResults=False,jsonForPlot=False,tabName=None):
 
         nObs = len(list(obsDict.keys()))
+
+        if jsonForPlot and nObs != 2:
+            print('ERROR: cannot print json')
+            sys.exit()
 
         vecObs = rt.vector('Int_t')()
         for i,meas in enumerate(self.usedMeas):
@@ -873,6 +971,9 @@ class BLUE_object:
             myBlue.PrintResult()
             myBlue.PrintWeight()
             myBlue.PrintRhoRes()
+            print('chi2 = {:.2f}'.format(myBlue.GetChiq()))
+            print('ndof = {}'.format(myBlue.GetNdof()))
+            print('prob = {:.1f}%'.format(myBlue.GetProb()*100))
 
         results = rt.TMatrixD(nObs,len(self.usedSyst)+1)
         myBlue.GetResult(results)
@@ -886,28 +987,74 @@ class BLUE_object:
                 uncobs[syst] = results[i][j+1]
             unc[obs] = uncobs
 
+        if jsonForPlot:
+            uncert = rt.TMatrixD(nObs,1)
+            myBlue.GetUncert(uncert)
+            rho = rt.TMatrixD(nObs,nObs)
+            myBlue.GetRhoRes(rho)
+
+            all_dict = dict()
+            all_dict['ATLAS_mt'] = res['ATLAS']
+            all_dict['CMS_mt'] = res['CMS']
+            all_dict['ATLAS_tot'] = uncert[0,0]
+            all_dict['CMS_tot'] = uncert[1,0]
+            all_dict['rho'] = rho[0][1]
+
+            import json
+            with open('subcomb_full.json','w') as j:
+                j.write(json.dumps(all_dict))
+
+        if not tabName is None:
+            weights = rt.TMatrixD(myBlue.GetActEst(),myBlue.GetActObs())
+            myBlue.GetWeight(weights)
+            w_dict = dict()
+            for i, obs in enumerate(obsDict.keys()):
+                w_dict[obs] = [weights[j][i] for j, _ in enumerate(vecObs)]
+            self.printSubCombWeights(name=tabName,w_dict=w_dict)
+
+        if tabName == 'channel':
+            rho = rt.TMatrixD(myBlue.GetActObs(),myBlue.GetActObs())
+            myBlue.GetRhoRes(rho)
+            self.printSubCombCorrTable(obsDict,rho,tabName)
+
         return res, unc
 
-
-    def printPulls(self,prefix):
-        if not os.path.exists(tab_dir):
-            os.makedirs(tab_dir)
-        o = open('{}/{}_pulls.tex'.format(tab_dir,prefix),'w')
-        o.write('measurement & pull \\\\\n')
-        o.write('\\hline\n')
-        for meas in self.usedMeas:
-            o.write('{} & {:.2f} \\\\\n'.format(meas,self.results.pulls[meas]))
+    def printSubCombCorrTable(self,obsDict,rho,tabName):
+        o = open('{}/subcomb_corr_{}.tex'.format(tab_dir,tabName),'w')
+        o.write('\\begin{scotch}{'+'c'*(len(obsDict)+1)+'}\n')
+        for obs in list(obsDict.keys()):
+            o.write('& {} '.format(obs).replace('other','Other'))
+        o.write('\\\\ \hline \n')
+        for i, obs in enumerate(list(obsDict.keys())):
+            o.write(obs.replace('other','Other'))
+            for j, _ in enumerate(list(obsDict.keys())):
+                o.write(' & {:.2f}'.format(rho[i][j]).replace('0.00','\makebox[0pt][r]{$<$}0.01'))
+            o.write(' \\\\\n')
+        o.write('\\end{scotch}')
         return
 
-    def printWeights(self,prefix):
+    def printSubCombWeights(self,name,w_dict):
+
         if not os.path.exists(tab_dir):
             os.makedirs(tab_dir)
-        o = open('{}/{}_weights.tex'.format(tab_dir,prefix),'w')
-        o.write('measurement & weight \\\\\n')
-        o.write('\\hline\n')
-        for meas in self.usedMeas:
-            o.write('{} & {:.2f} \\\\\n'.format(meas,self.results.weights[meas]))
+
+        o = open('{}/subcomb_weight_{}.tex'.format(tab_dir,name),'w')
+        f_start = open('templates/LHC_start_paper.tex')
+        o.write(f_start.read())
+
+        for obs in list(w_dict.keys()):
+            o.write('{} '.format(obs if name != 'experiment' else '\mt'+obs).replace('other','Other'))
+            for j, meas in enumerate(self.usedMeas):
+                if meas == 'CMS11_dil':
+                    o.write('& ')
+                o.write(('& ${:+.2f}$ '.format(w_dict[obs][j])).replace('-0.00','+0.00').replace('+0.00','\makebox[0pt][r]{$<$}0.01'))
+            o.write('\\\\\n')
+
+        o.write('\end{scotch}}')
+
         return
+
+
 
     def getCovariance(self,syst):
         u = np.array([self.p_uncert[meas][syst] for meas in self.usedMeas])
@@ -919,19 +1066,20 @@ class BLUE_object:
         return m
 
 
-    def printFullCorrTable(self,exp):
+    def printFullCorrTable(self):
 
-        td = 'corr_tables'
-
-        if not os.path.exists(td):
-            os.makedirs(td)
+        if not os.path.exists(tab_dir):
+            os.makedirs(tab_dir)
 
         m = np.zeros((len(self.usedMeas),len(self.usedMeas)))
         for syst in self.usedSyst:
             m += self.getCovariance(syst)
         u = np.diag(np.diag(m)**.5)
         c = np.matmul(np.linalg.inv(u),np.matmul(m,np.linalg.inv(u)))
-        o = open('{}/{}_corr_full.tex'.format(td,exp),'w')
+        o = open('{}/{}_corr_full.tex'.format(tab_dir,self.experiment()),'w')
+
+        f_start = open('templates/{}_start.tex'.format(self.experiment()))
+        o.write(f_start.read())
 
         for i, meas in enumerate(self.usedMeas):
             if i==0:
@@ -940,10 +1088,212 @@ class BLUE_object:
                 o.write('& {} '.format(measToTex(meas)))
         o.write('\\\\\n')
         for i,meas1 in enumerate(self.usedMeas):
+            if not i%3: o.write('\\hline\n')
             o.write(measToTex(meas1)+' ')
             for j,meas2 in enumerate(self.usedMeas):
                 o.write('& {:.2f} '.format(c[i][j]))
             o.write('\\\\\n')
+            
+        f_end = open('templates/end.tex')
+        if self.CMS:
+            o.write(f_end.read().replace('}}','}'))
+        else:
+            o.write(f_end.read())
+
+        return c
+
+    def printPullWeightsTable(self, blind=False):
+
+        if not os.path.exists(tab_dir):
+            os.makedirs(tab_dir)
+
+        o = open('{}/{}_pull_weight.tex'.format(tab_dir,self.experiment()),'w')
+
+        f_start = open('templates/{}_start.tex'.format(self.experiment()))
+        o.write(f_start.read().replace('Correlation matrix','Pulls and weights').replace('tab:corr','tab:pulls_weights'))
+
+        for i, meas in enumerate(self.usedMeas):
+            if i==0:
+                o.write('\t& {} '.format(measToTex(meas)))
+            else:
+                o.write('& {} '.format(measToTex(meas)))
+        o.write('\\\\\n\\hline\npull')
+        for meas in self.usedMeas:
+            if not blind:
+                o.write('& {:.2f} '.format(self.results.pulls[meas]))
+            else:
+                o.write('& x.x ')
+        o.write('\\\\\nweight')
+        for meas in self.usedMeas:
+            o.write('& {:.2f} '.format(self.results.weights[meas]))
+        o.write('\\\\\n')
+            
+        f_end = open('templates/end.tex')
+
+        if self.experiment() == 'LHC':
+            o.write(f_end.read())
+        else:
+            o.write(f_end.read().replace('}}','}'))
+
+        
+        return
+
+    def getUncertaintyListForTable(self):
+        unc_list = [snd.syst_exp, snd.syst_mod, snd.syst_bkg, snd.syst_oth]
+        all_unc = [item for sublist in unc_list for item in sublist]
+        for syst in self.results.mergedImpacts.keys() - ['Stat']:
+            if not syst in all_unc:
+                print('ERROR: systematics {} not found in systNameDict'.format(syst))
+                sys.exit()
+        return unc_list
+
+    def printSummaryTable(self,CMS_grid=False):
+        unc_list = self.getUncertaintyListForTable()
+        if CMS_grid and not self.CMS:
+            print('ERROR: can use CMS grid only for CMS combination')
+            sys.exit()
+        if self.LHC:
+            print('ERROR: use printSummaryTableLHC function instead')
+            sys.exit()
+        else:
+            self.printSummaryTableExp(unc_list,CMS_grid)
+
+
+    def printSummaryTableExp(self,unc_list,CMS_grid):
+        o = open('{}/summary_table_{}.tex'.format(tab_dir,self.experiment() if not CMS_grid else self.experiment()+'_CMS_grid'),'w')
+        
+        f_start = open('templates/summary_{}.tex'.format(self.experiment()))
+        o.write(f_start.read() if not CMS_grid else f_start.read().replace('LHC grid','CMS grid').replace('data_input_CMS','data_input_CMS_grid'))
+
+        # for i, meas in enumerate(self.usedMeas):
+        #     if i==0:
+        #         o.write('\t& {} '.format(measToTex(meas)))
+        #     else:
+        #         o.write('& {} '.format(measToTex(meas)))
+
+        # o.write('& combined \\\\\n')
+        # o.write('\\hline\n')
+
+        o.write('\\mt')
+        for meas in self.usedMeas:
+            o.write(' & {:.2f} '.format(self.value[meas]))
+        o.write(' & {:.2f} \\\\'.format(self.results.mt))
+
+        for l in unc_list:
+            o.write(' [\\cmsTabSkip]')
+            for syst in l:
+                if not syst in self.usedSyst: continue
+                o.write('\n')
+                o.write(snd.systNameDict[syst])
+                for meas in self.usedMeas:
+                    if self.uncert[meas][syst] == 0.:
+                        o.write(' & \\NA ')
+                    elif abs(round(self.uncert[meas][syst],2)) > 0: 
+                        o.write(' & {:.2f} '.format(abs(self.uncert[meas][syst]) if not CMS_grid else self.uncert[meas][syst]))
+                    else:
+                        o.write(' & $<$0.01 ')
+                if round(self.results.mergedImpacts[syst],2) > 0:
+                    o.write(' & {:.2f} '.format(self.results.mergedImpacts[syst]))
+                else: o.write(' & $<$0.01 ')
+                o.write('\\\\')
+
+        o.write(' [\\cmsTabSkip]\n')
+        o.write('Total systematic')
+        for meas in self.usedMeas:
+            o.write(' & {:.2f} '.format(self.getTotalSystMeas(meas)))
+        o.write(' & {:.2f} \\\\\n'.format(self.results.syst))
+        o.write('Statistical')
+        for meas in self.usedMeas:
+            o.write(' & {:.2f} '.format(self.uncert[meas]['Stat']))
+        o.write(' & {:.2f} \\\\'.format(self.results.stat))
+        o.write(' [\\cmsTabSkip]\n')
+        o.write('Total')
+        for meas in self.usedMeas:
+            o.write(' & {:.2f} '.format(self.getTotalUncertMeas(meas)))
+        o.write(' & {:.2f} \\\\\n'.format(self.results.tot))
+
+        o.write('\\end{scotch}')
+        if self.experiment() == 'CMS':
+            o.write('}')
+
+        return
+
+    def getSystNotInEra(self,com):
+        syst_l = []
+        for syst in self.usedSyst:
+            l = []
+            for meas in self.usedMeas:
+                if sqrts(meas) == com:
+                    l.append(self.uncert[meas][syst])
+            if np.all(np.array(l)==0):
+                syst_l.append(syst)
+            
+        return syst_l
+
+    def pickTwo(self,com):
+        l = []
+        for meas in self.usedMeas:
+            if sqrts(meas) == com:
+                l.append(meas)
+            if len(l)==2: break
+        return l
+
+    def getCorrAssumptions(self,syst,pick_two_7,pick_two_8):
+        return [self.matrix[syst][pick_two_7[0]][pick_two_7[1]], self.matrix[syst][pick_two_8[0]][pick_two_8[1]], self.matrix[syst][pick_two_7[0]][pick_two_8[0]]]
+
+    def printSummaryCorrTableCMS(self):
+        
+        if not self.CMS:
+            print('ERROR: called printSummaryCorrTableCMS for {}'.format(self.experiment()))
+        
+        not_in_7 = self.getSystNotInEra(7)
+        not_in_8 = self.getSystNotInEra(8)
+        pick_two_7 = self.pickTwo(7)
+        pick_two_8 = self.pickTwo(8)
+
+        d = {}
+        for syst in self.usedSyst:
+            d[syst] = self.getCorrAssumptions(syst,pick_two_7,pick_two_8)
+
+        from LHC_object import mergeMap_default
+        unc_list = copy.deepcopy([snd.syst_exp, snd.syst_mod, snd.syst_bkg, snd.syst_oth])
+        for l in unc_list:
+            for new, merged in mergeMap_default['CMS'].items():
+                if new in l:
+                    l.remove(new)
+                    l.extend(merged)
+        
+        for syst in self.usedSyst:
+            if syst == 'Stat': continue
+            found = False
+            for l in unc_list:
+                if syst in l: 
+                    found = True
+                    break
+            if not found:
+                print('ERROR: systematics {} not found in systNameDict'.format(syst))
+                sys.exit()
+
+        o = open('{}/CMS_corr_summary.tex'.format(tab_dir),'w')
+
+        f_start = open('templates/CMS_corr_start.tex')
+        o.write(f_start.read())
+
+
+        for l in unc_list:
+            o.write('\\hline\n')
+            for syst in l:
+                if syst not in self.usedSyst:
+                    continue
+                if syst.startswith('Atl'):
+                    continue
+                o.write('{} & {} & {} & {} \\\\\n'.format(snd.systNameDict[syst],
+                                                          d[syst][0] if not syst in not_in_7 else '--',
+                                                          d[syst][1] if not syst in not_in_8 else '--',
+                                                          d[syst][2] if not syst in not_in_7 and not syst in not_in_8 else '--',
+                                                      ))
+        f_end = open('templates/end.tex')
+        o.write(f_end.read().replace('}}','}'))
 
         return
 
@@ -966,3 +1316,23 @@ class BLUE_object:
             obj.simplePrint()
 
         return obj.results
+
+    def printStats(self):
+        print('\nchi2/ndf = {:.1f}/{} ({:.1f})'.format(self.chi2,self.ndf,self.chi2/self.ndf))
+        print('prob = {:.1f} %\n'.format(self.prob*100))
+
+    def experiment(self,table=False):
+        if self.ATLAS: return 'ATLAS'
+        if self.CMS: return 'CMS'
+        if self.LHC:
+            if len(self.measurements) == 2:
+                return 'LHC_sep' if not table else 'LHC (method B)'
+            else: return 'LHC'
+        return 'ERROR'
+
+    def printWeights(self):
+        print()
+        for meas in self.usedMeas:
+            print( 'weight {}\t{:.3f}'.format(meas,self.results.weights[meas]))
+        print()
+        return

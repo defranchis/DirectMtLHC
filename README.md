@@ -6,3 +6,4 @@
 - extract BLUE_custom.tar.gz in the BLUE directory (called 2.4.0)
 - compile BLUE (make)
 - link libBlue.so to the main directory
+- extract atlasrootstyle.tar.gz in your home directory

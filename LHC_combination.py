@@ -1,9 +1,8 @@
-
 from BLUE_object import BLUE_object
 from LHC_object import LHC_object
 from LHC_tools import makeAllCorrelationScansLHC, flipAmbiguousSigns
 from combTools import getToyResults, getToyResultsLHCobj, excludeMeasOneByOne, makeCorrelationScans, plotScanSummary, drawWeights, measToTex, measToROOT
-import argparse, sys, copy
+import argparse, sys, copy, os
 import numpy as np
 
 import default_files
@@ -45,8 +44,9 @@ def main():
     parser = argparse.ArgumentParser(description='specify options')
 
     parser.add_argument('--scanAllCorr',action='store_true', help='scan all correlations with simple assumptions for both methods')
+    parser.add_argument('--scanbJES',action='store_true', help='scan b JES correlations with both methods')
     parser.add_argument('--flipSigns',action='store_true', help='flip all ambiguous signs in LHC correlations')
-    parser.add_argument('--unblind',action='store_true', help='do not blind the LHC combination')
+    parser.add_argument('--blind', dest='unblind', action='store_false', help='blind the LHC combination')
     parser.add_argument('--nToys',action='store',type=int, help='number of toys for MC stat', default=0)
     parser.add_argument('--subCombinations',action='store_true', help='perform sub-combinations')
     parser.add_argument('--onlyWeightsAbove',action='store',type=float, help='re-perform combination with ony weights above given value')
@@ -66,9 +66,16 @@ def main():
     LHC_sep_unblind = LHC_object(obj_ATLAS, obj_CMS, blind=False, separateCombinations=True, PU_hack=PU_hack)
 
     LHC_full_unblind.printCorrTables(draw=True)
-    LHC_full_unblind.makeSummaryPlot(blind=not args.unblind)
+    LHC_full_unblind.BLUE_obj.printPullWeightsTable(blind=not args.unblind)
+    if args.unblind:
+        LHC_full_unblind.printPullWeightsComparisonTable()
+    LHC_full_unblind.printSummaryTableLHC()
+    LHC_full_unblind.printAllImpactsSorted()
+    # LHC_full_unblind.makeSummaryPlot(blind=not args.unblind)
     
-    print('CMS combination \n')
+    LHC_sep_unblind.BLUE_obj.printPullWeightsTable(blind=not args.unblind)
+
+    # print('CMS combination \n')
     # LHC_full_unblind.obj_d['CMS'].simplePrint()
     # LHC_full_unblind.obj_d['CMS'].printImpactsSorted()
 
@@ -96,21 +103,13 @@ def main():
     print(abs(LHC_sep_unblind.getBlueObject().results.mt - LHC_full_unblind.getBlueObject().results.mt), 'GeV\n')
 
 
-    LHC_full_unblind.BLUE_obj.printWeights(prefix='LHC_A')
-    LHC_sep_unblind.BLUE_obj.printWeights(prefix='LHC_B')
-
     drawWeights(LHC_full_unblind.BLUE_obj)
-
-    produceSummaryTable(LHC_full_unblind.BLUE_obj,blind=not args.unblind)
-
-    if args.unblind:
-        LHC_full_unblind.BLUE_obj.printPulls(prefix='LHC_A')
-        LHC_sep_unblind.BLUE_obj.printPulls(prefix='LHC_B')
+    produceSummaryTable(LHC_full_unblind,blind=not args.unblind)
 
 
-    if args.scanAllCorr:
-        makeAllCorrelationScansLHC(LHC_full_unblind,LHC_sep_unblind,blind=not args.unblind)
-        plotScanSummary(LHC_full_unblind.BLUE_obj,blind=not args.unblind,syst_list=list(LHC_full_unblind.corrMap.keys()))
+    if args.scanAllCorr or args.scanbJES:
+        makeAllCorrelationScansLHC(LHC_full_unblind,LHC_sep_unblind, only_bJES = args.scanbJES)
+        plotScanSummary(LHC_full_unblind.BLUE_obj,syst_list=list(LHC_full_unblind.corrMap.keys()))
 
     if args.flipSigns:
         flipAmbiguousSigns(LHC_full_unblind,LHC_sep_unblind)
@@ -118,7 +117,7 @@ def main():
     if args.nToys > 0:
 
         # full combination
-        LHC_full_unblind.CMS_obj.prepareForToys('MCstat_CMS_forLHC.txt')
+        LHC_full_unblind.CMS_obj.prepareForToys('inputs/MCstat_CMS_forLHC.txt')
         LHC_full_unblind.ATLAS_obj.prepareForToys('MCstat_ATLAS.txt')
         makeLHC_MCstat_file(LHC_full_unblind.ATLAS_obj,LHC_full_unblind.CMS_obj)        
 
@@ -128,7 +127,7 @@ def main():
         getToyResults(LHC_obj_full,plotToys=False,blind=not args.unblind)
 
         # separate combiantions
-        LHC_sep_unblind.CMS_obj.prepareForToys('MCstat_CMS_forLHC.txt')
+        LHC_sep_unblind.CMS_obj.prepareForToys('inputs/MCstat_CMS_forLHC.txt')
         LHC_sep_unblind.ATLAS_obj.prepareForToys('MCstat_ATLAS.txt')
         LHC_sep_unblind.CMS_obj.throwToys(args.nToys)
         LHC_sep_unblind.ATLAS_obj.throwToys(args.nToys)
@@ -138,20 +137,20 @@ def main():
         CMS = [meas for meas in LHC_full_unblind.BLUE_obj.usedMeas if 'CMS' in meas]
         ATLAS = [meas for meas in LHC_full_unblind.BLUE_obj.usedMeas if not meas in CMS]
         obsDict = {'ATLAS':ATLAS, 'CMS':CMS}
-        LHC_full_unblind.BLUE_obj.doSubCombination(obsDict=obsDict,printResults=True)
+        LHC_full_unblind.BLUE_obj.doSubCombination(obsDict=obsDict,printResults=True,jsonForPlot=True,tabName='experiment')
 
         CMS = [meas for meas in LHC_sep_unblind.BLUE_obj.usedMeas if 'CMS' in meas]
         ATLAS = [meas for meas in LHC_sep_unblind.BLUE_obj.usedMeas if not meas in CMS]
         obsDict = {'ATLAS':ATLAS, 'CMS':CMS}
         LHC_sep_unblind.BLUE_obj.doSubCombination(obsDict=obsDict,printResults=True)
 
-        ll = [meas for meas in LHC_full_unblind.BLUE_obj.usedMeas if measToTex(meas)=='$ll$']
+        ll = [meas for meas in LHC_full_unblind.BLUE_obj.usedMeas if measToTex(meas)=='$dil$']
         lj = [meas for meas in LHC_full_unblind.BLUE_obj.usedMeas if measToTex(meas)=='$lj$']
         aj = [meas for meas in LHC_full_unblind.BLUE_obj.usedMeas if measToTex(meas)=='$aj$']
         other = [meas for meas in LHC_full_unblind.BLUE_obj.usedMeas if not meas in ll and not meas in lj and not meas in aj]
         obsDict = {'ll':ll, 'lj':lj, 'aj':aj, 'other':other}
         if args.unblind:
-            LHC_full_unblind.BLUE_obj.doSubCombination(obsDict=obsDict,printResults=True)
+            LHC_full_unblind.BLUE_obj.doSubCombination(obsDict=obsDict,printResults=True,tabName='channel')
         else:
             res, unc = LHC_full_unblind.BLUE_obj.doSubCombination(obsDict=obsDict,printResults=False)
             LHC_full.BLUE_obj.doSubCombination(obsDict=obsDict,printResults=True)
@@ -181,13 +180,14 @@ def getTotUncFromDict(ud,no_stat=False):
     if not no_stat: return (np.sum(unc**2))**.5
     else: return (np.sum(unc**2) - ud['Stat']**2)**.5
 
-def produceSummaryTable(obj,blind=True):
+def produceSummaryTable(LHC_obj,blind=True):
 
-    ll = [meas for meas in obj.usedMeas if measToTex(meas)=='$ll$']
+    obj = LHC_obj.BLUE_obj
+    ll = [meas for meas in obj.usedMeas if measToTex(meas)=='$dil$']
     lj = [meas for meas in obj.usedMeas if measToTex(meas)=='$lj$']
     aj = [meas for meas in obj.usedMeas if measToTex(meas)=='$aj$']
     other = [meas for meas in obj.usedMeas if not meas in ll and not meas in lj and not meas in aj]
-    obsDict = {'ll':ll, 'lj':lj, 'aj':aj, 'other':other}
+    obsDict = {'dil':ll, 'lj':lj, 'aj':aj, 'other':other}
     res, unc = obj.doSubCombination(obsDict=obsDict,printResults=False)
 
     of = open('summary_table_LHC.txt','w')
@@ -201,8 +201,15 @@ def produceSummaryTable(obj,blind=True):
         all_dict[measToROOT(meas).replace('#','')] = [mt,stat,syst,tot]
 
     of.write('\n')
+    of.write('{},\t {:.2f}, {:.2f}, {:.2f}, {:.2f}\n'.format('ATLAS_comb',LHC_obj.ATLAS_obj.results.mt,LHC_obj.ATLAS_obj.results.stat,LHC_obj.ATLAS_obj.results.syst,LHC_obj.ATLAS_obj.results.tot))
+    of.write('{},\t {:.2f}, {:.2f}, {:.2f}, {:.2f}\n'.format('CMS_comb',LHC_obj.CMS_obj.results.mt,LHC_obj.CMS_obj.results.stat,LHC_obj.CMS_obj.results.syst,LHC_obj.CMS_obj.results.tot))
+    all_dict['ATLAS_comb'] = [LHC_obj.ATLAS_obj.results.mt,LHC_obj.ATLAS_obj.results.stat,LHC_obj.ATLAS_obj.results.syst,LHC_obj.ATLAS_obj.results.tot]
+    all_dict['CMS_comb'] = [LHC_obj.CMS_obj.results.mt,LHC_obj.CMS_obj.results.stat,LHC_obj.CMS_obj.results.syst,LHC_obj.CMS_obj.results.tot]
+    of.write('\n')
+
+    of.write('\n')
     for ch in obsDict.keys():
-        mt = res[ch] if not blind else 172
+        mt = res[ch] if not blind else 172 + (res[ch]-obj.results.mt)
         stat = unc[ch]['Stat']
         tot = getTotUncFromDict(unc[ch])
         of.write('{},\t {:.2f}, {:.2f}, {:.2f}, {:.2f}\n'.format(ch+' comb',mt,stat,(tot**2-stat**2)**.5,tot))
@@ -215,6 +222,8 @@ def produceSummaryTable(obj,blind=True):
     with open('summary_LHC.json','w') as j:
         j.write(json.dumps(all_dict))
 
+    os.system('python3 plotter/summaryPlot.py')
+        
     return
 
 

@@ -4,6 +4,8 @@ import argparse
 
 import default_files
 
+from LHC_object import mergeMap_default, renameMap_default
+
 infile = default_files.default_file_ATLAS
 MC_file = 'MCstat_ATLAS.txt'
 
@@ -33,9 +35,14 @@ def main():
 
     args = parser.parse_args()
 
-    base_obj = BLUE_object(infile,ATLAS=True,PU_hack=False)
+    base_obj = BLUE_object(infile,ATLAS=True,PU_hack=True)
+    for old, new in renameMap_default['ATLAS'].items():
+        base_obj.renameSyst(old,new)
+
+
     base_obj.printResults()
     base_obj.printImpactsSorted()
+    base_obj.printSummaryTable()
 
 
     if args.nToys > 0:

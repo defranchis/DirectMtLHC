@@ -9,9 +9,10 @@ ROOT.gROOT.SetBatch(True)
 np.random.seed(1)
 from combTools import scan_dir_LHC
 
-def makeAllCorrelationScansLHC(full,sep,blind=False):
+def makeAllCorrelationScansLHC(full,sep,blind=True,only_bJES=False):
 
     os.makedirs(scan_dir_LHC+'/syst',exist_ok=True)
+    os.makedirs(scan_dir_LHC+'/scans',exist_ok=True)
 
     LHC_full = full.clone()
     LHC_sep = sep.clone()
@@ -21,6 +22,7 @@ def makeAllCorrelationScansLHC(full,sep,blind=False):
         sys.exit()
     for syst in LHC_full.LHCsyst:
         if syst == 'Stat': continue
+        if only_bJES and syst != 'JESFLV': continue
         makeCorrelationScan(LHC_full,LHC_sep,orig_corrMap,syst,blind)
     return
 
@@ -34,9 +36,10 @@ def makeCorrelationScan(LHC_full,LHC_sep,corrMap,syst,blind=True):
         orig_corrMap[syst] = 0.
 
     corr = orig_corrMap[syst]
-    step = 0.005 if syst == 'JESFLV' else 0.05
+    # step = 0.005 if syst == 'JESFLV' else 0.05
+    step = 0.05
     halfrange = min(0.25, 1-abs(corr))
-    corrs = list(np.arange(corr-halfrange,corr+halfrange+step/2,step))
+    corrs = list(np.arange(corr-halfrange,corr+halfrange+step/2,step)) if not (syst == 'JESFLV') else list(np.arange(.5,1+step/2,step))
     corrs = [round(c,3) for c in corrs]
 
     scan_d = dict()
@@ -100,7 +103,7 @@ def plotScanResults(corrs,scan_d,syst,variable,blind=True):
         if i==0:
             if variable == 'tot':
                 gd[meth].SetMinimum(0.28)
-                gd[meth].SetMaximum(0.32)
+                gd[meth].SetMaximum(0.35)
                 gd[meth].SetTitle('{}; correlation; total uncertainty [GeV]'.format(syst))
             else:
                 offset = 172.5 if not blind else 0
@@ -117,8 +120,8 @@ def plotScanResults(corrs,scan_d,syst,variable,blind=True):
     latexLabel = TLatex()
     from systNameDict import systNameDict
     latexLabel.SetTextSize(0.045)
-    latexLabel.DrawLatexNDC(.15,.92,'scan for: {}'.format(systNameDict[syst]))
-    c.SaveAs('{}/scan_{}_{}.png'.format(scan_dir_LHC,variable,syst))
+    latexLabel.DrawLatexNDC(.15,.92,'scan for: {}'.format(syst))
+    c.SaveAs('{}/scans/scan_{}_{}.png'.format(scan_dir_LHC,variable,syst))
 
     gd['full'].SetName(variable)
 
@@ -171,10 +174,10 @@ def flipAllSignsLHC(LHC_full,LHC_sep,ambiguous_l,orig_corrMap):
     for meth, obj in list(obj_d.items()):
         print()
         print('-> method =', meth)
-        print('uncertainty original signs =', obj.getBlueObject().results.tot, 'GeV')
+        print('uncertainty original signs =', round(obj.getBlueObject().results.tot,3), 'GeV')
         mt_orig = obj.getBlueObject().results.mt
         obj.setNewLHCcorrMap(corrMap)
-        print('uncertainty flipped signs =', obj.getBlueObject().results.tot, 'GeV')
+        print('uncertainty flipped signs =', round(obj.getBlueObject().results.tot,3), 'GeV')
         print('mt(flip) - mt(original) =', round(obj.getBlueObject().results.mt-mt_orig,3) , 'GeV')
 
 def flipSignLHC(LHC_full,LHC_sep,syst,orig_corrMap):
